@@ -169,14 +169,10 @@ export async function createLesson(formData: FormData) {
     .select("id")
     .single();
 
-  // Template opcional: cria as N primeiras partes padrão já vazias.
-  const initialParts = Math.max(
-    0,
-    Math.min(DEFAULT_PART_TEMPLATE.length, Number(str(formData, "initial_parts") || "0")),
-  );
-  if (lesson && initialParts > 0) {
+  // Toda nova lição já nasce com o template padrão (admin edita depois).
+  if (lesson) {
     await supabase.from("parts").insert(
-      DEFAULT_PART_TEMPLATE.slice(0, initialParts).map((p, i) => ({
+      DEFAULT_PART_TEMPLATE.map((p, i) => ({
         lesson_id: lesson.id,
         course_id: courseId,
         title: p.title,

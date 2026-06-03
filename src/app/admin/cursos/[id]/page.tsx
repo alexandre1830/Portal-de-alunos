@@ -180,28 +180,13 @@ export default async function AdminCoursePage({
               <input type="hidden" name="module_id" value={module.id} />
               <input type="hidden" name="course_id" value={course.id} />
               <input name="title" placeholder="Nova lição" className={inputCls} />
-              <label className="flex items-center gap-2 text-xs text-fg-secondary">
-                Partes iniciais:
-                <select
-                  name="initial_parts"
-                  defaultValue="0"
-                  className="h-10 rounded-md border border-border-primary bg-bg-primary px-2 text-sm text-fg-primary"
-                >
-                  <option value="0">Nenhuma</option>
-                  <option value="8">Template padrão (8)</option>
-                  {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-                    <option key={n} value={n}>
-                      {n}
-                    </option>
-                  ))}
-                </select>
-              </label>
               <Button type="submit" variant="secondary" size="sm">
                 Adicionar lição
               </Button>
               <p className="basis-full pl-1 text-xs text-fg-tertiary">
-                Template padrão: Abertura, Vocabulary, Lesson topic, Grammar,
-                Pronunciation, Dialogue, Exercises, Revisão (dourada).
+                Já vem com 8 partes: Abertura, Vocabulary, Lesson topic, Grammar,
+                Pronunciation, Dialogue, Exercises, Revisão (dourada). Você edita
+                depois.
               </p>
             </form>
           </Card>
