@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/database";
 import type {
+  Block,
   Course,
   Lesson,
   Module,
@@ -96,4 +97,52 @@ export async function getCourseStructure(
   }));
 
   return { course, modules: moduleNodes };
+}
+
+export interface PartView {
+  part: Part;
+  lesson: Lesson | null;
+  course: Course | null;
+  blocks: Block[];
+  progress: PartProgress | null;
+}
+
+// Busca uma parte com seus blocos (ordenados) + lição/curso para navegação e o
+// progresso do aluno. A RLS garante que só vem se a parte for visível ao aluno.
+export async function getPartView(
+  supabase: Client,
+  userId: string,
+  partId: string,
+): Promise<PartView | null> {
+  const { data: part } = await supabase
+    .from("parts")
+    .select("*")
+    .eq("id", partId)
+    .maybeSingle();
+
+  if (!part) return null;
+
+  const [lessonRes, courseRes, blocksRes, progressRes] = await Promise.all([
+    supabase.from("lessons").select("*").eq("id", part.lesson_id).maybeSingle(),
+    supabase.from("courses").select("*").eq("id", part.course_id).maybeSingle(),
+    supabase
+      .from("blocks")
+      .select("*")
+      .eq("part_id", partId)
+      .order("position"),
+    supabase
+      .from("part_progress")
+      .select("*")
+      .eq("part_id", partId)
+      .eq("user_id", userId)
+      .maybeSingle(),
+  ]);
+
+  return {
+    part,
+    lesson: lessonRes.data,
+    course: courseRes.data,
+    blocks: blocksRes.data ?? [],
+    progress: progressRes.data,
+  };
 }
