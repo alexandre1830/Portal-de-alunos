@@ -1,3 +1,4 @@
+import { SpeakButton } from "@/components/blocks/SpeakButton";
 import type { ReadingData } from "@/lib/blocks/schemas";
 
 export function ReadingBlock({ data }: { data: ReadingData }) {
@@ -9,7 +10,7 @@ export function ReadingBlock({ data }: { data: ReadingData }) {
       <p className="whitespace-pre-wrap leading-relaxed text-fg-primary">
         {data.text}
       </p>
-      <span className="text-xs text-fg-tertiary">🔊 Áudio (em breve)</span>
+      <SpeakButton text={data.text} />
     </div>
   );
 }
