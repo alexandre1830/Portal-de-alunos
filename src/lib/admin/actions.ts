@@ -144,6 +144,18 @@ export async function moveModule(formData: FormData) {
 // ====================================================================
 // Lições
 // ====================================================================
+// Template das 8 seções padrão das lições (PDFs USpeaK, ADR 0004).
+const DEFAULT_PART_TEMPLATE: { title: string; kind: "regular" | "golden" }[] = [
+  { title: "Abertura", kind: "regular" },
+  { title: "Vocabulary", kind: "regular" },
+  { title: "Lesson topic", kind: "regular" },
+  { title: "Grammar", kind: "regular" },
+  { title: "Pronunciation", kind: "regular" },
+  { title: "Dialogue", kind: "regular" },
+  { title: "Exercises", kind: "regular" },
+  { title: "Revisão", kind: "golden" },
+];
+
 export async function createLesson(formData: FormData) {
   const { supabase } = await requireAdmin();
   const moduleId = str(formData, "module_id");
@@ -151,9 +163,116 @@ export async function createLesson(formData: FormData) {
   const title = str(formData, "title");
   if (!title) return;
   const position = await nextPosition(supabase, "lessons", "module_id", moduleId);
-  await supabase
+  const { data: lesson } = await supabase
     .from("lessons")
-    .insert({ module_id: moduleId, course_id: courseId, title, position });
+    .insert({ module_id: moduleId, course_id: courseId, title, position })
+    .select("id")
+    .single();
+
+  // Template opcional: cria as N primeiras partes padrão já vazias.
+  const initialParts = Math.max(
+    0,
+    Math.min(DEFAULT_PART_TEMPLATE.length, Number(str(formData, "initial_parts") || "0")),
+  );
+  if (lesson && initialParts > 0) {
+    await supabase.from("parts").insert(
+      DEFAULT_PART_TEMPLATE.slice(0, initialParts).map((p, i) => ({
+        lesson_id: lesson.id,
+        course_id: courseId,
+        title: p.title,
+        kind: p.kind,
+        position: i,
+      })),
+    );
+  }
+
+  revalidatePath(`/admin/cursos/${courseId}`);
+}
+
+// Duplica uma lição completa (partes + blocos + gabaritos) dentro do mesmo
+// módulo, como rascunho. Posicionada após a última.
+export async function duplicateLesson(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const sourceId = str(formData, "id");
+  const courseId = str(formData, "course_id");
+
+  const { data: source } = await supabase
+    .from("lessons")
+    .select("module_id, title")
+    .eq("id", sourceId)
+    .single();
+  if (!source) return;
+
+  const position = await nextPosition(supabase, "lessons", "module_id", source.module_id);
+  const { data: newLesson } = await supabase
+    .from("lessons")
+    .insert({
+      module_id: source.module_id,
+      course_id: courseId,
+      title: `${source.title} (cópia)`,
+      position,
+      is_published: false,
+    })
+    .select("id")
+    .single();
+  if (!newLesson) return;
+
+  const { data: parts } = await supabase
+    .from("parts")
+    .select("id, title, kind, position")
+    .eq("lesson_id", sourceId)
+    .order("position");
+
+  for (const part of parts ?? []) {
+    const { data: newPart } = await supabase
+      .from("parts")
+      .insert({
+        lesson_id: newLesson.id,
+        course_id: courseId,
+        title: part.title,
+        kind: part.kind,
+        position: part.position,
+      })
+      .select("id")
+      .single();
+    if (!newPart) continue;
+
+    const { data: blocks } = await supabase
+      .from("blocks")
+      .select("id, type, data, position")
+      .eq("part_id", part.id)
+      .order("position");
+
+    for (const block of blocks ?? []) {
+      const { data: newBlock } = await supabase
+        .from("blocks")
+        .insert({
+          part_id: newPart.id,
+          lesson_id: newLesson.id,
+          course_id: courseId,
+          type: block.type,
+          data: block.data as never,
+          position: block.position,
+        })
+        .select("id")
+        .single();
+      if (!newBlock) continue;
+
+      const { data: solution } = await supabase
+        .from("exercise_solutions")
+        .select("solution")
+        .eq("block_id", block.id)
+        .maybeSingle();
+      if (solution) {
+        await supabase.from("exercise_solutions").insert({
+          block_id: newBlock.id,
+          course_id: courseId,
+          solution: solution.solution as never,
+        });
+      }
+    }
+  }
+
   revalidatePath(`/admin/cursos/${courseId}`);
 }
 

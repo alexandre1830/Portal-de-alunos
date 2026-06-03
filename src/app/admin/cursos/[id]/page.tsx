@@ -10,6 +10,7 @@ import {
   deleteCourse,
   deleteLesson,
   deleteModule,
+  duplicateLesson,
   moveLesson,
   moveModule,
   unenrollStudent,
@@ -119,16 +120,33 @@ export default async function AdminCoursePage({
 
             <ul className="flex flex-col gap-2 pl-3">
               {(lessonsByModule.get(module.id) ?? []).map((lesson) => (
-                <li key={lesson.id} className="flex items-center gap-2">
-                  <Link
-                    href={`/admin/licoes/${lesson.id}`}
-                    className="flex-1 text-sm text-fg-primary hover:underline"
-                  >
-                    {lesson.title}
-                    {!lesson.is_published && (
-                      <span className="ml-2 text-xs text-fg-tertiary">(rascunho)</span>
-                    )}
-                  </Link>
+                <li
+                  key={lesson.id}
+                  className="flex items-center gap-2 rounded-md py-1"
+                >
+                  <div className="flex flex-1 flex-col">
+                    <span className="text-sm text-fg-primary">
+                      {lesson.title}
+                      {!lesson.is_published && (
+                        <span className="ml-2 text-xs text-fg-tertiary">
+                          (rascunho)
+                        </span>
+                      )}
+                    </span>
+                    <Link
+                      href={`/admin/licoes/${lesson.id}`}
+                      className="text-xs font-medium text-fg-secondary hover:text-fg-primary"
+                    >
+                      Editar lição →
+                    </Link>
+                  </div>
+                  <form action={duplicateLesson}>
+                    <input type="hidden" name="id" value={lesson.id} />
+                    <input type="hidden" name="course_id" value={course.id} />
+                    <Button type="submit" variant="ghost" size="sm">
+                      Duplicar
+                    </Button>
+                  </form>
                   <form action={moveLesson}>
                     <input type="hidden" name="id" value={lesson.id} />
                     <input type="hidden" name="module_id" value={module.id} />
@@ -158,13 +176,33 @@ export default async function AdminCoursePage({
               ))}
             </ul>
 
-            <form action={createLesson} className="flex items-end gap-2 pl-3">
+            <form action={createLesson} className="flex flex-wrap items-end gap-2 pl-3">
               <input type="hidden" name="module_id" value={module.id} />
               <input type="hidden" name="course_id" value={course.id} />
               <input name="title" placeholder="Nova lição" className={inputCls} />
+              <label className="flex items-center gap-2 text-xs text-fg-secondary">
+                Partes iniciais:
+                <select
+                  name="initial_parts"
+                  defaultValue="0"
+                  className="h-10 rounded-md border border-border-primary bg-bg-primary px-2 text-sm text-fg-primary"
+                >
+                  <option value="0">Nenhuma</option>
+                  <option value="8">Template padrão (8)</option>
+                  {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <Button type="submit" variant="secondary" size="sm">
                 Adicionar lição
               </Button>
+              <p className="basis-full pl-1 text-xs text-fg-tertiary">
+                Template padrão: Abertura, Vocabulary, Lesson topic, Grammar,
+                Pronunciation, Dialogue, Exercises, Revisão (dourada).
+              </p>
             </form>
           </Card>
         ))}
