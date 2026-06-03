@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { EnrollForm } from "@/components/admin/EnrollForm";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import {
@@ -11,6 +12,7 @@ import {
   deleteModule,
   moveLesson,
   moveModule,
+  unenrollStudent,
   updateCourse,
   updateModule,
 } from "@/lib/admin/actions";
@@ -34,10 +36,16 @@ export default async function AdminCoursePage({
     .maybeSingle();
   if (!course) notFound();
 
-  const [{ data: modules }, { data: lessons }] = await Promise.all([
-    supabase.from("modules").select("*").eq("course_id", id).order("position"),
-    supabase.from("lessons").select("*").eq("course_id", id).order("position"),
-  ]);
+  const [{ data: modules }, { data: lessons }, { data: enrollments }] =
+    await Promise.all([
+      supabase.from("modules").select("*").eq("course_id", id).order("position"),
+      supabase.from("lessons").select("*").eq("course_id", id).order("position"),
+      supabase
+        .from("enrollments")
+        .select("id, status, user:profiles(email, full_name)")
+        .eq("course_id", id)
+        .order("created_at"),
+    ]);
 
   const lessonsByModule = new Map<string, typeof lessons>();
   for (const lesson of lessons ?? []) {
@@ -169,6 +177,44 @@ export default async function AdminCoursePage({
               Adicionar módulo
             </Button>
           </form>
+        </Card>
+      </section>
+
+      {/* Matrículas */}
+      <section className="flex flex-col gap-4">
+        <h2 className="text-base font-semibold text-fg-primary">Matrículas</h2>
+
+        <Card padded className="flex flex-col gap-3">
+          {(enrollments ?? []).length === 0 ? (
+            <p className="text-sm text-fg-secondary">Nenhum aluno matriculado.</p>
+          ) : (
+            <ul className="flex flex-col divide-y divide-border-primary">
+              {(enrollments ?? []).map((enr) => (
+                <li key={enr.id} className="flex items-center justify-between gap-3 py-2">
+                  <span className="text-sm text-fg-primary">
+                    {enr.user?.email ?? "—"}
+                    {enr.user?.full_name && (
+                      <span className="ml-2 text-xs text-fg-tertiary">
+                        {enr.user.full_name}
+                      </span>
+                    )}
+                  </span>
+                  <form action={unenrollStudent}>
+                    <input type="hidden" name="id" value={enr.id} />
+                    <input type="hidden" name="course_id" value={course.id} />
+                    <Button type="submit" variant="ghost" size="sm">
+                      Remover
+                    </Button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <EnrollForm courseId={course.id} />
+          <p className="text-xs text-fg-tertiary">
+            O aluno precisa já ter conta no portal (cadastro) para ser matriculado.
+          </p>
         </Card>
       </section>
 

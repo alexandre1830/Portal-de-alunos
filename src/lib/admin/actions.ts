@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireAdmin } from "@/lib/admin/guard";
+import type { EnrollState } from "@/lib/admin/types";
 
 // ====================================================================
 // Helpers
@@ -350,4 +351,46 @@ export async function moveBlock(formData: FormData) {
   const partId = str(formData, "part_id");
   await reorder(supabase, "blocks", "part_id", partId, str(formData, "id"), str(formData, "dir") as "up" | "down");
   revalidatePath(`/admin/partes/${partId}`);
+}
+
+// ====================================================================
+// Matrículas
+// ====================================================================
+export async function enrollStudent(
+  _prev: EnrollState,
+  formData: FormData,
+): Promise<EnrollState> {
+  const { supabase } = await requireAdmin();
+  const courseId = str(formData, "course_id");
+  const email = str(formData, "email").toLowerCase();
+  if (!email) return { error: "Informe o e-mail.", notice: null };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .ilike("email", email)
+    .maybeSingle();
+  if (!profile) {
+    return {
+      error: "Nenhum aluno com esse e-mail. Peça para a pessoa se cadastrar primeiro.",
+      notice: null,
+    };
+  }
+
+  const { error } = await supabase
+    .from("enrollments")
+    .upsert(
+      { user_id: profile.id, course_id: courseId, status: "active" },
+      { onConflict: "user_id,course_id" },
+    );
+  if (error) return { error: "Não foi possível matricular.", notice: null };
+
+  revalidatePath(`/admin/cursos/${courseId}`);
+  return { error: null, notice: `Aluno matriculado: ${email}` };
+}
+
+export async function unenrollStudent(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  await supabase.from("enrollments").delete().eq("id", str(formData, "id"));
+  revalidatePath(`/admin/cursos/${str(formData, "course_id")}`);
 }
