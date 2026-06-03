@@ -1,4 +1,6 @@
-import { Button } from "@/components/ui/Button";
+import Link from "next/link";
+
+import { buttonVariants } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 
@@ -25,10 +27,15 @@ export default function Home() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Button size="lg">Entrar</Button>
-          <Button variant="secondary" size="lg">
-            Conhecer os cursos
-          </Button>
+          <Link href="/login" className={buttonVariants({ size: "lg" })}>
+            Entrar
+          </Link>
+          <Link
+            href="/cadastro"
+            className={buttonVariants({ variant: "secondary", size: "lg" })}
+          >
+            Criar conta
+          </Link>
         </div>
 
         <Card padded className="flex flex-col gap-2">
