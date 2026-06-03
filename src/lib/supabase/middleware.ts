@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database";
 
 // Rotas que exigem usuário autenticado. Sem sessão -> redireciona para /login.
-const PROTECTED_PREFIXES = ["/painel"];
+const PROTECTED_PREFIXES = ["/painel", "/cursos", "/partes"];
 
 // Atualiza/renova a sessão do Supabase a cada request (refresh de tokens) e
 // aplica a proteção de rotas. Chamado pelo middleware do Next.

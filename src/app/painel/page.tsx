@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/Button";
@@ -110,21 +111,27 @@ export default async function PainelPage() {
           <ul className="flex flex-col gap-3">
             {dashboard.courses.map((course) => (
               <li key={course.id}>
-                <Card padded className="flex items-center justify-between gap-4">
-                  <div className="flex flex-col gap-1">
-                    <span className="font-medium text-fg-primary">
-                      {course.title}
-                    </span>
-                    {course.description && (
-                      <span className="text-sm text-fg-secondary">
-                        {course.description}
+                <Link href={`/cursos/${course.slug}`} className="block">
+                  <Card
+                    padded
+                    interactive
+                    className="flex items-center justify-between gap-4"
+                  >
+                    <div className="flex flex-col gap-1">
+                      <span className="font-medium text-fg-primary">
+                        {course.title}
                       </span>
-                    )}
-                  </div>
-                  <span className="shrink-0 rounded-full border border-border-primary px-2.5 py-1 text-xs text-fg-secondary">
-                    {LANGUAGE_LABELS[course.language]} · {levelLabel(course.level)}
-                  </span>
-                </Card>
+                      {course.description && (
+                        <span className="text-sm text-fg-secondary">
+                          {course.description}
+                        </span>
+                      )}
+                    </div>
+                    <span className="shrink-0 rounded-full border border-border-primary px-2.5 py-1 text-xs text-fg-secondary">
+                      {LANGUAGE_LABELS[course.language]} · {levelLabel(course.level)}
+                    </span>
+                  </Card>
+                </Link>
               </li>
             ))}
           </ul>
