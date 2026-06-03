@@ -80,8 +80,8 @@ export async function createCourse(formData: FormData) {
     .insert({ title, slug, language, level: level as never })
     .select("id")
     .single();
-  revalidatePath("/admin");
-  if (data) redirect(`/admin/cursos/${data.id}`);
+  revalidatePath("/admin/cursos");
+  if (data) redirect(`/admin/cursos/${data.id}/modulos`);
 }
 
 export async function updateCourse(formData: FormData) {
@@ -98,15 +98,15 @@ export async function updateCourse(formData: FormData) {
       is_published: formData.get("is_published") === "on",
     })
     .eq("id", id);
-  revalidatePath(`/admin/cursos/${id}`);
-  revalidatePath("/admin");
+  revalidatePath(`/admin/cursos/${id}/config`);
+  revalidatePath("/admin/cursos");
 }
 
 export async function deleteCourse(formData: FormData) {
   const { supabase } = await requireAdmin();
   await supabase.from("courses").delete().eq("id", str(formData, "id"));
-  revalidatePath("/admin");
-  redirect("/admin");
+  revalidatePath("/admin/cursos");
+  redirect("/admin/cursos");
 }
 
 // ====================================================================
@@ -119,7 +119,7 @@ export async function createModule(formData: FormData) {
   if (!title) return;
   const position = await nextPosition(supabase, "modules", "course_id", courseId);
   await supabase.from("modules").insert({ course_id: courseId, title, position });
-  revalidatePath(`/admin/cursos/${courseId}`);
+  revalidatePath(`/admin/cursos/${courseId}/modulos`);
 }
 
 export async function updateModule(formData: FormData) {
@@ -128,20 +128,20 @@ export async function updateModule(formData: FormData) {
     .from("modules")
     .update({ title: str(formData, "title") })
     .eq("id", str(formData, "id"));
-  revalidatePath(`/admin/cursos/${str(formData, "course_id")}`);
+  revalidatePath(`/admin/cursos/${str(formData, "course_id")}/modulos`);
 }
 
 export async function deleteModule(formData: FormData) {
   const { supabase } = await requireAdmin();
   await supabase.from("modules").delete().eq("id", str(formData, "id"));
-  revalidatePath(`/admin/cursos/${str(formData, "course_id")}`);
+  revalidatePath(`/admin/cursos/${str(formData, "course_id")}/modulos`);
 }
 
 export async function moveModule(formData: FormData) {
   const { supabase } = await requireAdmin();
   const courseId = str(formData, "course_id");
   await reorder(supabase, "modules", "course_id", courseId, str(formData, "id"), str(formData, "dir") as "up" | "down");
-  revalidatePath(`/admin/cursos/${courseId}`);
+  revalidatePath(`/admin/cursos/${courseId}/modulos`);
 }
 
 // ====================================================================
@@ -185,7 +185,7 @@ export async function createLesson(formData: FormData) {
     );
   }
 
-  revalidatePath(`/admin/cursos/${courseId}`);
+  revalidatePath(`/admin/cursos/${courseId}/modulos`);
 }
 
 // Duplica uma lição completa (partes + blocos + gabaritos) dentro do mesmo
@@ -272,7 +272,7 @@ export async function duplicateLesson(formData: FormData) {
     }
   }
 
-  revalidatePath(`/admin/cursos/${courseId}`);
+  revalidatePath(`/admin/cursos/${courseId}/modulos`);
 }
 
 export async function updateLesson(formData: FormData) {
@@ -286,19 +286,19 @@ export async function updateLesson(formData: FormData) {
     })
     .eq("id", id);
   revalidatePath(`/admin/licoes/${id}`);
-  revalidatePath(`/admin/cursos/${str(formData, "course_id")}`);
+  revalidatePath(`/admin/cursos/${str(formData, "course_id")}/modulos`);
 }
 
 export async function deleteLesson(formData: FormData) {
   const { supabase } = await requireAdmin();
   await supabase.from("lessons").delete().eq("id", str(formData, "id"));
-  revalidatePath(`/admin/cursos/${str(formData, "course_id")}`);
+  revalidatePath(`/admin/cursos/${str(formData, "course_id")}/modulos`);
 }
 
 export async function moveLesson(formData: FormData) {
   const { supabase } = await requireAdmin();
   await reorder(supabase, "lessons", "module_id", str(formData, "module_id"), str(formData, "id"), str(formData, "dir") as "up" | "down");
-  revalidatePath(`/admin/cursos/${str(formData, "course_id")}`);
+  revalidatePath(`/admin/cursos/${str(formData, "course_id")}/modulos`);
 }
 
 // ====================================================================
@@ -503,14 +503,14 @@ export async function enrollStudent(
     );
   if (error) return { error: "Não foi possível matricular.", notice: null };
 
-  revalidatePath(`/admin/cursos/${courseId}`);
+  revalidatePath(`/admin/cursos/${courseId}/matriculas`);
   return { error: null, notice: `Aluno matriculado: ${email}` };
 }
 
 export async function unenrollStudent(formData: FormData) {
   const { supabase } = await requireAdmin();
   await supabase.from("enrollments").delete().eq("id", str(formData, "id"));
-  revalidatePath(`/admin/cursos/${str(formData, "course_id")}`);
+  revalidatePath(`/admin/cursos/${str(formData, "course_id")}/matriculas`);
 }
 
 // Gera uma senha curta e legível (sem ambiguidades). Mostrada uma única vez.
@@ -519,15 +519,14 @@ function generatePassword(): string {
   return `aluno-${token.slice(0, 8)}`;
 }
 
-// Cria conta de aluno já confirmada e matricula no curso. Para uso do admin
-// quando o aluno ainda não se cadastrou — substitui o fluxo "peça para se
-// cadastrar primeiro". As credenciais voltam no estado para serem entregues.
-export async function createAndEnrollStudent(
+// Cria conta de aluno já confirmada (login imediato). Decoupled de curso: a
+// matrícula acontece em /admin/cursos/[id]/matriculas. As credenciais voltam
+// no estado para o admin entregar ao aluno.
+export async function createStudent(
   _prev: CreateStudentState,
   formData: FormData,
 ): Promise<CreateStudentState> {
   await requireAdmin();
-  const courseId = str(formData, "course_id");
   const email = str(formData, "email").toLowerCase();
   const fullName = str(formData, "full_name");
 
@@ -550,7 +549,7 @@ export async function createAndEnrollStudent(
   const password = typedPassword || generatePassword();
 
   const admin = createAdminClient();
-  const { data, error } = await admin.auth.admin.createUser({
+  const { error } = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
@@ -560,8 +559,7 @@ export async function createAndEnrollStudent(
     const msg = error.message.toLowerCase();
     if (msg.includes("already") || msg.includes("registered")) {
       return {
-        error:
-          "Já existe uma conta com esse e-mail. Use o campo \"Matricular por e-mail\" acima.",
+        error: "Já existe uma conta com esse e-mail.",
         notice: null,
         credentials: null,
       };
@@ -574,24 +572,10 @@ export async function createAndEnrollStudent(
   }
 
   // O trigger handle_new_user já criou o profile com role=student e full_name.
-  const { error: enrollErr } = await admin
-    .from("enrollments")
-    .upsert(
-      { user_id: data.user.id, course_id: courseId, status: "active" },
-      { onConflict: "user_id,course_id" },
-    );
-  if (enrollErr) {
-    return {
-      error: `Conta criada, mas falhou ao matricular: ${enrollErr.message}`,
-      notice: null,
-      credentials: { email, password },
-    };
-  }
-
-  revalidatePath(`/admin/cursos/${courseId}`);
+  revalidatePath("/admin/alunos");
   return {
     error: null,
-    notice: "Aluno criado e matriculado.",
+    notice: "Aluno criado.",
     credentials: { email, password },
   };
 }

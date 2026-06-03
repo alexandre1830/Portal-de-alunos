@@ -1,23 +1,23 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 
 import { Button } from "@/components/ui/Button";
-import { createAndEnrollStudent } from "@/lib/admin/actions";
+import { createStudent } from "@/lib/admin/actions";
 import { initialCreateStudentState } from "@/lib/admin/types";
 
 const inputCls =
   "h-10 w-full rounded-md border border-border-primary bg-bg-primary px-3 text-sm text-fg-primary";
 
-export function CreateStudentForm({ courseId }: { courseId: string }) {
+export function CreateStudentForm() {
   const [state, action, pending] = useActionState(
-    createAndEnrollStudent,
+    createStudent,
     initialCreateStudentState,
   );
 
   return (
     <form action={action} className="flex flex-col gap-2">
-      <input type="hidden" name="course_id" value={courseId} />
       <div className="flex flex-col gap-2 sm:flex-row">
         <input
           name="full_name"
@@ -49,7 +49,7 @@ export function CreateStudentForm({ courseId }: { courseId: string }) {
         loading={pending}
         className="self-start"
       >
-        Criar aluno e matricular
+        Criar aluno
       </Button>
 
       {state.error && <p className="text-sm text-danger">{state.error}</p>}
@@ -77,6 +77,12 @@ export function CreateStudentForm({ courseId }: { courseId: string }) {
                 Anote agora — a senha não será exibida de novo. O aluno pode
                 trocá-la depois.
               </p>
+              <Link
+                href="/admin/cursos"
+                className="text-sm font-medium text-fg-secondary underline hover:text-fg-primary"
+              >
+                Matricular este aluno em um curso →
+              </Link>
             </>
           )}
         </div>
