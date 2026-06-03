@@ -2,16 +2,26 @@
 
 import { useRef, useState } from "react";
 
+import { StopIcon } from "@/components/icons/StopIcon";
+import { VolumeIcon } from "@/components/icons/VolumeIcon";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/browser";
 
 type State = "idle" | "loading" | "playing" | "error";
 
-// Botão "Ouvir" para blocos de leitura/diálogo. Invoca a Edge Function `tts`
-// (gera/recupera o MP3 do cache no Storage) e toca o áudio. `body` é o payload
-// da função: { text, lang } para leitura ou { lines, lang } para diálogo. A URL
-// é guardada para não reinvocar a função em re-toques.
-export function SpeakButton({ body }: { body: Record<string, unknown> }) {
+// Botão "Ouvir" para blocos de leitura/diálogo/pronúncia. Invoca a Edge
+// Function `tts` (gera/recupera o MP3 do cache no Storage) e toca o áudio.
+// `body` é o payload da função: { text, lang } ou { lines, lang }. A URL é
+// guardada para não reinvocar a função em re-toques.
+export function SpeakButton({
+  body,
+  label = "Ouvir",
+  iconOnly = false,
+}: {
+  body: Record<string, unknown>;
+  label?: string;
+  iconOnly?: boolean;
+}) {
   const [state, setState] = useState<State>("idle");
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const urlRef = useRef<string | null>(null);
@@ -28,9 +38,7 @@ export function SpeakButton({ body }: { body: Record<string, unknown> }) {
     if (!url) {
       setState("loading");
       const supabase = createClient();
-      const { data, error } = await supabase.functions.invoke("tts", {
-        body,
-      });
+      const { data, error } = await supabase.functions.invoke("tts", { body });
       if (error || !data?.url) {
         setState("error");
         return;
@@ -47,12 +55,13 @@ export function SpeakButton({ body }: { body: Record<string, unknown> }) {
     audio.play().catch(() => setState("error"));
   }
 
-  const label =
-    state === "playing"
-      ? "⏹ Parar"
-      : state === "error"
-        ? "🔊 Tentar de novo"
-        : "🔊 Ouvir";
+  const isPlaying = state === "playing";
+  const Icon = isPlaying ? StopIcon : VolumeIcon;
+  const text = isPlaying
+    ? "Parar"
+    : state === "error"
+      ? "Tentar de novo"
+      : label;
 
   return (
     <div className="flex flex-col gap-1">
@@ -63,11 +72,12 @@ export function SpeakButton({ body }: { body: Record<string, unknown> }) {
         className="self-start"
         loading={state === "loading"}
         onClick={handleClick}
-        aria-label="Ouvir o áudio deste trecho"
+        aria-label={iconOnly ? text : undefined}
       >
-        {label}
+        {state !== "loading" && <Icon className="h-4 w-4" />}
+        {!iconOnly && <span>{text}</span>}
       </Button>
-      {state === "error" && (
+      {state === "error" && !iconOnly && (
         <span className="text-xs text-danger">
           Não foi possível gerar o áudio agora.
         </span>

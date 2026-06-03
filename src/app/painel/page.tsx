@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { FlameIcon } from "@/components/icons/FlameIcon";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
@@ -84,9 +85,9 @@ export default async function PainelPage() {
           <span className="text-xs text-fg-secondary">XP total</span>
         </Card>
         <Card padded className="flex flex-col gap-1">
-          <span className="text-2xl font-bold text-fg-primary">
+          <span className="flex items-center gap-1.5 text-2xl font-bold text-fg-primary">
             {streak}
-            <span className="ml-1 text-base">🔥</span>
+            <FlameIcon className="h-5 w-5 text-warning" />
           </span>
           <span className="text-xs text-fg-secondary">Streak atual</span>
         </Card>

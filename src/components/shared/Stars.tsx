@@ -1,3 +1,4 @@
+import { StarIcon } from "@/components/icons/StarIcon";
 import { cn } from "@/lib/utils/cn";
 
 interface StarsProps {
@@ -17,13 +18,11 @@ export function Stars({ value, max = 3, className }: StarsProps) {
       role="img"
     >
       {Array.from({ length: max }).map((_, i) => (
-        <span
+        <StarIcon
           key={i}
-          aria-hidden="true"
-          className={i < filled ? "text-warning" : "text-fg-tertiary"}
-        >
-          {i < filled ? "★" : "☆"}
-        </span>
+          filled={i < filled}
+          className={cn("h-4 w-4", i < filled ? "text-warning" : "text-fg-tertiary")}
+        />
       ))}
     </span>
   );

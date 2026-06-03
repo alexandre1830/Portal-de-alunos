@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { BlockRenderer } from "@/components/blocks/BlockRenderer";
+import { TrophyIcon } from "@/components/icons/TrophyIcon";
 import { Card } from "@/components/ui/Card";
 import { Stars } from "@/components/shared/Stars";
 import { getPartView } from "@/lib/courses/queries";
@@ -42,9 +43,7 @@ export default async function PartPage({
         <div className="flex items-center justify-between gap-3">
           <h1 className="flex items-center gap-2 text-2xl font-semibold text-fg-primary">
             {part.kind === "golden" && (
-              <span aria-label="Parte dourada" title="Parte dourada">
-                🏆
-              </span>
+              <TrophyIcon className="h-6 w-6 text-warning" />
             )}
             {part.title}
           </h1>

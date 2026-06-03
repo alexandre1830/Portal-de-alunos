@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { TrophyIcon } from "@/components/icons/TrophyIcon";
 import { Card } from "@/components/ui/Card";
 import { Stars } from "@/components/shared/Stars";
 import { getCourseStructure } from "@/lib/courses/queries";
@@ -96,9 +97,9 @@ export default async function CoursePage({
                                 >
                                   <span className="flex items-center gap-2 text-sm text-fg-primary">
                                     {part.kind === "golden" && (
-                                      <span aria-label="Parte dourada" title="Parte dourada">
-                                        🏆
-                                      </span>
+                                      <TrophyIcon
+                                        className="h-4 w-4 text-warning"
+                                      />
                                     )}
                                     {part.title}
                                   </span>
