@@ -1,6 +1,7 @@
 import { DialogueBlock } from "@/components/blocks/DialogueBlock";
 import { FillBlankExercise } from "@/components/blocks/FillBlankExercise";
 import { MultipleChoiceExercise } from "@/components/blocks/MultipleChoiceExercise";
+import { PronunciationBlock } from "@/components/blocks/PronunciationBlock";
 import { ReadingBlock } from "@/components/blocks/ReadingBlock";
 import { RichTextBlock } from "@/components/blocks/RichTextBlock";
 import { VocabularyBlock } from "@/components/blocks/VocabularyBlock";
@@ -8,6 +9,7 @@ import {
   dialogueData,
   fillBlankData,
   multipleChoiceData,
+  pronunciationData,
   readingData,
   richTextData,
   vocabularyData,
@@ -57,6 +59,14 @@ export function BlockRenderer({ block }: { block: Block }) {
         <DialogueBlock data={parsed.data} />
       ) : (
         <Notice>Bloco de diálogo inválido.</Notice>
+      );
+    }
+    case "pronunciation": {
+      const parsed = pronunciationData.safeParse(block.data);
+      return parsed.success ? (
+        <PronunciationBlock data={parsed.data} />
+      ) : (
+        <Notice>Bloco de pronúncia inválido.</Notice>
       );
     }
     case "multiple_choice": {

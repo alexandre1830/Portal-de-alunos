@@ -44,6 +44,7 @@ const rich = (text) => ({ type: "rich_text", data: { text } });
 const vocab = (items) => ({ type: "vocabulary", data: { items } });
 const reading = (title, text) => ({ type: "reading_tts", data: { title, text } });
 const dialogue = (lines) => ({ type: "dialogue_tts", data: { lines } });
+const pron = (title, items) => ({ type: "pronunciation", data: { title, items } });
 const mc = (question, options, answerIndex) => ({
   type: "multiple_choice",
   data: { question, options },
@@ -99,17 +100,21 @@ const lesson02 = {
       title: "Grammar — Personal pronouns",
       blocks: [
         rich(
-          "Os pronomes pessoais substituem o sujeito da frase, deixando a comunicação mais rápida e clara. Em vez de \"Sean is my friend. Sean is from Colorado\", dizemos \"He is my friend. He is from Colorado\".\n\nSINGULAR:\n• I (eu) · you (você) · he (ele) · she (ela) · it (ele/ela neutro)\n\nPLURAL:\n• we (nós) · you (vocês) · they (eles/elas)\n\n⚠ O pronome \"I\" é sempre escrito em letra maiúscula, em qualquer posição da frase.",
+          "Os pronomes pessoais substituem o sujeito da frase, deixando a comunicação mais rápida e clara. Em vez de \"Sean is my friend. Sean is from Colorado\", dizemos \"He is my friend. He is from Colorado\".\n\nSINGULAR:\n• I (eu) · you (você) · he (ele) · she (ela) · it (ele/ela neutro)\n\nPLURAL:\n• we (nós) · you (vocês) · they (eles/elas)\n\nAtenção: o pronome \"I\" é sempre escrito em letra maiúscula, em qualquer posição da frase.",
         ),
       ],
     },
     {
       title: "Pronunciation — Contracted form",
       blocks: [
-        reading(
-          "Verb to be: contracted form",
-          "I am → I'm a student\nYou are → You're my friend\nHe is → He's 12 years old\nShe is → She's a teacher\nWe are → We're in the same class\nThey are → They're my classmates",
-        ),
+        pron("Verb to be: forma contraída", [
+          "I am → I'm a student",
+          "You are → You're my friend",
+          "He is → He's 12 years old",
+          "She is → She's a teacher",
+          "We are → We're in the same class",
+          "They are → They're my classmates",
+        ]),
       ],
     },
     {
@@ -142,7 +147,7 @@ const lesson02 = {
       title: "Revisão",
       kind: "golden",
       blocks: [
-        rich("Parte dourada 🏆 — gabarite os exercícios de revisão para ganhar a recompensa extra da lição!"),
+        rich("Revisão da lição — gabarite os exercícios desta parte para ganhar a recompensa extra."),
         mc("She ___ a teacher.", ["am", "is", "are"], 1),
         fill("Reescreva com contração: They are friends.", "They're friends", ["theyre friends"]),
       ],
@@ -200,10 +205,12 @@ const lesson03 = {
     {
       title: "Pronunciation — The 'th' sound",
       blocks: [
-        reading(
-          "The 'th' sound",
-          "On Thursday morning, Theo thinks about three things: \"The weather, the news, and the theme of the day\". He says, \"I think the weather is better than yesterday\". Then, he thanks his brother for the coffee and says: \"This is the best coffee this week!\"",
-        ),
+        pron("The 'th' sound", [
+          "On Thursday morning, Theo thinks about three things.",
+          "I think the weather is better than yesterday.",
+          "Then, he thanks his brother for the coffee.",
+          "This is the best coffee this week!",
+        ]),
       ],
     },
     {
@@ -236,7 +243,7 @@ const lesson03 = {
       title: "Revisão",
       kind: "golden",
       blocks: [
-        rich("Parte dourada 🏆 — gabarite a revisão da Lição 03!"),
+        rich("Revisão — gabarite os exercícios desta parte da Lição 03."),
         mc("Artigo correto: I want ___ orange.", ["a", "an", "the"], 1),
         fill("Contração de 'They are not here':", "they aren't here", ["they're not here", "they aren’t here"]),
       ],
@@ -267,7 +274,7 @@ const lesson04 = {
       title: "Vocabulary — How are you?",
       blocks: [
         rich(
-          "Perguntas comuns:\n• How are you? — Como você está?\n• How are you doing? — Como vai você?\n• How's it going? — Como está indo?\n• What's up? — E aí? (informal)\n\nQuando você está bem 🙂:\n• I'm good / I'm fine / I'm great / I'm doing well\n\nQuando está \"mais ou menos\":\n• I'm okay, thanks / I'm doing alright / I'm managing\n\nQuando está mal ☹:\n• I'm not feeling well / I'm not okay / I'm not fine\n\nPerguntando \"e você?\":\n• And you? / How about you? / What about you?",
+          "Perguntas comuns:\n• How are you? — Como você está?\n• How are you doing? — Como vai você?\n• How's it going? — Como está indo?\n• What's up? — E aí? (informal)\n\nQuando você está bem:\n• I'm good / I'm fine / I'm great / I'm doing well\n\nQuando está \"mais ou menos\":\n• I'm okay, thanks / I'm doing alright / I'm managing\n\nQuando está mal:\n• I'm not feeling well / I'm not okay / I'm not fine\n\nPerguntando \"e você?\":\n• And you? / How about you? / What about you?",
         ),
       ],
     },
@@ -290,10 +297,14 @@ const lesson04 = {
     {
       title: "Pronunciation — this, that & the 'th' sound",
       blocks: [
-        reading(
-          "This or That?",
-          "This is my phone. That is your book. This is my friend. That is your house. This is nice. That is cool! Lembre-se: practice makes perfect!",
-        ),
+        pron("This or That?", [
+          "This is my phone.",
+          "That is your book.",
+          "This is my friend.",
+          "That is your house.",
+          "This is nice.",
+          "That is cool!",
+        ]),
       ],
     },
     {
@@ -326,7 +337,7 @@ const lesson04 = {
       title: "Revisão",
       kind: "golden",
       blocks: [
-        rich("Parte dourada 🏆 — gabarite a revisão da Lição 04!"),
+        rich("Revisão — gabarite os exercícios desta parte da Lição 04."),
         mc("______ are my parents. (longe)", ["These", "Those", "This"], 1),
         fill("Faça a pergunta: você é estudante? (you / a student)", "are you a student", ["are you a student?"]),
       ],

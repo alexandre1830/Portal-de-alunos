@@ -2,12 +2,11 @@
 // Gera o áudio de um trecho (texto ou diálogo) via Google Cloud Text-to-Speech,
 // salva no Storage (bucket tts-audio) e serve do cache nas próximas chamadas.
 //
-// Corrige para alunos iniciantes:
+// Para alunos iniciantes:
 //  - speakingRate lento (RATE) — A1 precisa de áudio devagar.
-//  - diálogo: cada personagem ganha uma voz diferente (sintetiza linha a linha
-//    e concatena os MP3).
-//  - limpeza do texto: setas viram pausa, emojis/símbolos são removidos (para
-//    a voz não ler "right pointing arrow" etc.).
+//  - diálogo: cada personagem ganha uma voz com o gênero inferido do nome, e
+//    vozes distintas mesmo entre personagens do mesmo gênero.
+//  - limpeza do texto: setas viram pausa, emojis/símbolos são removidos.
 //
 // Auth: verify_jwt = true. Google via API key (secret GOOGLE_TTS_API_KEY).
 
@@ -16,14 +15,43 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const BUCKET = "tts-audio";
 const MAX_TEXT = 8000;
-const RATE = 0.8; // velocidade de fala (1.0 = normal). A1 -> mais devagar.
+const RATE = 0.8;
 
-// Pool de vozes Neural2 por idioma (a 1ª é a padrão; no diálogo, alterna por
-// personagem). C = feminina, D = masculina.
-const VOICES: Record<string, { languageCode: string; names: string[] }> = {
-  en: { languageCode: "en-US", names: ["en-US-Neural2-C", "en-US-Neural2-D", "en-US-Neural2-A"] },
-  es: { languageCode: "es-US", names: ["es-US-Neural2-A", "es-US-Neural2-B", "es-US-Neural2-C"] },
+// Vozes Neural2 por idioma e gênero (a 1ª de cada lista é a preferida).
+const VOICES: Record<
+  string,
+  { languageCode: string; female: string[]; male: string[] }
+> = {
+  en: {
+    languageCode: "en-US",
+    female: ["en-US-Neural2-C", "en-US-Neural2-F", "en-US-Neural2-G", "en-US-Neural2-H"],
+    male: ["en-US-Neural2-D", "en-US-Neural2-A", "en-US-Neural2-I", "en-US-Neural2-J"],
+  },
+  es: {
+    languageCode: "es-US",
+    female: ["es-US-Neural2-A"],
+    male: ["es-US-Neural2-B", "es-US-Neural2-C"],
+  },
 };
+
+// Gênero conhecido de nomes (chave em minúsculas).
+const NAME_GENDER: Record<string, "m" | "f"> = {
+  john: "m", connor: "m", pedro: "m", mike: "m", leo: "m", nigel: "m",
+  peter: "m", caleb: "m", renan: "m", sanjay: "m", sean: "m", brown: "m",
+  carlos: "m", miguel: "m", theo: "m", david: "m", mark: "m", james: "m",
+  robert: "m", paul: "m", tom: "m", jack: "m",
+  sarah: "f", emma: "f", laura: "f", pauline: "f", maria: "f", julia: "f",
+  ana: "f", annie: "f", anna: "f", sophia: "f", olivia: "f", mary: "f",
+  jane: "f", sandra: "f", emily: "f", grace: "f",
+};
+
+function inferGender(speaker: string): "m" | "f" | null {
+  const s = speaker.toLowerCase();
+  if (/\b(mrs|ms|miss)\b/.test(s)) return "f";
+  if (/\bmr\b\.?/.test(s)) return "m";
+  const token = (s.match(/[a-zà-ú]+/) ?? [""])[0]!;
+  return NAME_GENDER[token] ?? null;
+}
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -38,7 +66,6 @@ function json(obj: unknown, status = 200): Response {
   });
 }
 
-// Remove símbolos que a voz leria em voz alta. Setas viram pausa (vírgula).
 function clean(input: string): string {
   return input
     .replace(/[→➔➜⇒↦➝]/g, ", ")
@@ -96,34 +123,44 @@ Deno.serve(async (req) => {
 
   const lang = (typeof body.lang === "string" ? body.lang : "en").slice(0, 2);
   const voiceSet = VOICES[lang] ?? VOICES.en;
-  const { languageCode, names } = voiceSet;
+  const { languageCode, female, male } = voiceSet;
 
-  // Monta os segmentos (cada um com seu texto limpo e voz).
   const segments: Segment[] = [];
 
   if (Array.isArray(body.lines)) {
-    // Diálogo: uma voz por personagem (ordem de aparição).
+    // Diálogo: voz por personagem, com gênero inferido do nome.
     const speakerVoice = new Map<string, string>();
+    let fi = 0;
+    let mi = 0;
+    const voiceFor = (speaker: string): string => {
+      const existing = speakerVoice.get(speaker);
+      if (existing) return existing;
+      const g = inferGender(speaker);
+      let v: string;
+      if (g === "f") v = female[fi++ % female.length]!;
+      else if (g === "m") v = male[mi++ % male.length]!;
+      else if (fi <= mi) v = female[fi++ % female.length]!;
+      else v = male[mi++ % male.length]!;
+      speakerVoice.set(speaker, v);
+      return v;
+    };
+
     for (const raw of body.lines) {
       if (!raw || typeof raw !== "object") continue;
       const speaker = String((raw as { speaker?: unknown }).speaker ?? "");
       const lineText = clean(String((raw as { text?: unknown }).text ?? ""));
       if (!lineText) continue;
-      if (!speakerVoice.has(speaker)) {
-        speakerVoice.set(speaker, names[speakerVoice.size % names.length]!);
-      }
-      segments.push({ text: lineText, name: speakerVoice.get(speaker)! });
+      segments.push({ text: lineText, name: voiceFor(speaker) });
     }
   } else {
     const text = clean(typeof body.text === "string" ? body.text : "");
-    if (text) segments.push({ text, name: names[0]! });
+    if (text) segments.push({ text, name: female[0]! });
   }
 
   if (segments.length === 0) return json({ error: "Nada para falar" }, 400);
   const totalLen = segments.reduce((n, s) => n + s.text.length, 0);
   if (totalLen > MAX_TEXT) return json({ error: "Texto muito longo" }, 400);
 
-  // Chave de cache: depende de idioma, rate, vozes e textos limpos.
   const spec = JSON.stringify({ languageCode, rate: RATE, segments });
   const path = `${await sha256Hex(spec)}.mp3`;
 
@@ -143,7 +180,6 @@ Deno.serve(async (req) => {
     return json({ error: "TTS nao configurado: defina o secret GOOGLE_TTS_API_KEY." }, 503);
   }
 
-  // Sintetiza cada segmento e concatena os MP3.
   let parts: Uint8Array[];
   try {
     parts = await Promise.all(

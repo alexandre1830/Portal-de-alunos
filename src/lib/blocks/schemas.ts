@@ -36,6 +36,12 @@ export const dialogueData = z.object({
     .min(1),
 });
 
+// Prática de pronúncia: lista de frases, cada uma com seu próprio áudio.
+export const pronunciationData = z.object({
+  title: z.string().optional(),
+  items: z.array(z.string()).min(1),
+});
+
 // --- Blocos de exercício (dados PÚBLICOS — sem gabarito) ---
 // O gabarito vive em exercise_solutions (fora do alcance do aluno).
 export const multipleChoiceData = z.object({
@@ -66,6 +72,7 @@ export type RichTextData = z.infer<typeof richTextData>;
 export type VocabularyData = z.infer<typeof vocabularyData>;
 export type ReadingData = z.infer<typeof readingData>;
 export type DialogueData = z.infer<typeof dialogueData>;
+export type PronunciationData = z.infer<typeof pronunciationData>;
 export type MultipleChoiceData = z.infer<typeof multipleChoiceData>;
 export type FillBlankData = z.infer<typeof fillBlankData>;
 
@@ -74,6 +81,7 @@ export const BLOCK_SCHEMAS = {
   vocabulary: vocabularyData,
   reading_tts: readingData,
   dialogue_tts: dialogueData,
+  pronunciation: pronunciationData,
   multiple_choice: multipleChoiceData,
   fill_blank: fillBlankData,
 } as const;
