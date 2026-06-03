@@ -10,7 +10,7 @@ export function ReadingBlock({ data }: { data: ReadingData }) {
       <p className="whitespace-pre-wrap leading-relaxed text-fg-primary">
         {data.text}
       </p>
-      <SpeakButton text={data.text} />
+      <SpeakButton body={{ text: data.text, lang: "en" }} />
     </div>
   );
 }

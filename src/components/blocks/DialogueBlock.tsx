@@ -2,8 +2,6 @@ import { SpeakButton } from "@/components/blocks/SpeakButton";
 import type { DialogueData } from "@/lib/blocks/schemas";
 
 export function DialogueBlock({ data }: { data: DialogueData }) {
-  // Para o áudio, lemos apenas as falas (sem os nomes dos personagens).
-  const spoken = data.lines.map((line) => line.text).join(" ");
   return (
     <div className="flex flex-col gap-2">
       {data.lines.map((line, i) => (
@@ -12,7 +10,8 @@ export function DialogueBlock({ data }: { data: DialogueData }) {
           {line.text}
         </p>
       ))}
-      <SpeakButton text={spoken} />
+      {/* Diálogo: cada personagem ganha uma voz diferente na função tts. */}
+      <SpeakButton body={{ lines: data.lines, lang: "en" }} />
     </div>
   );
 }

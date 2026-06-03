@@ -8,15 +8,10 @@ import { createClient } from "@/lib/supabase/browser";
 type State = "idle" | "loading" | "playing" | "error";
 
 // Botão "Ouvir" para blocos de leitura/diálogo. Invoca a Edge Function `tts`
-// (gera/recupera o MP3 do cache no Storage) e toca o áudio. A URL é guardada
-// para não reinvocar a função em re-toques.
-export function SpeakButton({
-  text,
-  lang = "en",
-}: {
-  text: string;
-  lang?: string;
-}) {
+// (gera/recupera o MP3 do cache no Storage) e toca o áudio. `body` é o payload
+// da função: { text, lang } para leitura ou { lines, lang } para diálogo. A URL
+// é guardada para não reinvocar a função em re-toques.
+export function SpeakButton({ body }: { body: Record<string, unknown> }) {
   const [state, setState] = useState<State>("idle");
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const urlRef = useRef<string | null>(null);
@@ -34,7 +29,7 @@ export function SpeakButton({
       setState("loading");
       const supabase = createClient();
       const { data, error } = await supabase.functions.invoke("tts", {
-        body: { text, lang },
+        body,
       });
       if (error || !data?.url) {
         setState("error");
