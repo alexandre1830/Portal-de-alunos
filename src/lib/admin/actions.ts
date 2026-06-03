@@ -3,8 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { randomBytes } from "node:crypto";
+
 import { requireAdmin } from "@/lib/admin/guard";
-import type { EnrollState } from "@/lib/admin/types";
+import type { CreateStudentState, EnrollState } from "@/lib/admin/types";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // ====================================================================
 // Helpers
@@ -508,4 +511,87 @@ export async function unenrollStudent(formData: FormData) {
   const { supabase } = await requireAdmin();
   await supabase.from("enrollments").delete().eq("id", str(formData, "id"));
   revalidatePath(`/admin/cursos/${str(formData, "course_id")}`);
+}
+
+// Gera uma senha curta e legível (sem ambiguidades). Mostrada uma única vez.
+function generatePassword(): string {
+  const token = randomBytes(6).toString("base64").replace(/[+/=lI0O]/g, "");
+  return `aluno-${token.slice(0, 8)}`;
+}
+
+// Cria conta de aluno já confirmada e matricula no curso. Para uso do admin
+// quando o aluno ainda não se cadastrou — substitui o fluxo "peça para se
+// cadastrar primeiro". As credenciais voltam no estado para serem entregues.
+export async function createAndEnrollStudent(
+  _prev: CreateStudentState,
+  formData: FormData,
+): Promise<CreateStudentState> {
+  await requireAdmin();
+  const courseId = str(formData, "course_id");
+  const email = str(formData, "email").toLowerCase();
+  const fullName = str(formData, "full_name");
+
+  if (!email || !fullName) {
+    return {
+      error: "Informe nome e e-mail.",
+      notice: null,
+      credentials: null,
+    };
+  }
+
+  const typedPassword = str(formData, "password");
+  if (typedPassword.length > 0 && typedPassword.length < 8) {
+    return {
+      error: "A senha precisa ter ao menos 8 caracteres.",
+      notice: null,
+      credentials: null,
+    };
+  }
+  const password = typedPassword || generatePassword();
+
+  const admin = createAdminClient();
+  const { data, error } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: fullName },
+  });
+  if (error) {
+    const msg = error.message.toLowerCase();
+    if (msg.includes("already") || msg.includes("registered")) {
+      return {
+        error:
+          "Já existe uma conta com esse e-mail. Use o campo \"Matricular por e-mail\" acima.",
+        notice: null,
+        credentials: null,
+      };
+    }
+    return {
+      error: `Não foi possível criar a conta: ${error.message}`,
+      notice: null,
+      credentials: null,
+    };
+  }
+
+  // O trigger handle_new_user já criou o profile com role=student e full_name.
+  const { error: enrollErr } = await admin
+    .from("enrollments")
+    .upsert(
+      { user_id: data.user.id, course_id: courseId, status: "active" },
+      { onConflict: "user_id,course_id" },
+    );
+  if (enrollErr) {
+    return {
+      error: `Conta criada, mas falhou ao matricular: ${enrollErr.message}`,
+      notice: null,
+      credentials: { email, password },
+    };
+  }
+
+  revalidatePath(`/admin/cursos/${courseId}`);
+  return {
+    error: null,
+    notice: "Aluno criado e matriculado.",
+    credentials: { email, password },
+  };
 }

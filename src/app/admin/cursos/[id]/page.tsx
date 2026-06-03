@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { CreateStudentForm } from "@/components/admin/CreateStudentForm";
 import { EnrollForm } from "@/components/admin/EnrollForm";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -234,10 +235,23 @@ export default async function AdminCoursePage({
             </ul>
           )}
 
-          <EnrollForm courseId={course.id} />
-          <p className="text-xs text-fg-tertiary">
-            O aluno precisa já ter conta no portal (cadastro) para ser matriculado.
-          </p>
+          <div className="flex flex-col gap-1">
+            <h3 className="text-sm font-medium text-fg-primary">
+              Matricular aluno existente
+            </h3>
+            <EnrollForm courseId={course.id} />
+            <p className="text-xs text-fg-tertiary">
+              O aluno precisa já ter conta no portal (cadastro) para ser
+              matriculado.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-1 border-t border-border-primary pt-3">
+            <h3 className="text-sm font-medium text-fg-primary">
+              Criar novo aluno e matricular
+            </h3>
+            <CreateStudentForm courseId={course.id} />
+          </div>
         </Card>
       </section>
 

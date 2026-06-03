@@ -7,3 +7,16 @@ export interface EnrollState {
 }
 
 export const initialEnrollState: EnrollState = { error: null, notice: null };
+
+export interface CreateStudentState {
+  error: string | null;
+  notice: string | null;
+  // Credenciais exibidas só após o sucesso, para o admin entregar ao aluno.
+  credentials: { email: string; password: string } | null;
+}
+
+export const initialCreateStudentState: CreateStudentState = {
+  error: null,
+  notice: null,
+  credentials: null,
+};
