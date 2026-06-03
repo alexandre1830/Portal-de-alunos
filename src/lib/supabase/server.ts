@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+import type { Database } from "@/types/database";
+
 // Cliente Supabase para Server Components e Server Actions. Lê/escreve a sessão
 // via cookies da requisição. Usa a chave pública (anon) — autorização vem das
 // políticas RLS no banco.
@@ -16,7 +18,7 @@ export async function createClient() {
     );
   }
 
-  return createServerClient(url, anonKey, {
+  return createServerClient<Database>(url, anonKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();

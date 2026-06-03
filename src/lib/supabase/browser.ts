@@ -1,5 +1,7 @@
 import { createBrowserClient } from "@supabase/ssr";
 
+import type { Database } from "@/types/database";
+
 // Cliente Supabase para Client Components ('use client'). Usa a chave pública
 // (anon), então toda autorização depende das políticas RLS no banco.
 export function createClient() {
@@ -12,5 +14,5 @@ export function createClient() {
     );
   }
 
-  return createBrowserClient(url, anonKey);
+  return createBrowserClient<Database>(url, anonKey);
 }

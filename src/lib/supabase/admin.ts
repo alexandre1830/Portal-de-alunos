@@ -1,5 +1,7 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
+import type { Database } from "@/types/database";
+
 // Cliente Supabase com a chave service_role. IGNORA RLS e tem poder total sobre
 // o banco — use APENAS em código server-only seguro (Edge Functions, rotas
 // server-only). Nunca importar em Client Components.
@@ -22,7 +24,7 @@ export function createAdminClient() {
     );
   }
 
-  return createSupabaseClient(url, serviceRoleKey, {
+  return createSupabaseClient<Database>(url, serviceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
