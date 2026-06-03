@@ -1,0 +1,56 @@
+import type {
+  FillBlankSolution,
+  MultipleChoiceSolution,
+} from "@/lib/blocks/schemas";
+import { levenshtein } from "@/lib/grading/levenshtein";
+
+// Três estados de feedback (ADR 0006):
+//  - perfect: resposta correta -> XP cheio.
+//  - close:   typo dentro da tolerância -> XP parcial.
+//  - incorrect: erro -> XP zero + resposta correta exibida.
+export type GradeState = "perfect" | "close" | "incorrect";
+
+export const XP_BY_STATE: Record<GradeState, number> = {
+  perfect: 10,
+  close: 5,
+  incorrect: 0,
+};
+
+// Normaliza para comparação tolerante: minúsculas, sem acento, espaços
+// colapsados, sem pontuação no fim.
+function normalize(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/[.,!?;:]+$/g, "");
+}
+
+export function gradeMultipleChoice(
+  selectedIndex: number,
+  solution: MultipleChoiceSolution,
+): GradeState {
+  return selectedIndex === solution.answerIndex ? "perfect" : "incorrect";
+}
+
+export function gradeFillBlank(
+  text: string,
+  solution: FillBlankSolution,
+): GradeState {
+  const candidates = [solution.answer, ...(solution.alternatives ?? [])].map(
+    normalize,
+  );
+  const guess = normalize(text);
+
+  if (candidates.includes(guess)) return "perfect";
+
+  // Tolerância proporcional ao tamanho do alvo (mín. 1 edição).
+  const closeEnough = candidates.some((candidate) => {
+    const tolerance = Math.max(1, Math.floor(candidate.length * 0.2));
+    return levenshtein(guess, candidate) <= tolerance;
+  });
+
+  return closeEnough ? "close" : "incorrect";
+}

@@ -1,4 +1,6 @@
 import { DialogueBlock } from "@/components/blocks/DialogueBlock";
+import { FillBlankExercise } from "@/components/blocks/FillBlankExercise";
+import { MultipleChoiceExercise } from "@/components/blocks/MultipleChoiceExercise";
 import { ReadingBlock } from "@/components/blocks/ReadingBlock";
 import { RichTextBlock } from "@/components/blocks/RichTextBlock";
 import { VocabularyBlock } from "@/components/blocks/VocabularyBlock";
@@ -59,9 +61,8 @@ export function BlockRenderer({ block }: { block: Block }) {
     }
     case "multiple_choice": {
       const parsed = multipleChoiceData.safeParse(block.data);
-      // Exercício interativo + correção chegam no passo seguinte.
       return parsed.success ? (
-        <Notice>Exercício (múltipla escolha) — em breve.</Notice>
+        <MultipleChoiceExercise blockId={block.id} data={parsed.data} />
       ) : (
         <Notice>Exercício inválido.</Notice>
       );
@@ -69,7 +70,7 @@ export function BlockRenderer({ block }: { block: Block }) {
     case "fill_blank": {
       const parsed = fillBlankData.safeParse(block.data);
       return parsed.success ? (
-        <Notice>Exercício (preencher lacuna) — em breve.</Notice>
+        <FillBlankExercise blockId={block.id} data={parsed.data} />
       ) : (
         <Notice>Exercício inválido.</Notice>
       );

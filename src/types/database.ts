@@ -189,6 +189,113 @@ export type Database = {
           },
         ]
       }
+      exercise_attempts: {
+        Row: {
+          attempts: number
+          block_id: string
+          course_id: string
+          created_at: string
+          id: string
+          part_id: string
+          solved: boolean
+          solved_first_try: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          block_id: string
+          course_id: string
+          created_at?: string
+          id?: string
+          part_id: string
+          solved?: boolean
+          solved_first_try?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          block_id?: string
+          course_id?: string
+          created_at?: string
+          id?: string
+          part_id?: string
+          solved?: boolean
+          solved_first_try?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_attempts_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercise_attempts_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercise_attempts_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
+            referencedRelation: "parts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercise_attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exercise_solutions: {
+        Row: {
+          block_id: string
+          course_id: string
+          created_at: string
+          solution: Json
+          updated_at: string
+        }
+        Insert: {
+          block_id: string
+          course_id: string
+          created_at?: string
+          solution: Json
+          updated_at?: string
+        }
+        Update: {
+          block_id?: string
+          course_id?: string
+          created_at?: string
+          solution?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_solutions_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: true
+            referencedRelation: "blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercise_solutions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lessons: {
         Row: {
           course_id: string

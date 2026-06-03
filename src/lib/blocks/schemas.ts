@@ -36,18 +36,31 @@ export const dialogueData = z.object({
     .min(1),
 });
 
-// --- Blocos de exercício (com gabarito) ---
+// --- Blocos de exercício (dados PÚBLICOS — sem gabarito) ---
+// O gabarito vive em exercise_solutions (fora do alcance do aluno).
 export const multipleChoiceData = z.object({
   question: z.string(),
   options: z.array(z.string()).min(2),
-  answerIndex: z.number().int().nonnegative(),
 });
 
 export const fillBlankData = z.object({
   prompt: z.string(),
-  // Resposta canônica. Aceita variações via Levenshtein na correção (ADR 0006).
-  answer: z.string(),
 });
+
+// --- Gabaritos (lidos só no servidor, via service_role) ---
+export const multipleChoiceSolution = z.object({
+  answerIndex: z.number().int().nonnegative(),
+});
+
+export const fillBlankSolution = z.object({
+  // Resposta canônica + variações aceitas. Typos toleráveis via Levenshtein
+  // na correção (ADR 0006).
+  answer: z.string().min(1),
+  alternatives: z.array(z.string()).optional(),
+});
+
+export type MultipleChoiceSolution = z.infer<typeof multipleChoiceSolution>;
+export type FillBlankSolution = z.infer<typeof fillBlankSolution>;
 
 export type RichTextData = z.infer<typeof richTextData>;
 export type VocabularyData = z.infer<typeof vocabularyData>;
