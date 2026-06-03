@@ -1,0 +1,174 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { BlockForm, type BlockInitial } from "@/components/admin/BlockForm";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { deleteBlock, moveBlock } from "@/lib/admin/actions";
+import { requireAdmin } from "@/lib/admin/guard";
+import {
+  dialogueData,
+  fillBlankData,
+  fillBlankSolution,
+  isExerciseType,
+  multipleChoiceData,
+  multipleChoiceSolution,
+  pronunciationData,
+  readingData,
+  richTextData,
+  vocabularyData,
+} from "@/lib/blocks/schemas";
+
+function toInitial(
+  type: string,
+  data: unknown,
+  solution: unknown,
+): BlockInitial {
+  switch (type) {
+    case "rich_text": {
+      const p = richTextData.safeParse(data);
+      return { text: p.success ? p.data.text : "" };
+    }
+    case "reading_tts": {
+      const p = readingData.safeParse(data);
+      return p.success ? { title: p.data.title ?? "", text: p.data.text } : {};
+    }
+    case "pronunciation": {
+      const p = pronunciationData.safeParse(data);
+      return p.success
+        ? { title: p.data.title ?? "", items: p.data.items.join("\n") }
+        : {};
+    }
+    case "vocabulary": {
+      const p = vocabularyData.safeParse(data);
+      return p.success
+        ? {
+            items: p.data.items
+              .map((it) => [it.term, it.translation, it.example].filter(Boolean).join(" | "))
+              .join("\n"),
+          }
+        : {};
+    }
+    case "dialogue_tts": {
+      const p = dialogueData.safeParse(data);
+      return p.success
+        ? { lines: p.data.lines.map((l) => `${l.speaker}: ${l.text}`).join("\n") }
+        : {};
+    }
+    case "multiple_choice": {
+      const p = multipleChoiceData.safeParse(data);
+      const s = multipleChoiceSolution.safeParse(solution);
+      return {
+        question: p.success ? p.data.question : "",
+        options: p.success ? p.data.options.join("\n") : "",
+        answerIndex: s.success ? String(s.data.answerIndex) : "0",
+      };
+    }
+    case "fill_blank": {
+      const p = fillBlankData.safeParse(data);
+      const s = fillBlankSolution.safeParse(solution);
+      return {
+        prompt: p.success ? p.data.prompt : "",
+        answer: s.success ? s.data.answer : "",
+        alternatives: s.success ? (s.data.alternatives ?? []).join(", ") : "",
+      };
+    }
+    default:
+      return {};
+  }
+}
+
+export default async function AdminPartPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const { supabase } = await requireAdmin();
+
+  const { data: part } = await supabase
+    .from("parts")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (!part) notFound();
+
+  const { data: blocks } = await supabase
+    .from("blocks")
+    .select("*")
+    .eq("part_id", id)
+    .order("position");
+
+  const exerciseIds = (blocks ?? [])
+    .filter((b) => isExerciseType(b.type))
+    .map((b) => b.id);
+
+  const solutions = new Map<string, unknown>();
+  if (exerciseIds.length > 0) {
+    const { data: sols } = await supabase
+      .from("exercise_solutions")
+      .select("block_id, solution")
+      .in("block_id", exerciseIds);
+    for (const s of sols ?? []) solutions.set(s.block_id, s.solution);
+  }
+
+  return (
+    <div className="flex flex-col gap-8">
+      <div className="flex items-center justify-between">
+        <Link
+          href={`/admin/licoes/${part.lesson_id}`}
+          className="text-sm text-fg-secondary hover:text-fg-primary"
+        >
+          ← Lição
+        </Link>
+        <Link
+          href={`/partes/${part.id}`}
+          className="text-sm text-fg-secondary hover:text-fg-primary"
+        >
+          Pré-visualizar parte
+        </Link>
+      </div>
+
+      <h1 className="text-2xl font-semibold text-fg-primary">{part.title}</h1>
+
+      <section className="flex flex-col gap-4">
+        {(blocks ?? []).map((block) => (
+          <Card key={block.id} padded className="flex flex-col gap-3">
+            <div className="flex items-center justify-end gap-1">
+              {(["up", "down"] as const).map((dir) => (
+                <form key={dir} action={moveBlock}>
+                  <input type="hidden" name="id" value={block.id} />
+                  <input type="hidden" name="part_id" value={part.id} />
+                  <input type="hidden" name="dir" value={dir} />
+                  <Button type="submit" variant="ghost" size="sm">
+                    {dir === "up" ? "Subir" : "Descer"}
+                  </Button>
+                </form>
+              ))}
+              <form action={deleteBlock}>
+                <input type="hidden" name="id" value={block.id} />
+                <input type="hidden" name="part_id" value={part.id} />
+                <Button type="submit" variant="ghost" size="sm">
+                  Excluir
+                </Button>
+              </form>
+            </div>
+            <BlockForm
+              mode="edit"
+              partId={part.id}
+              courseId={part.course_id}
+              blockId={block.id}
+              type={block.type}
+              initial={toInitial(block.type, block.data, solutions.get(block.id))}
+            />
+          </Card>
+        ))}
+      </section>
+
+      <Card padded className="flex flex-col gap-3">
+        <h2 className="text-base font-semibold text-fg-primary">Novo bloco</h2>
+        <BlockForm mode="create" partId={part.id} courseId={part.course_id} />
+      </Card>
+    </div>
+  );
+}

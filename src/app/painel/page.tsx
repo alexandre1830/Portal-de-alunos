@@ -59,6 +59,14 @@ export default async function PainelPage() {
           Portal de alunos
         </span>
         <div className="flex items-center gap-2">
+          {profile?.role === "admin" && (
+            <Link
+              href="/admin"
+              className="text-sm font-medium text-fg-secondary hover:text-fg-primary"
+            >
+              Admin
+            </Link>
+          )}
           <ThemeToggle />
           <form action={signOut}>
             <Button type="submit" variant="ghost" size="sm">
