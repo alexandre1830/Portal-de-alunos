@@ -60,6 +60,22 @@ export default async function AdminLessonPage({
         </form>
       </Card>
 
+      <Card padded className="flex flex-col gap-2">
+        <h2 className="text-base font-semibold text-fg-primary">
+          Importar PDF
+        </h2>
+        <p className="text-sm text-fg-secondary">
+          Suba o PDF da lição e a Claude API gera um rascunho com partes e
+          blocos. Você revisa antes de gravar.
+        </p>
+        <Link
+          href={`/admin/licoes/${lesson.id}/importar`}
+          className="text-sm font-medium text-fg-primary underline self-start"
+        >
+          Abrir importação →
+        </Link>
+      </Card>
+
       <section className="flex flex-col gap-4">
         <h2 className="text-base font-semibold text-fg-primary">Partes</h2>
 
