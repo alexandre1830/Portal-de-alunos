@@ -75,6 +75,12 @@ export default async function PainelPage() {
               Admin
             </Link>
           )}
+          <Link
+            href="/painel/senha"
+            className="text-sm text-fg-secondary hover:text-fg-primary"
+          >
+            Senha
+          </Link>
           <ThemeToggle />
           <form action={signOut}>
             <Button type="submit" variant="ghost" size="sm">

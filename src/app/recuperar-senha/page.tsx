@@ -6,21 +6,23 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
-import { signIn } from "@/lib/auth/actions";
+import { requestPasswordReset } from "@/lib/auth/password";
 import { initialAuthState } from "@/lib/auth/types";
 
-export default function LoginPage() {
+export default function RecuperarSenhaPage() {
   const [state, formAction, isPending] = useActionState(
-    signIn,
+    requestPasswordReset,
     initialAuthState,
   );
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-6 py-12">
       <div className="flex flex-col gap-2 text-center">
-        <h1 className="text-2xl font-semibold text-fg-primary">Entrar</h1>
+        <h1 className="text-2xl font-semibold text-fg-primary">
+          Recuperar senha
+        </h1>
         <p className="text-sm text-fg-secondary">
-          Acesse o portal com seu e-mail e senha.
+          Digite seu e-mail e enviaremos um link para você redefinir a senha.
         </p>
       </div>
 
@@ -34,37 +36,28 @@ export default function LoginPage() {
             required
             placeholder="voce@exemplo.com"
           />
-          <Input
-            label="Senha"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            placeholder="••••••••"
-          />
 
           {state.error && (
             <p role="alert" className="text-sm text-danger">
               {state.error}
             </p>
           )}
+          {state.notice && (
+            <p role="status" className="text-sm text-success">
+              {state.notice}
+            </p>
+          )}
 
           <Button type="submit" loading={isPending} className="w-full">
-            Entrar
+            Enviar link de redefinição
           </Button>
-          <Link
-            href="/recuperar-senha"
-            className="self-center text-xs text-fg-secondary hover:text-fg-primary"
-          >
-            Esqueci a senha
-          </Link>
         </form>
       </Card>
 
       <p className="text-center text-sm text-fg-secondary">
-        Não tem conta?{" "}
-        <Link href="/cadastro" className="font-medium text-fg-primary underline">
-          Cadastre-se
+        Lembrou a senha?{" "}
+        <Link href="/login" className="font-medium text-fg-primary underline">
+          Entrar
         </Link>
       </p>
     </main>
