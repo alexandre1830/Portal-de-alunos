@@ -5,6 +5,7 @@ import { BookmarkIcon } from "@/components/icons/BookmarkIcon";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { toggleReviewMark } from "@/lib/review/actions";
+import { countDueItems } from "@/lib/srs/queries";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function RevisarPage() {
@@ -15,13 +16,16 @@ export default async function RevisarPage() {
   if (!user) redirect("/login");
 
   // RLS já filtra para o usuário; trazemos parte + lição + curso aninhados.
-  const { data: marks } = await supabase
-    .from("review_marks")
-    .select(
-      "id, created_at, part:parts(id, title, kind, lesson:lessons(title)), course:courses(id, slug, title)",
-    )
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+  const [{ data: marks }, dueCount] = await Promise.all([
+    supabase
+      .from("review_marks")
+      .select(
+        "id, created_at, part:parts(id, title, kind, lesson:lessons(title)), course:courses(id, slug, title)",
+      )
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false }),
+    countDueItems(supabase, user.id),
+  ]);
 
   const items = (marks ?? []).filter((m) => m.part && m.course);
 
@@ -38,10 +42,42 @@ export default async function RevisarPage() {
           Para revisar
         </h1>
         <p className="text-sm text-fg-secondary">
-          Suas marcações de partes que você quer revisitar depois.
+          Revisão espaçada automática + suas marcações manuais.
         </p>
       </div>
 
+      {/* SRS — revisão espaçada automática */}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-base font-semibold text-fg-primary">
+          Revisão espaçada
+        </h2>
+        <Card padded className="flex items-center justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <span className="text-sm text-fg-primary">
+              {dueCount === 0
+                ? "Nenhum item pronto agora."
+                : dueCount === 1
+                  ? "1 item pronto para revisar"
+                  : `${dueCount} itens prontos para revisar`}
+            </span>
+            <span className="text-xs text-fg-tertiary">
+              Geramos a fila a partir dos exercícios que você errou e do
+              vocabulário das partes concluídas.
+            </span>
+          </div>
+          {dueCount > 0 && (
+            <Link href="/painel/revisar/sessao">
+              <Button size="sm">Começar revisão</Button>
+            </Link>
+          )}
+        </Card>
+      </section>
+
+      {/* Marcações manuais */}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-base font-semibold text-fg-primary">
+          Marcações manuais
+        </h2>
       {items.length === 0 ? (
         <Card padded>
           <p className="text-sm text-fg-secondary">
@@ -92,6 +128,7 @@ export default async function RevisarPage() {
           })}
         </ul>
       )}
+      </section>
     </main>
   );
 }

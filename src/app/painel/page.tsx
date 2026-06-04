@@ -5,6 +5,7 @@ import { FlameIcon } from "@/components/icons/FlameIcon";
 import { GearIcon } from "@/components/icons/GearIcon";
 import { Card } from "@/components/ui/Card";
 import { getStudentDashboard } from "@/lib/dashboard/queries";
+import { countDueItems } from "@/lib/srs/queries";
 import { createClient } from "@/lib/supabase/server";
 import type { CefrLevel, CourseLanguage } from "@/types/content";
 import type { UserRole } from "@/types/user";
@@ -37,13 +38,14 @@ export default async function PainelPage() {
     redirect("/login");
   }
 
-  const [{ data: profile }, dashboard] = await Promise.all([
+  const [{ data: profile }, dashboard, srsDue] = await Promise.all([
     supabase
       .from("profiles")
       .select("full_name, email, role")
       .eq("id", user.id)
       .single(),
     getStudentDashboard(supabase, user.id),
+    countDueItems(supabase, user.id),
   ]);
 
   const xp = dashboard.gamification?.total_xp ?? 0;
@@ -127,6 +129,31 @@ export default async function PainelPage() {
           Conquistas ({dashboard.achievementsCount}) →
         </Link>
       </div>
+
+      {/* Revisão espaçada — só aparece quando há itens prontos */}
+      {srsDue > 0 && (
+        <Link href="/painel/revisar/sessao" className="block">
+          <Card
+            padded
+            interactive
+            className="flex items-center justify-between gap-4"
+          >
+            <div className="flex flex-col gap-1">
+              <span className="font-medium text-fg-primary">
+                {srsDue === 1
+                  ? "1 revisão pronta"
+                  : `${srsDue} revisões prontas`}
+              </span>
+              <span className="text-xs text-fg-tertiary">
+                Comece sua sessão de revisão espaçada.
+              </span>
+            </div>
+            <span className="shrink-0 text-sm text-fg-secondary">
+              Começar →
+            </span>
+          </Card>
+        </Link>
+      )}
 
       {/* Cursos matriculados */}
       <section className="flex flex-col gap-3">

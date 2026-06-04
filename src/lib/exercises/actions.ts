@@ -6,10 +6,13 @@ import { z } from "zod";
 import { awardAchievements } from "@/lib/achievements/award";
 import {
   EXERCISE_TYPES,
+  fillBlankData,
   fillBlankSolution,
   multipleChoiceData,
   multipleChoiceSolution,
+  vocabularyData,
 } from "@/lib/blocks/schemas";
+import { upsertExerciseSrsItem, upsertVocabSrsItems } from "@/lib/srs/upsert";
 import {
   gradeFillBlank,
   gradeMultipleChoice,
@@ -85,6 +88,10 @@ export async function submitExercise(raw: {
   // --- Correção (server-side; o gabarito nunca sai daqui) ---
   let state: GradeState;
   let correctAnswer: string | null = null;
+  // Para alimentar o SRS quando o aluno erra/quase: precisamos do enunciado
+  // e da resposta canônica de cada tipo.
+  let srsQuestion = "";
+  let srsAnswer = "";
 
   if (block.type === "multiple_choice") {
     const sol = multipleChoiceSolution.safeParse(solutionRow.solution);
@@ -92,16 +99,20 @@ export async function submitExercise(raw: {
     if (!sol.success || !pub.success) return fail("Exercício mal configurado.");
     if (typeof selectedIndex !== "number") return fail("Selecione uma opção.");
     state = gradeMultipleChoice(selectedIndex, sol.data);
-    if (state === "incorrect") {
-      correctAnswer = pub.data.options[sol.data.answerIndex] ?? null;
-    }
+    const canonical = pub.data.options[sol.data.answerIndex] ?? "";
+    srsQuestion = pub.data.question;
+    srsAnswer = canonical;
+    if (state === "incorrect") correctAnswer = canonical;
   } else if (block.type === "fill_blank") {
     const sol = fillBlankSolution.safeParse(solutionRow.solution);
-    if (!sol.success) return fail("Exercício mal configurado.");
+    const pub = fillBlankData.safeParse(block.data);
+    if (!sol.success || !pub.success) return fail("Exercício mal configurado.");
     if (typeof text !== "string" || text.trim().length === 0) {
       return fail("Digite sua resposta.");
     }
     state = gradeFillBlank(text, sol.data);
+    srsQuestion = pub.data.prompt;
+    srsAnswer = sol.data.answer;
     if (state === "incorrect") correctAnswer = sol.data.answer;
   } else {
     return fail("Tipo de exercício não suportado.");
@@ -146,7 +157,29 @@ export async function submitExercise(raw: {
     });
   }
 
-  await recomputePartProgress(admin, user.id, block.part_id, block.course_id);
+  // SRS: erros e "quase lá" entram (ou voltam) para a fila de revisão.
+  if (state !== "perfect" && srsQuestion && srsAnswer) {
+    await upsertExerciseSrsItem(admin, {
+      userId: user.id,
+      courseId: block.course_id,
+      blockId: block.id,
+      kind: block.type as "multiple_choice" | "fill_blank",
+      question: srsQuestion,
+      answer: srsAnswer,
+    });
+  }
+
+  const justCompleted = await recomputePartProgress(
+    admin,
+    user.id,
+    block.part_id,
+    block.course_id,
+  );
+  // SRS: ao concluir a parte pela primeira vez, semeia itens de vocabulário.
+  if (justCompleted) {
+    await seedVocabSrsForPart(admin, user.id, block.part_id, block.course_id);
+  }
+
   await awardAchievements(admin, {
     userId: user.id,
     courseId: block.course_id,
@@ -156,14 +189,42 @@ export async function submitExercise(raw: {
   return { ok: true, state, correctAnswer, xpAwarded, error: null };
 }
 
-// Recalcula o progresso da parte: completa quando todos os exercícios foram
-// resolvidos; estrelas pela proporção de acertos de primeira.
-async function recomputePartProgress(
+// Para cada bloco de vocabulário da parte concluída, cria itens SRS para
+// todos os termos. Idempotente: termos já cadastrados são preservados.
+async function seedVocabSrsForPart(
   admin: AdminClient,
   userId: string,
   partId: string,
   courseId: string,
 ): Promise<void> {
+  const { data: vocabBlocks } = await admin
+    .from("blocks")
+    .select("id, data")
+    .eq("part_id", partId)
+    .eq("type", "vocabulary");
+
+  for (const b of vocabBlocks ?? []) {
+    const parsed = vocabularyData.safeParse(b.data);
+    if (!parsed.success) continue;
+    await upsertVocabSrsItems(admin, {
+      userId,
+      courseId,
+      blockId: b.id,
+      items: parsed.data.items,
+    });
+  }
+}
+
+// Recalcula o progresso da parte: completa quando todos os exercícios foram
+// resolvidos; estrelas pela proporção de acertos de primeira. Devolve true
+// quando esta chamada transicionou a parte de "não-completa" para "completa"
+// — usado para disparar side-effects (semear SRS de vocab) só uma vez.
+async function recomputePartProgress(
+  admin: AdminClient,
+  userId: string,
+  partId: string,
+  courseId: string,
+): Promise<boolean> {
   const { data: exerciseBlocks } = await admin
     .from("blocks")
     .select("id")
@@ -171,7 +232,7 @@ async function recomputePartProgress(
     .in("type", EXERCISE_TYPES);
 
   const total = exerciseBlocks?.length ?? 0;
-  if (total === 0) return;
+  if (total === 0) return false;
 
   const { data: attempts } = await admin
     .from("exercise_attempts")
@@ -186,6 +247,14 @@ async function recomputePartProgress(
   const stars = allSolved ? (ratio === 1 ? 3 : ratio >= 0.5 ? 2 : 1) : 0;
   const score = Math.round((solved / total) * 100);
 
+  const { data: previous } = await admin
+    .from("part_progress")
+    .select("status")
+    .eq("user_id", userId)
+    .eq("part_id", partId)
+    .maybeSingle();
+  const wasCompleted = previous?.status === "completed";
+
   await admin.from("part_progress").upsert(
     {
       user_id: userId,
@@ -198,4 +267,6 @@ async function recomputePartProgress(
     },
     { onConflict: "user_id,part_id" },
   );
+
+  return allSolved && !wasCompleted;
 }

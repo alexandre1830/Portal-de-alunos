@@ -564,6 +564,75 @@ export type Database = {
           },
         ]
       }
+      srs_items: {
+        Row: {
+          course_id: string
+          created_at: string
+          ease_factor: number
+          id: string
+          interval_days: number
+          last_quality: number | null
+          last_reviewed_at: string | null
+          next_review_at: string
+          payload: Json
+          repetitions: number
+          source_id: string
+          source_key: string
+          source_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          ease_factor?: number
+          id?: string
+          interval_days?: number
+          last_quality?: number | null
+          last_reviewed_at?: string | null
+          next_review_at?: string
+          payload: Json
+          repetitions?: number
+          source_id: string
+          source_key?: string
+          source_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          ease_factor?: number
+          id?: string
+          interval_days?: number
+          last_quality?: number | null
+          last_reviewed_at?: string | null
+          next_review_at?: string
+          payload?: Json
+          repetitions?: number
+          source_id?: string
+          source_key?: string
+          source_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "srs_items_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "srs_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_achievements: {
         Row: {
           achievement_id: string
