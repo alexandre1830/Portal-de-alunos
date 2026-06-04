@@ -9,6 +9,7 @@ type Client = SupabaseClient<Database>;
 export interface StudentDashboard {
   gamification: UserGamification | null;
   courses: Course[];
+  achievementsCount: number;
 }
 
 // Busca os dados do dashboard do aluno (gamificação + cursos matriculados).
@@ -17,18 +18,23 @@ export async function getStudentDashboard(
   supabase: Client,
   userId: string,
 ): Promise<StudentDashboard> {
-  const [gamificationResult, enrollmentsResult] = await Promise.all([
-    supabase
-      .from("user_gamification")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle(),
-    supabase
-      .from("enrollments")
-      .select("course:courses(*)")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: true }),
-  ]);
+  const [gamificationResult, enrollmentsResult, achievementsResult] =
+    await Promise.all([
+      supabase
+        .from("user_gamification")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle(),
+      supabase
+        .from("enrollments")
+        .select("course:courses(*)")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("user_achievements")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId),
+    ]);
 
   const courses = (enrollmentsResult.data ?? [])
     .map((row) => row.course)
@@ -37,5 +43,6 @@ export async function getStudentDashboard(
   return {
     gamification: gamificationResult.data,
     courses,
+    achievementsCount: achievementsResult.count ?? 0,
   };
 }

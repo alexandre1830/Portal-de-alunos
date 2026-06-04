@@ -10,7 +10,8 @@
     "type-check": "tsc --noEmit",
     "seed": "node scripts/seed.mjs",
     "seed:admin": "node scripts/seed-admin.mjs",
-    "seed:professor": "node scripts/seed-professor.mjs"
+    "seed:professor": "node scripts/seed-professor.mjs",
+    "seed:achievements": "node scripts/seed-achievements.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

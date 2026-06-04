@@ -3,6 +3,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
+import { awardAchievements } from "@/lib/achievements/award";
 import {
   EXERCISE_TYPES,
   fillBlankSolution,
@@ -146,6 +147,11 @@ export async function submitExercise(raw: {
   }
 
   await recomputePartProgress(admin, user.id, block.part_id, block.course_id);
+  await awardAchievements(admin, {
+    userId: user.id,
+    courseId: block.course_id,
+    partId: block.part_id,
+  });
 
   return { ok: true, state, correctAnswer, xpAwarded, error: null };
 }

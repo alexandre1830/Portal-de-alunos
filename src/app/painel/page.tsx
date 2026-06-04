@@ -119,12 +119,18 @@ export default async function PainelPage() {
         </Card>
       </section>
 
-      <div className="-mt-4 flex flex-wrap gap-2 text-sm">
+      <div className="-mt-4 flex flex-wrap gap-4 text-sm">
         <Link
           href="/painel/revisar"
           className="text-fg-secondary hover:text-fg-primary"
         >
           Para revisar →
+        </Link>
+        <Link
+          href="/painel/conquistas"
+          className="text-fg-secondary hover:text-fg-primary"
+        >
+          Conquistas ({dashboard.achievementsCount}) →
         </Link>
       </div>
 
