@@ -87,6 +87,7 @@ export async function createCourse(formData: FormData) {
 export async function updateCourse(formData: FormData) {
   const { supabase } = await requireAdmin();
   const id = str(formData, "id");
+  const teacherId = str(formData, "teacher_id");
   await supabase
     .from("courses")
     .update({
@@ -96,6 +97,7 @@ export async function updateCourse(formData: FormData) {
       language: str(formData, "language") === "es" ? "es" : "en",
       level: (str(formData, "level") || "a1") as never,
       is_published: formData.get("is_published") === "on",
+      teacher_id: teacherId || null,
     })
     .eq("id", id);
   revalidatePath(`/admin/cursos/${id}/config`);

@@ -9,7 +9,8 @@
     "lint": "eslint",
     "type-check": "tsc --noEmit",
     "seed": "node scripts/seed.mjs",
-    "seed:admin": "node scripts/seed-admin.mjs"
+    "seed:admin": "node scripts/seed-admin.mjs",
+    "seed:professor": "node scripts/seed-professor.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
