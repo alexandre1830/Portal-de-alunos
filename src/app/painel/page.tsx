@@ -2,10 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { FlameIcon } from "@/components/icons/FlameIcon";
-import { Button } from "@/components/ui/Button";
+import { GearIcon } from "@/components/icons/GearIcon";
 import { Card } from "@/components/ui/Card";
-import { ThemeToggle } from "@/components/shared/ThemeToggle";
-import { signOut } from "@/lib/auth/actions";
 import { getStudentDashboard } from "@/lib/dashboard/queries";
 import { createClient } from "@/lib/supabase/server";
 import type { CefrLevel, CourseLanguage } from "@/types/content";
@@ -58,7 +56,7 @@ export default async function PainelPage() {
         <span className="text-sm font-medium text-fg-secondary">
           Portal de alunos
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {(profile?.role === "teacher" || profile?.role === "admin") && (
             <Link
               href="/professor"
@@ -77,22 +75,12 @@ export default async function PainelPage() {
           )}
           <Link
             href="/painel/configuracoes"
-            className="text-sm text-fg-secondary hover:text-fg-primary"
+            aria-label="Configurações"
+            title="Configurações"
+            className="rounded p-1.5 text-fg-secondary transition-colors hover:bg-bg-secondary hover:text-fg-primary"
           >
-            Config
+            <GearIcon className="h-5 w-5" />
           </Link>
-          <Link
-            href="/painel/senha"
-            className="text-sm text-fg-secondary hover:text-fg-primary"
-          >
-            Senha
-          </Link>
-          <ThemeToggle />
-          <form action={signOut}>
-            <Button type="submit" variant="ghost" size="sm">
-              Sair
-            </Button>
-          </form>
         </div>
       </header>
 

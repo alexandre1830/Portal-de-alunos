@@ -12,8 +12,8 @@ export interface VoiceOption {
   example: string; // frase tocada no botão de "ouvir"
 }
 
-const EXAMPLE_EN = "Hello. How are you doing today?";
-const EXAMPLE_ES = "Hola, como estás hoy?";
+const EXAMPLE_EN = "Hello. How are you doing today? I'm studying english at Mr. Dave.";
+const EXAMPLE_ES = "Hola, como estás hoy? Estoy estudiando español en el portal de Mr. Dave.";
 
 // Chirp 3 HD usa nomes de corpos celestes; Aoede e Charon estão disponíveis
 // em todos os locales que o portal usa.
