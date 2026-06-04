@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { createStudent } from "@/lib/admin/actions";
 import { initialCreateStudentState } from "@/lib/admin/types";
 
@@ -35,12 +36,12 @@ export function CreateStudentForm() {
           className={inputCls}
         />
       </div>
-      <input
+      <PasswordInput
         name="password"
-        type="text"
         placeholder="Senha (opcional — geramos se vazio)"
         autoComplete="off"
-        className={inputCls}
+        minLength={8}
+        showStrength
       />
       <Button
         type="submit"

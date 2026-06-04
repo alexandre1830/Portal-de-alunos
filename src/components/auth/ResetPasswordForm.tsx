@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
 
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { updatePassword } from "@/lib/auth/password";
 import { initialAuthState } from "@/lib/auth/types";
 
@@ -27,19 +27,18 @@ export function ResetPasswordForm({ redirectTo }: { redirectTo?: string }) {
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
-      <Input
+      <PasswordInput
         label="Nova senha"
         name="password"
-        type="password"
         autoComplete="new-password"
         required
         minLength={8}
         placeholder="Ao menos 8 caracteres"
+        showStrength
       />
-      <Input
+      <PasswordInput
         label="Confirmar nova senha"
         name="confirm"
-        type="password"
         autoComplete="new-password"
         required
         minLength={8}

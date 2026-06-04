@@ -6,6 +6,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { signUp } from "@/lib/auth/actions";
 import { initialAuthState } from "@/lib/auth/types";
 
@@ -42,15 +43,15 @@ export default function CadastroPage() {
             required
             placeholder="voce@exemplo.com"
           />
-          <Input
+          <PasswordInput
             label="Senha"
             name="password"
-            type="password"
             autoComplete="new-password"
             required
             minLength={8}
             placeholder="Ao menos 8 caracteres"
             helperText="A senha precisa ter ao menos 8 caracteres."
+            showStrength
           />
 
           {state.error && (

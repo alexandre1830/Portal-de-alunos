@@ -6,6 +6,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { signIn } from "@/lib/auth/actions";
 import { initialAuthState } from "@/lib/auth/types";
 
@@ -34,10 +35,9 @@ export default function LoginPage() {
             required
             placeholder="voce@exemplo.com"
           />
-          <Input
+          <PasswordInput
             label="Senha"
             name="password"
-            type="password"
             autoComplete="current-password"
             required
             placeholder="••••••••"
