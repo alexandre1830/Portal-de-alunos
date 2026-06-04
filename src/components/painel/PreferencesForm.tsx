@@ -23,13 +23,19 @@ interface Props {
   initialVoiceEn: string;
   initialVoiceEs: string;
   initialRate: number;
+  // Idiomas das matrículas ativas do aluno. A seção de cada idioma só aparece
+  // quando ele tem ao menos um curso naquele idioma.
+  availableLanguages: ("en" | "es")[];
 }
 
 export function PreferencesForm({
   initialVoiceEn,
   initialVoiceEs,
   initialRate,
+  availableLanguages,
 }: Props) {
+  const showEn = availableLanguages.includes("en");
+  const showEs = availableLanguages.includes("es");
   const [voiceEn, setVoiceEn] = useState(initialVoiceEn);
   const [voiceEs, setVoiceEs] = useState(initialVoiceEs);
   const [rate, setRate] = useState(
@@ -46,21 +52,34 @@ export function PreferencesForm({
       <input type="hidden" name="tts_voice_es" value={voiceEs} />
       <input type="hidden" name="tts_rate" value={rate.toFixed(2)} />
 
-      <VoiceSection
-        title="Voz para textos em inglês"
-        voices={VOICES_BY_LANG.en}
-        selected={voiceEn}
-        onSelect={setVoiceEn}
-        rate={rate}
-      />
+      {showEn && (
+        <VoiceSection
+          title="Voz para textos em inglês"
+          voices={VOICES_BY_LANG.en}
+          selected={voiceEn}
+          onSelect={setVoiceEn}
+          rate={rate}
+        />
+      )}
 
-      <VoiceSection
-        title="Voz para textos em espanhol"
-        voices={VOICES_BY_LANG.es}
-        selected={voiceEs}
-        onSelect={setVoiceEs}
-        rate={rate}
-      />
+      {showEs && (
+        <VoiceSection
+          title="Voz para textos em espanhol"
+          voices={VOICES_BY_LANG.es}
+          selected={voiceEs}
+          onSelect={setVoiceEs}
+          rate={rate}
+        />
+      )}
+
+      {!showEn && !showEs && (
+        <Card padded>
+          <p className="text-sm text-fg-secondary">
+            Você ainda não está matriculado em nenhum curso. Quando estiver, as
+            opções de voz aparecem aqui de acordo com o idioma do curso.
+          </p>
+        </Card>
+      )}
 
       <Card padded className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between">

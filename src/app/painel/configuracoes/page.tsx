@@ -12,6 +12,20 @@ export default async function ConfiguracoesPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Idiomas das matrículas ativas → quais seções de voz mostrar.
+  const { data: enrollments } = await supabase
+    .from("enrollments")
+    .select("course:courses(language)")
+    .eq("user_id", user.id)
+    .eq("status", "active");
+
+  const enrolledLanguagesSet = new Set<"en" | "es">();
+  for (const row of enrollments ?? []) {
+    const lang = row.course?.language;
+    if (lang === "en" || lang === "es") enrolledLanguagesSet.add(lang);
+  }
+  const enrolledLanguages = Array.from(enrolledLanguagesSet);
+
   const prefs = await getUserPreferences(supabase, user.id);
 
   return (
@@ -37,6 +51,7 @@ export default async function ConfiguracoesPage() {
         initialVoiceEn={prefs.ttsVoiceEn}
         initialVoiceEs={prefs.ttsVoiceEs}
         initialRate={prefs.ttsRate}
+        availableLanguages={enrolledLanguages}
       />
     </main>
   );

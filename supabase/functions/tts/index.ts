@@ -2,14 +2,15 @@
 // Gera o áudio de um trecho (texto ou diálogo) via Google Cloud Text-to-Speech,
 // salva no Storage (bucket tts-audio) e serve do cache nas próximas chamadas.
 //
-// Para alunos iniciantes:
-//  - speakingRate lento (RATE_DEFAULT) — A1 precisa de áudio devagar.
-//  - diálogo: cada personagem ganha uma voz com o gênero inferido do nome, e
-//    vozes distintas mesmo entre personagens do mesmo gênero. Voice/rate
-//    enviados pelo cliente são IGNORADOS em diálogos.
-//  - texto único / pronúncia: aceita override `voice` e `rate` (preferências
+// Vozes: Chirp 3 HD (mais natural que Neural2). Mesmo nome funciona em todos
+// os locales suportados (en-US, en-GB, en-AU, en-IN, es-US, es-ES).
+//
+//  - Diálogo: cada personagem ganha uma voz com o gênero inferido do nome;
+//    vozes distintas entre personagens do mesmo gênero. Voice/rate enviados
+//    pelo cliente são IGNORADOS em diálogos.
+//  - Texto único / pronúncia: aceita override `voice` e `rate` (preferências
 //    do aluno). Validados contra whitelist; senão usa default por idioma.
-//  - limpeza do texto: setas viram pausa, emojis/símbolos são removidos.
+//  - Limpeza do texto: setas viram pausa, emojis/símbolos são removidos.
 //
 // Auth: verify_jwt = true. Google via API key (secret GOOGLE_TTS_API_KEY).
 // IMPORTANTE: o catálogo aqui deve espelhar src/lib/tts/voices.ts.
@@ -19,54 +20,68 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const BUCKET = "tts-audio";
 const MAX_TEXT = 8000;
-const RATE_DEFAULT = 0.8;
-const RATE_MIN = 0.6;
-const RATE_MAX = 1.2;
+const RATE_DEFAULT = 1.0;
+const RATE_MIN = 0.5;
+const RATE_MAX = 1.5;
 
-// Catálogo de vozes aprovadas. Quando o aluno envia `voice`, validamos por id
-// e pelo prefixo do languageCode (en-... só lê inglês, etc).
+// Catálogo de vozes Chirp 3 HD aprovadas. Quando o aluno envia `voice`,
+// validamos por id e pelo prefixo do languageCode.
 const ALLOWED_VOICES: Record<string, string> = {
-  // Inglês — preferências do aluno
-  "en-US-Neural2-F": "en-US",
-  "en-US-Neural2-D": "en-US",
-  "en-GB-Neural2-A": "en-GB",
-  "en-GB-Neural2-B": "en-GB",
-  "en-AU-Neural2-A": "en-AU",
-  "en-AU-Neural2-B": "en-AU",
-  // Espanhol — preferências do aluno
-  "es-US-Neural2-A": "es-US",
-  "es-US-Neural2-B": "es-US",
-  "es-ES-Neural2-A": "es-ES",
-  "es-ES-Neural2-B": "es-ES",
-  // Vozes do pool de diálogo (mantidas para compat com o cache antigo)
-  "en-US-Neural2-C": "en-US",
-  "en-US-Neural2-G": "en-US",
-  "en-US-Neural2-H": "en-US",
-  "en-US-Neural2-A": "en-US",
-  "en-US-Neural2-I": "en-US",
-  "en-US-Neural2-J": "en-US",
-  "es-US-Neural2-C": "es-US",
+  // Inglês — preferências do aluno (4 sotaques × 2 gêneros)
+  "en-US-Chirp3-HD-Aoede": "en-US",
+  "en-US-Chirp3-HD-Charon": "en-US",
+  "en-GB-Chirp3-HD-Aoede": "en-GB",
+  "en-GB-Chirp3-HD-Charon": "en-GB",
+  "en-AU-Chirp3-HD-Aoede": "en-AU",
+  "en-AU-Chirp3-HD-Charon": "en-AU",
+  "en-IN-Chirp3-HD-Aoede": "en-IN",
+  "en-IN-Chirp3-HD-Charon": "en-IN",
+  // Espanhol — preferências do aluno (2 sotaques × 2 gêneros)
+  "es-US-Chirp3-HD-Aoede": "es-US",
+  "es-US-Chirp3-HD-Charon": "es-US",
+  "es-ES-Chirp3-HD-Aoede": "es-ES",
+  "es-ES-Chirp3-HD-Charon": "es-ES",
+  // Vozes adicionais usadas no pool de diálogo (variedade entre personagens
+  // do mesmo gênero).
+  "en-US-Chirp3-HD-Kore": "en-US",
+  "en-US-Chirp3-HD-Leda": "en-US",
+  "en-US-Chirp3-HD-Zephyr": "en-US",
+  "en-US-Chirp3-HD-Fenrir": "en-US",
+  "en-US-Chirp3-HD-Orus": "en-US",
+  "en-US-Chirp3-HD-Puck": "en-US",
+  "es-US-Chirp3-HD-Kore": "es-US",
+  "es-US-Chirp3-HD-Fenrir": "es-US",
 };
 
 const DEFAULT_VOICE_FOR_LANG: Record<string, string> = {
-  en: "en-US-Neural2-F",
-  es: "es-US-Neural2-A",
+  en: "en-US-Chirp3-HD-Aoede",
+  es: "es-US-Chirp3-HD-Aoede",
 };
 
-// Pool de vozes Neural2 por idioma e gênero para diálogos.
+// Pool de vozes Chirp 3 HD por idioma e gênero para diálogos.
 const DIALOG_VOICES: Record<
   string,
   { languageCode: string; female: string[]; male: string[] }
 > = {
   en: {
     languageCode: "en-US",
-    female: ["en-US-Neural2-C", "en-US-Neural2-F", "en-US-Neural2-G", "en-US-Neural2-H"],
-    male: ["en-US-Neural2-D", "en-US-Neural2-A", "en-US-Neural2-I", "en-US-Neural2-J"],
+    female: [
+      "en-US-Chirp3-HD-Aoede",
+      "en-US-Chirp3-HD-Kore",
+      "en-US-Chirp3-HD-Leda",
+      "en-US-Chirp3-HD-Zephyr",
+    ],
+    male: [
+      "en-US-Chirp3-HD-Charon",
+      "en-US-Chirp3-HD-Fenrir",
+      "en-US-Chirp3-HD-Orus",
+      "en-US-Chirp3-HD-Puck",
+    ],
   },
   es: {
     languageCode: "es-US",
-    female: ["es-US-Neural2-A"],
-    male: ["es-US-Neural2-B", "es-US-Neural2-C"],
+    female: ["es-US-Chirp3-HD-Aoede", "es-US-Chirp3-HD-Kore"],
+    male: ["es-US-Chirp3-HD-Charon", "es-US-Chirp3-HD-Fenrir"],
   },
 };
 
@@ -125,8 +140,6 @@ function clampRate(input: unknown): number {
   return n;
 }
 
-// Valida a voz solicitada pelo cliente: precisa estar no catálogo e seu
-// languageCode precisa começar pelo idioma do request (en-* p/ "en").
 function pickVoice(requested: unknown, lang: string): string {
   const fallback = DEFAULT_VOICE_FOR_LANG[lang] ?? DEFAULT_VOICE_FOR_LANG.en;
   if (typeof requested !== "string") return fallback;
@@ -191,8 +204,6 @@ Deno.serve(async (req) => {
   const segments: Segment[] = [];
 
   if (Array.isArray(body.lines)) {
-    // Diálogo: voz por personagem, gênero inferido, rate padrão. IGNORA
-    // voice/rate enviados pelo cliente.
     const pool = DIALOG_VOICES[lang] ?? DIALOG_VOICES.en;
     const { languageCode, female, male } = pool;
     const speakerVoice = new Map<string, string>();
@@ -224,7 +235,6 @@ Deno.serve(async (req) => {
       });
     }
   } else {
-    // Texto único / pronúncia: usa override do cliente quando válido.
     const text = clean(typeof body.text === "string" ? body.text : "");
     if (text) {
       const voice = pickVoice(body.voice, lang);
@@ -238,7 +248,6 @@ Deno.serve(async (req) => {
   const totalLen = segments.reduce((n, s) => n + s.text.length, 0);
   if (totalLen > MAX_TEXT) return json({ error: "Texto muito longo" }, 400);
 
-  // Chave de cache: depende de idioma, vozes, rates e textos limpos.
   const spec = JSON.stringify({ lang, segments });
   const path = `${await sha256Hex(spec)}.mp3`;
 
