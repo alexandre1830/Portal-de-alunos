@@ -5,10 +5,8 @@ import { useActionState, useState } from "react";
 import { SpeakButton } from "@/components/blocks/SpeakButton";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import {
-  initialPreferencesState,
-  savePreferences,
-} from "@/lib/preferences/actions";
+import { savePreferences } from "@/lib/preferences/actions";
+import { initialPreferencesState } from "@/lib/preferences/types";
 import {
   DEFAULT_RATE,
   MAX_RATE,

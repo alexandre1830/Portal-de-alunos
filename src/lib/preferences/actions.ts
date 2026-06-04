@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import type { PreferencesState } from "@/lib/preferences/types";
 import {
   DEFAULT_RATE,
   DEFAULT_VOICE,
@@ -18,16 +19,6 @@ const schema = z.object({
   tts_voice_es: z.string().refine(isValidVoiceId, "Voz de espanhol inválida."),
   tts_rate: z.coerce.number().min(MIN_RATE).max(MAX_RATE),
 });
-
-export interface PreferencesState {
-  error: string | null;
-  notice: string | null;
-}
-
-export const initialPreferencesState: PreferencesState = {
-  error: null,
-  notice: null,
-};
 
 export async function savePreferences(
   _prev: PreferencesState,
