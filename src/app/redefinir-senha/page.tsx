@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { createClient } from "@/lib/supabase/server";
 
@@ -23,11 +24,10 @@ export default async function RedefinirSenhaPage() {
           <p className="text-sm text-fg-secondary">
             Peça um novo link de redefinição. Os links têm validade limitada.
           </p>
-          <Link
-            href="/recuperar-senha"
-            className="font-medium text-fg-primary underline"
-          >
-            Pedir novo link →
+          <Link href="/recuperar-senha" className="self-center">
+            <Button type="button" size="sm">
+              Pedir novo link
+            </Button>
           </Link>
         </Card>
       </main>

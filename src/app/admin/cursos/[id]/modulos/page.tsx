@@ -98,11 +98,10 @@ export default async function AdminCourseModulesPage({
                       </span>
                     )}
                   </span>
-                  <Link
-                    href={`/admin/licoes/${lesson.id}`}
-                    className="text-xs font-medium text-fg-secondary hover:text-fg-primary"
-                  >
-                    Editar lição →
+                  <Link href={`/admin/licoes/${lesson.id}`}>
+                    <Button type="button" variant="ghost" size="sm">
+                      Editar lição
+                    </Button>
                   </Link>
                 </div>
                 <form action={duplicateLesson}>

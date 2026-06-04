@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { BookmarkIcon } from "@/components/icons/BookmarkIcon";
 import { FlameIcon } from "@/components/icons/FlameIcon";
 import { GearIcon } from "@/components/icons/GearIcon";
+import { TrophyIcon } from "@/components/icons/TrophyIcon";
 import { Card } from "@/components/ui/Card";
 import { getStudentDashboard } from "@/lib/dashboard/queries";
 import { countDueItems } from "@/lib/srs/queries";
@@ -115,41 +117,71 @@ export default async function PainelPage() {
         </Card>
       </section>
 
-      <div className="-mt-4 flex flex-wrap gap-4 text-sm">
-        <Link
-          href="/painel/revisar"
-          className="text-fg-secondary hover:text-fg-primary"
-        >
-          Para revisar →
+      {/* Atalhos: revisar manualmente + conquistas */}
+      <section className="grid grid-cols-2 gap-3">
+        <Link href="/painel/revisar" className="block">
+          <Card padded interactive className="flex h-full items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bg-tertiary text-fg-primary">
+              <BookmarkIcon className="h-5 w-5" />
+            </span>
+            <span className="flex flex-col">
+              <span className="text-sm font-medium text-fg-primary">
+                Para revisar
+              </span>
+              <span className="text-xs text-fg-tertiary">
+                Suas marcações e a fila SRS
+              </span>
+            </span>
+          </Card>
         </Link>
-        <Link
-          href="/painel/conquistas"
-          className="text-fg-secondary hover:text-fg-primary"
-        >
-          Conquistas ({dashboard.achievementsCount}) →
+        <Link href="/painel/conquistas" className="block">
+          <Card padded interactive className="flex h-full items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bg-tertiary text-warning">
+              <TrophyIcon className="h-5 w-5" />
+            </span>
+            <span className="flex flex-col">
+              <span className="text-sm font-medium text-fg-primary">
+                Conquistas
+              </span>
+              <span className="text-xs text-fg-tertiary">
+                {dashboard.achievementsCount}{" "}
+                {dashboard.achievementsCount === 1 ? "ganha" : "ganhas"}
+              </span>
+            </span>
+          </Card>
         </Link>
-      </div>
+      </section>
 
-      {/* Revisão espaçada — só aparece quando há itens prontos */}
+      {/* Revisão espaçada — só aparece quando há itens prontos.
+          Recebe accent visual + pulse no contador para chamar atenção. */}
       {srsDue > 0 && (
         <Link href="/painel/revisar/sessao" className="block">
           <Card
             padded
             interactive
+            accent
             className="flex items-center justify-between gap-4"
           >
-            <div className="flex flex-col gap-1">
-              <span className="font-medium text-fg-primary">
-                {srsDue === 1
-                  ? "1 revisão pronta"
-                  : `${srsDue} revisões prontas`}
+            <div className="flex items-center gap-3">
+              <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-fg-primary/10 text-fg-primary">
+                <span className="absolute inset-0 animate-ping rounded-full bg-fg-primary/20" />
+                <span className="relative text-base font-semibold">
+                  {srsDue > 99 ? "99+" : srsDue}
+                </span>
               </span>
-              <span className="text-xs text-fg-tertiary">
-                Comece sua sessão de revisão espaçada.
-              </span>
+              <div className="flex flex-col gap-1">
+                <span className="font-medium text-fg-primary">
+                  {srsDue === 1
+                    ? "1 revisão pronta"
+                    : `${srsDue} revisões prontas`}
+                </span>
+                <span className="text-xs text-fg-tertiary">
+                  Comece sua sessão de revisão espaçada.
+                </span>
+              </div>
             </div>
-            <span className="shrink-0 text-sm text-fg-secondary">
-              Começar →
+            <span className="shrink-0 rounded-md bg-fg-primary px-3 py-1.5 text-xs font-medium text-fg-inverse">
+              Começar
             </span>
           </Card>
         </Link>

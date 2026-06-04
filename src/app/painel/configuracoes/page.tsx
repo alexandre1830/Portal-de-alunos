@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { KeyIcon } from "@/components/icons/KeyIcon";
 import { PreferencesForm } from "@/components/painel/PreferencesForm";
 import { SignOutButton } from "@/components/painel/SignOutButton";
 import { ThemeSwitch } from "@/components/painel/ThemeSwitch";
+import { BackLink } from "@/components/shared/BackLink";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { getUserPreferences } from "@/lib/preferences/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -33,12 +36,7 @@ export default async function ConfiguracoesPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-6 px-6 py-12">
-      <Link
-        href="/painel"
-        className="text-sm text-fg-secondary hover:text-fg-primary"
-      >
-        ← Voltar ao painel
-      </Link>
+      <BackLink href="/painel" label="Voltar ao painel" />
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold text-fg-primary">Configurações</h1>
         <p className="text-sm text-fg-secondary">
@@ -61,16 +59,16 @@ export default async function ConfiguracoesPage() {
       />
 
       {/* 3. Senha */}
-      <Card padded className="flex flex-col gap-2">
+      <Card padded className="flex flex-col gap-3">
         <h2 className="text-base font-semibold text-fg-primary">Senha</h2>
         <p className="text-sm text-fg-secondary">
           Atualize a senha de acesso à sua conta.
         </p>
-        <Link
-          href="/painel/senha"
-          className="text-sm font-medium text-fg-primary underline self-start"
-        >
-          Trocar senha →
+        <Link href="/painel/senha" className="self-start">
+          <Button type="button" variant="secondary" size="sm">
+            <KeyIcon className="h-4 w-4" />
+            Trocar senha
+          </Button>
         </Link>
       </Card>
 

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { CourseTabs } from "@/components/admin/CourseTabs";
+import { BackLink } from "@/components/shared/BackLink";
+import { Button } from "@/components/ui/Button";
 import { requireAdmin } from "@/lib/admin/guard";
 
 export default async function AdminCourseLayout({
@@ -24,19 +26,13 @@ export default async function AdminCourseLayout({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <Link
-          href="/admin/cursos"
-          className="text-sm text-fg-secondary hover:text-fg-primary"
-        >
-          ← Cursos
-        </Link>
+        <BackLink href="/admin/cursos" label="Cursos" />
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl font-semibold text-fg-primary">{course.title}</h1>
-          <Link
-            href={`/cursos/${course.slug}`}
-            className="text-sm text-fg-secondary hover:text-fg-primary"
-          >
-            Ver como aluno →
+          <Link href={`/cursos/${course.slug}`}>
+            <Button type="button" variant="ghost" size="sm">
+              Ver como aluno
+            </Button>
           </Link>
         </div>
         {!course.is_published && (

@@ -70,9 +70,11 @@ export default async function AdminLessonPage({
         </p>
         <Link
           href={`/admin/licoes/${lesson.id}/importar`}
-          className="text-sm font-medium text-fg-primary underline self-start"
+          className="self-start"
         >
-          Abrir importação →
+          <Button type="button" variant="secondary" size="sm">
+            Abrir importação
+          </Button>
         </Link>
       </Card>
 

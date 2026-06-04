@@ -78,11 +78,10 @@ export function CreateStudentForm() {
                 Anote agora — a senha não será exibida de novo. O aluno pode
                 trocá-la depois.
               </p>
-              <Link
-                href="/admin/cursos"
-                className="text-sm font-medium text-fg-secondary underline hover:text-fg-primary"
-              >
-                Matricular este aluno em um curso →
+              <Link href="/admin/cursos" className="self-start">
+                <Button type="button" variant="secondary" size="sm">
+                  Matricular este aluno em um curso
+                </Button>
               </Link>
             </>
           )}
