@@ -19,4 +19,16 @@ export interface SrsVocabPayload {
   courseTitle?: string;
 }
 
-export type SrsPayload = SrsExercisePayload | SrsVocabPayload;
+// Speaking: a "pergunta" da revisão é o que o aluno deve falar, e a "resposta"
+// é a mesma frase (na sessão SRS ele simplesmente revê e se autoavalia).
+export interface SrsSpeakingPayload {
+  type: "speaking";
+  phrase: string;
+  partTitle?: string;
+  courseTitle?: string;
+}
+
+export type SrsPayload =
+  | SrsExercisePayload
+  | SrsVocabPayload
+  | SrsSpeakingPayload;

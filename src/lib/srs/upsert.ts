@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type {
   SrsExercisePayload,
+  SrsSpeakingPayload,
   SrsVocabPayload,
 } from "@/lib/srs/payload";
 import type { Database, Json } from "@/types/database";
@@ -114,5 +115,56 @@ export async function upsertVocabSrsItems(
 
   if (rows.length > 0) {
     await admin.from("srs_items").insert(rows);
+  }
+}
+
+// Speaking: 1 item por frase de um bloco. Chave secundária = índice da frase
+// para suportar múltiplas frases no mesmo bloco.
+export async function upsertSpeakingSrsItem(
+  admin: AdminClient,
+  params: {
+    userId: string;
+    courseId: string;
+    blockId: string;
+    phraseIndex: number;
+    phrase: string;
+    partTitle?: string;
+    courseTitle?: string;
+  },
+): Promise<void> {
+  const payload: SrsSpeakingPayload = {
+    type: "speaking",
+    phrase: params.phrase,
+    partTitle: params.partTitle,
+    courseTitle: params.courseTitle,
+  };
+  const sourceKey = String(params.phraseIndex);
+
+  const { data: existing } = await admin
+    .from("srs_items")
+    .select("id")
+    .eq("user_id", params.userId)
+    .eq("source_type", "speaking")
+    .eq("source_id", params.blockId)
+    .eq("source_key", sourceKey)
+    .maybeSingle();
+
+  if (existing) {
+    await admin
+      .from("srs_items")
+      .update({
+        payload: payload as unknown as Json,
+        next_review_at: new Date().toISOString(),
+      })
+      .eq("id", existing.id);
+  } else {
+    await admin.from("srs_items").insert({
+      user_id: params.userId,
+      course_id: params.courseId,
+      source_type: "speaking",
+      source_id: params.blockId,
+      source_key: sourceKey,
+      payload: payload as unknown as Json,
+    });
   }
 }

@@ -79,3 +79,11 @@ const IDS = new Set(VOICES.map((x) => x.id));
 export function isValidVoiceId(id: string): boolean {
   return IDS.has(id);
 }
+
+// Resolve o código BCP-47 (en-US, en-IN, es-ES, ...) a partir do id da voz.
+// Usado pelo reconhecedor de voz (Web Speech API) para casar com o sotaque
+// que o aluno escolheu nas configurações.
+export function languageCodeForVoice(voiceId: string): string {
+  const found = VOICES.find((v) => v.id === voiceId);
+  return found?.languageCode ?? "en-US";
+}

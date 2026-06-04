@@ -11,6 +11,7 @@ const TYPES: [string, string][] = [
   ["vocabulary", "Vocabulário"],
   ["dialogue_tts", "Diálogo (áudio)"],
   ["pronunciation", "Pronúncia"],
+  ["speaking", "Speaking (falar)"],
   ["multiple_choice", "Múltipla escolha"],
   ["fill_blank", "Lacuna"],
 ];
@@ -82,7 +83,9 @@ export function BlockForm({
         </span>
       )}
 
-      {(type === "reading_tts" || type === "pronunciation") && (
+      {(type === "reading_tts" ||
+        type === "pronunciation" ||
+        type === "speaking") && (
         <input
           name="title"
           defaultValue={initial.title}
@@ -109,6 +112,22 @@ export function BlockForm({
             className={`${areaCls} h-28`}
           />
           <Hint>Uma frase por linha — cada uma terá seu próprio botão de áudio.</Hint>
+        </>
+      )}
+
+      {type === "speaking" && (
+        <>
+          <textarea
+            name="items"
+            defaultValue={initial.items}
+            placeholder={"Uma frase por linha"}
+            className={`${areaCls} h-28`}
+          />
+          <Hint>
+            Uma frase por linha — o aluno fala cada uma (Web Speech API) e o
+            sistema compara com Levenshtein. Não conta para conclusão da
+            parte; XP entra na gamificação.
+          </Hint>
         </>
       )}
 

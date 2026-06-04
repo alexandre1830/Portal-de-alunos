@@ -370,6 +370,11 @@ function buildBlockData(type: string, formData: FormData): {
         data: { title: str(formData, "title") || undefined, items: lines("items") },
         solution: null,
       };
+    case "speaking":
+      return {
+        data: { title: str(formData, "title") || undefined, items: lines("items") },
+        solution: null,
+      };
     case "vocabulary":
       return {
         data: {

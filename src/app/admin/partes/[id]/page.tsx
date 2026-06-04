@@ -16,6 +16,7 @@ import {
   pronunciationData,
   readingData,
   richTextData,
+  speakingData,
   vocabularyData,
 } from "@/lib/blocks/schemas";
 
@@ -35,6 +36,12 @@ function toInitial(
     }
     case "pronunciation": {
       const p = pronunciationData.safeParse(data);
+      return p.success
+        ? { title: p.data.title ?? "", items: p.data.items.join("\n") }
+        : {};
+    }
+    case "speaking": {
+      const p = speakingData.safeParse(data);
       return p.success
         ? { title: p.data.title ?? "", items: p.data.items.join("\n") }
         : {};

@@ -58,20 +58,33 @@ export function ReviewSession({ items }: Props) {
     );
   }
 
-  const front =
-    current.payload.type === "exercise"
-      ? current.payload.question
-      : current.payload.term;
-  const back =
-    current.payload.type === "exercise"
-      ? current.payload.answer
-      : current.payload.translation;
-  const extra =
-    current.payload.type === "vocab" && current.payload.example
-      ? current.payload.example
-      : null;
-  const sourceLabel =
-    current.payload.type === "exercise" ? "Exercício" : "Vocabulário";
+  // Renderização da "frente" e "verso" depende do tipo de item:
+  //  - exercise: pergunta -> resposta
+  //  - vocab:    termo -> tradução (+ exemplo)
+  //  - speaking: "Tente dizer" + frase -> mesma frase (auto-avaliação)
+  let front: string;
+  let back: string;
+  let extra: string | null = null;
+  let sourceLabel: string;
+  switch (current.payload.type) {
+    case "exercise":
+      front = current.payload.question;
+      back = current.payload.answer;
+      sourceLabel = "Exercício";
+      break;
+    case "vocab":
+      front = current.payload.term;
+      back = current.payload.translation;
+      extra = current.payload.example ?? null;
+      sourceLabel = "Vocabulário";
+      break;
+    case "speaking":
+      front = current.payload.phrase;
+      back = current.payload.phrase;
+      extra = "Tente dizer em voz alta — depois revele e avalie como foi.";
+      sourceLabel = "Speaking";
+      break;
+  }
 
   function handleRate(rating: ReviewRating) {
     const itemId = current?.id;

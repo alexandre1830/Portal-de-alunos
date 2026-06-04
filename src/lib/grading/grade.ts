@@ -35,6 +35,24 @@ export function gradeMultipleChoice(
   return selectedIndex === solution.answerIndex ? "perfect" : "incorrect";
 }
 
+// Correção de speaking. O target é a frase canônica; o input é a transcrição
+// (Web Speech API ou texto digitado no fallback).
+// Tolerância MAIOR que fill_blank: STT erra pontuação, "to" vs "two",
+// "their" vs "there" — frases inteiras toleram ~30% de edits.
+// `viaText=true` aplica a mesma tolerância (a pessoa não testou pronúncia,
+// só o reconhecimento textual, então não vale recompensar mais).
+export function gradeSpeaking(
+  transcript: string,
+  target: string,
+): GradeState {
+  const guess = normalize(transcript);
+  const goal = normalize(target);
+  if (guess.length === 0) return "incorrect";
+  if (guess === goal) return "perfect";
+  const tolerance = Math.max(2, Math.floor(goal.length * 0.3));
+  return levenshtein(guess, goal) <= tolerance ? "close" : "incorrect";
+}
+
 export function gradeFillBlank(
   text: string,
   solution: FillBlankSolution,

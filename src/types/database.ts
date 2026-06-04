@@ -564,6 +564,80 @@ export type Database = {
           },
         ]
       }
+      speaking_attempts: {
+        Row: {
+          attempts: number
+          best_state: string
+          block_id: string
+          course_id: string
+          created_at: string
+          id: string
+          part_id: string
+          phrase_index: number
+          updated_at: string
+          user_id: string
+          via_text: boolean
+          xp_awarded: number
+        }
+        Insert: {
+          attempts?: number
+          best_state?: string
+          block_id: string
+          course_id: string
+          created_at?: string
+          id?: string
+          part_id: string
+          phrase_index: number
+          updated_at?: string
+          user_id: string
+          via_text?: boolean
+          xp_awarded?: number
+        }
+        Update: {
+          attempts?: number
+          best_state?: string
+          block_id?: string
+          course_id?: string
+          created_at?: string
+          id?: string
+          part_id?: string
+          phrase_index?: number
+          updated_at?: string
+          user_id?: string
+          via_text?: boolean
+          xp_awarded?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "speaking_attempts_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "speaking_attempts_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "speaking_attempts_part_id_fkey"
+            columns: ["part_id"]
+            isOneToOne: false
+            referencedRelation: "parts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "speaking_attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       srs_items: {
         Row: {
           course_id: string
