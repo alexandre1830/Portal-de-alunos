@@ -70,23 +70,38 @@ Tipos de bloco permitidos (use exatamente esses 'type'):
 4) dialogue_tts — diálogo entre personagens nomeados.
 { "type": "dialogue_tts", "data": { "lines": [{ "speaker": "Nome", "text": "..." }, ...] } }
 
-5) pronunciation — lista de frases curtas para praticar.
+5) pronunciation — lista de frases curtas para o aluno OUVIR e repetir.
 { "type": "pronunciation", "data": { "title": "opcional", "items": ["frase 1", "frase 2", ...] } }
 
-6) multiple_choice — exercício com alternativas.
+6) speaking — lista de frases curtas para o aluno FALAR (o navegador transcreve via Web Speech API e compara com a frase).
+{ "type": "speaking", "data": { "title": "opcional", "items": ["frase 1", "frase 2", ...] } }
+
+7) multiple_choice — exercício com alternativas.
 { "type": "multiple_choice", "data": { "question": "...", "options": ["a","b","c"] }, "solution": { "answerIndex": 0 } }
 
-7) fill_blank — lacuna a preencher.
+8) fill_blank — lacuna a preencher.
 { "type": "fill_blank", "data": { "prompt": "Texto com ___ onde vai a resposta" }, "solution": { "answer": "resposta canônica", "alternatives": ["variação 1", "variação 2"] } }
+
+9) translation — aluno traduz uma frase.
+{ "type": "translation", "data": { "instruction": "Traduza para o inglês:", "source": "frase original em português" }, "solution": { "answer": "tradução canônica", "alternatives": ["variação 1"] } }
+
+10) reorder_words — aluno reordena palavras embaralhadas. 'tokens' DEVE estar na ORDEM CORRETA (o sistema embaralha ao exibir).
+{ "type": "reorder_words", "data": { "instruction": "Reordene para formar a frase:", "tokens": ["I", "am", "studying", "english"] } }
+
+11) error_correction — aluno corrige uma frase com erro.
+{ "type": "error_correction", "data": { "instruction": "Corrija a frase:", "sentence": "She go to school every day." }, "solution": { "answer": "She goes to school every day.", "alternatives": [] } }
 
 Regras importantes:
 - NÃO inclua emojis ou símbolos decorativos (a voz lê em voz alta).
 - Setas '→' viram ', ' (vírgula).
 - A última parte da lição deve ter "kind": "golden" e ser uma revisão curta (2-3 exercícios).
 - Use 'reading_tts' para textos contínuos curtos (1-3 parágrafos), 'rich_text' para explicações gramaticais.
-- 'pronunciation' é uma lista de FRASES (uma por linha do PDF original), não vocabulário.
+- 'pronunciation' é só OUVIR e repetir; use 'speaking' quando quiser que o aluno FALE e o sistema avalie (forem exercícios de pronúncia ativos).
 - Em 'multiple_choice', 'answerIndex' é zero-based.
 - Em 'fill_blank', use '___' no prompt para marcar a lacuna; a resposta canônica em 'answer'.
+- Em 'translation' e 'error_correction', preencha 'alternatives' com variações naturais aceitas.
+- Em 'reorder_words', 'tokens' é a frase já na ORDEM CORRETA — o sistema embaralha sozinho.
+- Misture os tipos de exercício na parte de exercises: prefira diversidade (não use só fill_blank).
 - Mantenha o conteúdo em inglês quando for material em inglês; instruções/títulos podem ficar em português.
 - Responda APENAS com o JSON, sem markdown, sem prefixo.`;
 

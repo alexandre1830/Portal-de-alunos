@@ -61,6 +61,28 @@ export const fillBlankData = z.object({
   prompt: z.string(),
 });
 
+// Tradução: aluno traduz `source` para o idioma esperado. `instruction`
+// indica a direção quando não está óbvia ("Traduza para o inglês:").
+export const translationData = z.object({
+  instruction: z.string().optional(),
+  source: z.string(),
+});
+
+// Reordenar palavras: tokens já vêm na ordem CORRETA. O cliente embaralha
+// (com seed determinístico do blockId, para não bagunçar a cada render) e
+// o aluno envia o array de índices originais na ordem em que escolheu.
+export const reorderWordsData = z.object({
+  instruction: z.string().optional(),
+  tokens: z.array(z.string().min(1)).min(2),
+});
+
+// Correção de erro: aluno reescreve `sentence` (frase com erro) corrigida.
+// `instruction` opcional ("Corrija a frase abaixo:").
+export const errorCorrectionData = z.object({
+  instruction: z.string().optional(),
+  sentence: z.string(),
+});
+
 // --- Gabaritos (lidos só no servidor, via service_role) ---
 export const multipleChoiceSolution = z.object({
   answerIndex: z.number().int().nonnegative(),
@@ -73,8 +95,15 @@ export const fillBlankSolution = z.object({
   alternatives: z.array(z.string()).optional(),
 });
 
+// Translation e ErrorCorrection seguem o mesmo formato de fill_blank:
+// resposta canônica + variações aceitas + tolerância Levenshtein.
+export const translationSolution = fillBlankSolution;
+export const errorCorrectionSolution = fillBlankSolution;
+
 export type MultipleChoiceSolution = z.infer<typeof multipleChoiceSolution>;
 export type FillBlankSolution = z.infer<typeof fillBlankSolution>;
+export type TranslationSolution = z.infer<typeof translationSolution>;
+export type ErrorCorrectionSolution = z.infer<typeof errorCorrectionSolution>;
 
 // --- Draft retornado pela Edge Function import_lesson ---
 // Cada bloco vem com `type` + `data` (uso o schema certo na validação de UI)
@@ -96,6 +125,20 @@ const draftBlock = z.discriminatedUnion("type", [
     type: z.literal("fill_blank"),
     data: fillBlankData,
     solution: fillBlankSolution,
+  }),
+  z.object({
+    type: z.literal("translation"),
+    data: translationData,
+    solution: translationSolution,
+  }),
+  z.object({
+    type: z.literal("reorder_words"),
+    data: reorderWordsData,
+  }),
+  z.object({
+    type: z.literal("error_correction"),
+    data: errorCorrectionData,
+    solution: errorCorrectionSolution,
   }),
 ]);
 
@@ -122,6 +165,9 @@ export type PronunciationData = z.infer<typeof pronunciationData>;
 export type SpeakingData = z.infer<typeof speakingData>;
 export type MultipleChoiceData = z.infer<typeof multipleChoiceData>;
 export type FillBlankData = z.infer<typeof fillBlankData>;
+export type TranslationData = z.infer<typeof translationData>;
+export type ReorderWordsData = z.infer<typeof reorderWordsData>;
+export type ErrorCorrectionData = z.infer<typeof errorCorrectionData>;
 
 export const BLOCK_SCHEMAS = {
   rich_text: richTextData,
@@ -132,11 +178,22 @@ export const BLOCK_SCHEMAS = {
   speaking: speakingData,
   multiple_choice: multipleChoiceData,
   fill_blank: fillBlankData,
+  translation: translationData,
+  reorder_words: reorderWordsData,
+  error_correction: errorCorrectionData,
 } as const;
 
 export type BlockType = keyof typeof BLOCK_SCHEMAS;
 
-export const EXERCISE_TYPES: BlockType[] = ["multiple_choice", "fill_blank"];
+// Exercícios que CONTAM para conclusão da parte (recomputePartProgress).
+// Speaking fica de fora por design (modo híbrido).
+export const EXERCISE_TYPES: BlockType[] = [
+  "multiple_choice",
+  "fill_blank",
+  "translation",
+  "reorder_words",
+  "error_correction",
+];
 
 export function isExerciseType(type: string): boolean {
   return (EXERCISE_TYPES as string[]).includes(type);

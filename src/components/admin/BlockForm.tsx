@@ -14,6 +14,9 @@ const TYPES: [string, string][] = [
   ["speaking", "Speaking (falar)"],
   ["multiple_choice", "Múltipla escolha"],
   ["fill_blank", "Lacuna"],
+  ["translation", "Tradução"],
+  ["reorder_words", "Reordenar palavras"],
+  ["error_correction", "Correção de erro"],
 ];
 
 const TYPE_LABEL = Object.fromEntries(TYPES);
@@ -29,6 +32,11 @@ export interface BlockInitial {
   prompt?: string;
   answer?: string;
   alternatives?: string;
+  // translation / error_correction / reorder_words
+  instruction?: string;
+  source?: string;
+  sentence?: string;
+  tokens?: string;
 }
 
 const inputCls =
@@ -202,6 +210,85 @@ export function BlockForm({
             placeholder="Variações aceitas (separadas por vírgula)"
             className={inputCls}
           />
+        </>
+      )}
+
+      {type === "translation" && (
+        <>
+          <input
+            name="instruction"
+            defaultValue={initial.instruction}
+            placeholder="Instrução (ex.: Traduza para o inglês)"
+            className={inputCls}
+          />
+          <input
+            name="source"
+            defaultValue={initial.source}
+            placeholder="Frase original"
+            className={inputCls}
+          />
+          <input
+            name="answer"
+            defaultValue={initial.answer}
+            placeholder="Tradução canônica"
+            className={inputCls}
+          />
+          <input
+            name="alternatives"
+            defaultValue={initial.alternatives}
+            placeholder="Variações aceitas (separadas por vírgula)"
+            className={inputCls}
+          />
+        </>
+      )}
+
+      {type === "error_correction" && (
+        <>
+          <input
+            name="instruction"
+            defaultValue={initial.instruction}
+            placeholder="Instrução (ex.: Corrija a frase abaixo)"
+            className={inputCls}
+          />
+          <input
+            name="sentence"
+            defaultValue={initial.sentence}
+            placeholder="Frase com erro"
+            className={inputCls}
+          />
+          <input
+            name="answer"
+            defaultValue={initial.answer}
+            placeholder="Frase corrigida"
+            className={inputCls}
+          />
+          <input
+            name="alternatives"
+            defaultValue={initial.alternatives}
+            placeholder="Variações aceitas (separadas por vírgula)"
+            className={inputCls}
+          />
+        </>
+      )}
+
+      {type === "reorder_words" && (
+        <>
+          <input
+            name="instruction"
+            defaultValue={initial.instruction}
+            placeholder="Instrução (opcional)"
+            className={inputCls}
+          />
+          <input
+            name="tokens"
+            defaultValue={initial.tokens}
+            placeholder="Palavras na ORDEM CORRETA, separadas por espaço"
+            className={inputCls}
+          />
+          <Hint>
+            Escreva a frase já na ordem certa. O sistema embaralha as palavras
+            quando mostra ao aluno.
+          </Hint>
         </>
       )}
 

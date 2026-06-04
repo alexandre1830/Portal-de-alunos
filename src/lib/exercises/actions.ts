@@ -6,16 +6,24 @@ import { z } from "zod";
 import { awardAchievements } from "@/lib/achievements/award";
 import {
   EXERCISE_TYPES,
+  errorCorrectionData,
+  errorCorrectionSolution,
   fillBlankData,
   fillBlankSolution,
   multipleChoiceData,
   multipleChoiceSolution,
+  reorderWordsData,
+  translationData,
+  translationSolution,
   vocabularyData,
 } from "@/lib/blocks/schemas";
 import { upsertExerciseSrsItem, upsertVocabSrsItems } from "@/lib/srs/upsert";
 import {
+  gradeErrorCorrection,
   gradeFillBlank,
   gradeMultipleChoice,
+  gradeReorderWords,
+  gradeTranslation,
   XP_BY_STATE,
   type GradeState,
 } from "@/lib/grading/grade";
@@ -36,8 +44,12 @@ export interface ExerciseResult {
 
 const inputSchema = z.object({
   blockId: z.string().uuid(),
+  // Resposta de multiple_choice
   selectedIndex: z.number().int().nonnegative().optional(),
+  // Resposta de fill_blank / translation / error_correction
   text: z.string().optional(),
+  // Resposta de reorder_words: array de índices originais na ordem montada.
+  selectedIndices: z.array(z.number().int().nonnegative()).optional(),
 });
 
 function fail(error: string): ExerciseResult {
@@ -48,10 +60,11 @@ export async function submitExercise(raw: {
   blockId: string;
   selectedIndex?: number;
   text?: string;
+  selectedIndices?: number[];
 }): Promise<ExerciseResult> {
   const parsed = inputSchema.safeParse(raw);
   if (!parsed.success) return fail("Entrada inválida.");
-  const { blockId, selectedIndex, text } = parsed.data;
+  const { blockId, selectedIndex, text, selectedIndices } = parsed.data;
 
   const supabase = await createClient();
   const {
@@ -114,6 +127,47 @@ export async function submitExercise(raw: {
     srsQuestion = pub.data.prompt;
     srsAnswer = sol.data.answer;
     if (state === "incorrect") correctAnswer = sol.data.answer;
+  } else if (block.type === "translation") {
+    const sol = translationSolution.safeParse(solutionRow.solution);
+    const pub = translationData.safeParse(block.data);
+    if (!sol.success || !pub.success) return fail("Exercício mal configurado.");
+    if (typeof text !== "string" || text.trim().length === 0) {
+      return fail("Digite sua tradução.");
+    }
+    state = gradeTranslation(text, sol.data);
+    // SRS payload: pergunta = instrução + frase original.
+    srsQuestion = pub.data.instruction
+      ? `${pub.data.instruction} ${pub.data.source}`
+      : pub.data.source;
+    srsAnswer = sol.data.answer;
+    if (state === "incorrect") correctAnswer = sol.data.answer;
+  } else if (block.type === "error_correction") {
+    const sol = errorCorrectionSolution.safeParse(solutionRow.solution);
+    const pub = errorCorrectionData.safeParse(block.data);
+    if (!sol.success || !pub.success) return fail("Exercício mal configurado.");
+    if (typeof text !== "string" || text.trim().length === 0) {
+      return fail("Digite a frase corrigida.");
+    }
+    state = gradeErrorCorrection(text, sol.data);
+    srsQuestion = pub.data.instruction
+      ? `${pub.data.instruction} ${pub.data.sentence}`
+      : pub.data.sentence;
+    srsAnswer = sol.data.answer;
+    if (state === "incorrect") correctAnswer = sol.data.answer;
+  } else if (block.type === "reorder_words") {
+    // reorder_words não usa exercise_solutions — a ordem canônica é a própria
+    // ordem dos tokens em block.data. O safeParse de solutionRow não é
+    // relevante aqui.
+    const pub = reorderWordsData.safeParse(block.data);
+    if (!pub.success) return fail("Exercício mal configurado.");
+    if (!Array.isArray(selectedIndices)) {
+      return fail("Monte a frase antes de enviar.");
+    }
+    state = gradeReorderWords(selectedIndices, pub.data.tokens.length);
+    const canonical = pub.data.tokens.join(" ");
+    srsQuestion = pub.data.instruction ?? "Reordene as palavras";
+    srsAnswer = canonical;
+    if (state === "incorrect") correctAnswer = canonical;
   } else {
     return fail("Tipo de exercício não suportado.");
   }

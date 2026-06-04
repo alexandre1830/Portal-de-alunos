@@ -412,6 +412,54 @@ function buildBlockData(type: string, formData: FormData): {
         solution: { answer: str(formData, "answer"), ...(alternatives.length ? { alternatives } : {}) },
       };
     }
+    case "translation": {
+      const alternatives = str(formData, "alternatives")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      return {
+        data: {
+          instruction: str(formData, "instruction") || undefined,
+          source: str(formData, "source"),
+        },
+        solution: {
+          answer: str(formData, "answer"),
+          ...(alternatives.length ? { alternatives } : {}),
+        },
+      };
+    }
+    case "error_correction": {
+      const alternatives = str(formData, "alternatives")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      return {
+        data: {
+          instruction: str(formData, "instruction") || undefined,
+          sentence: str(formData, "sentence"),
+        },
+        solution: {
+          answer: str(formData, "answer"),
+          ...(alternatives.length ? { alternatives } : {}),
+        },
+      };
+    }
+    case "reorder_words": {
+      // Tokens separados por espaço — admin escreve a frase na ORDEM CORRETA;
+      // o renderer embaralha no cliente.
+      const tokens = str(formData, "tokens")
+        .split(/\s+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      return {
+        data: {
+          instruction: str(formData, "instruction") || undefined,
+          tokens,
+        },
+        // Sem exercise_solution — a ordem canônica vive em data.tokens.
+        solution: null,
+      };
+    }
     default:
       return { data: {}, solution: null };
   }

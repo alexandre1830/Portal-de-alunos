@@ -1,6 +1,8 @@
 import type {
+  ErrorCorrectionSolution,
   FillBlankSolution,
   MultipleChoiceSolution,
+  TranslationSolution,
 } from "@/lib/blocks/schemas";
 import { levenshtein } from "@/lib/grading/levenshtein";
 
@@ -71,4 +73,36 @@ export function gradeFillBlank(
   });
 
   return closeEnough ? "close" : "incorrect";
+}
+
+// Tradução e correção de erro usam a mesma lógica do fill_blank — resposta
+// canônica + alternativas + tolerância. Frases tendem a ser mais longas, mas
+// a regra proporcional (20% do tamanho) já se adapta.
+export function gradeTranslation(
+  text: string,
+  solution: TranslationSolution,
+): GradeState {
+  return gradeFillBlank(text, solution);
+}
+
+export function gradeErrorCorrection(
+  text: string,
+  solution: ErrorCorrectionSolution,
+): GradeState {
+  return gradeFillBlank(text, solution);
+}
+
+// Reordenar palavras: aluno envia array de índices originais na ordem em que
+// montou a frase. Ordem canônica = identidade [0,1,...,n-1] (admin escreve
+// os tokens já na ordem certa; o cliente embaralha para exibir).
+// Sem "close": ou montou certo, ou não.
+export function gradeReorderWords(
+  selectedIndices: number[],
+  tokenCount: number,
+): GradeState {
+  if (selectedIndices.length !== tokenCount) return "incorrect";
+  for (let i = 0; i < tokenCount; i++) {
+    if (selectedIndices[i] !== i) return "incorrect";
+  }
+  return "perfect";
 }

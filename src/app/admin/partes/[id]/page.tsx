@@ -13,10 +13,15 @@ import {
   isExerciseType,
   multipleChoiceData,
   multipleChoiceSolution,
+  errorCorrectionData,
+  errorCorrectionSolution,
   pronunciationData,
   readingData,
+  reorderWordsData,
   richTextData,
   speakingData,
+  translationData,
+  translationSolution,
   vocabularyData,
 } from "@/lib/blocks/schemas";
 
@@ -78,6 +83,33 @@ function toInitial(
         prompt: p.success ? p.data.prompt : "",
         answer: s.success ? s.data.answer : "",
         alternatives: s.success ? (s.data.alternatives ?? []).join(", ") : "",
+      };
+    }
+    case "translation": {
+      const p = translationData.safeParse(data);
+      const s = translationSolution.safeParse(solution);
+      return {
+        instruction: p.success ? (p.data.instruction ?? "") : "",
+        source: p.success ? p.data.source : "",
+        answer: s.success ? s.data.answer : "",
+        alternatives: s.success ? (s.data.alternatives ?? []).join(", ") : "",
+      };
+    }
+    case "error_correction": {
+      const p = errorCorrectionData.safeParse(data);
+      const s = errorCorrectionSolution.safeParse(solution);
+      return {
+        instruction: p.success ? (p.data.instruction ?? "") : "",
+        sentence: p.success ? p.data.sentence : "",
+        answer: s.success ? s.data.answer : "",
+        alternatives: s.success ? (s.data.alternatives ?? []).join(", ") : "",
+      };
+    }
+    case "reorder_words": {
+      const p = reorderWordsData.safeParse(data);
+      return {
+        instruction: p.success ? (p.data.instruction ?? "") : "",
+        tokens: p.success ? p.data.tokens.join(" ") : "",
       };
     }
     default:

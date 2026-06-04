@@ -1,19 +1,25 @@
 import { DialogueBlock } from "@/components/blocks/DialogueBlock";
+import { ErrorCorrectionExercise } from "@/components/blocks/ErrorCorrectionExercise";
 import { FillBlankExercise } from "@/components/blocks/FillBlankExercise";
 import { MultipleChoiceExercise } from "@/components/blocks/MultipleChoiceExercise";
 import { PronunciationBlock } from "@/components/blocks/PronunciationBlock";
 import { ReadingBlock } from "@/components/blocks/ReadingBlock";
+import { ReorderWordsExercise } from "@/components/blocks/ReorderWordsExercise";
 import { RichTextBlock } from "@/components/blocks/RichTextBlock";
 import { SpeakingBlock } from "@/components/blocks/SpeakingBlock";
+import { TranslationExercise } from "@/components/blocks/TranslationExercise";
 import { VocabularyBlock } from "@/components/blocks/VocabularyBlock";
 import {
   dialogueData,
+  errorCorrectionData,
   fillBlankData,
   multipleChoiceData,
   pronunciationData,
   readingData,
+  reorderWordsData,
   richTextData,
   speakingData,
+  translationData,
   vocabularyData,
 } from "@/lib/blocks/schemas";
 import type { Block } from "@/types/content";
@@ -104,6 +110,30 @@ export function BlockRenderer({
       const parsed = fillBlankData.safeParse(block.data);
       return parsed.success ? (
         <FillBlankExercise blockId={block.id} data={parsed.data} />
+      ) : (
+        <Notice>Exercício inválido.</Notice>
+      );
+    }
+    case "translation": {
+      const parsed = translationData.safeParse(block.data);
+      return parsed.success ? (
+        <TranslationExercise blockId={block.id} data={parsed.data} />
+      ) : (
+        <Notice>Exercício inválido.</Notice>
+      );
+    }
+    case "reorder_words": {
+      const parsed = reorderWordsData.safeParse(block.data);
+      return parsed.success ? (
+        <ReorderWordsExercise blockId={block.id} data={parsed.data} />
+      ) : (
+        <Notice>Exercício inválido.</Notice>
+      );
+    }
+    case "error_correction": {
+      const parsed = errorCorrectionData.safeParse(block.data);
+      return parsed.success ? (
+        <ErrorCorrectionExercise blockId={block.id} data={parsed.data} />
       ) : (
         <Notice>Exercício inválido.</Notice>
       );
