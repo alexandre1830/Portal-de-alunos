@@ -19,7 +19,8 @@ interface Props {
 // Importação de PDF (admin):
 // 1) Admin escolhe um PDF; extraímos texto via pdfjs no browser.
 // 2) Mandamos para a Edge Function import_lesson; ela retorna o draft.
-// 3) Preview editável (JSON cru). Admin confirma → Server Action substitui.
+// 3) Resumo (partes/blocos) + confirmação. Ajustes finos vão para a tela
+//    normal de edição da lição depois de importado.
 export function ImportLessonClient({
   lessonId,
   courseLanguage,
@@ -122,7 +123,7 @@ export function ImportLessonClient({
   return (
     <div className="flex flex-col gap-4">
       <Card padded className="flex flex-col gap-3">
-        <h2 className="text-base font-semibold text-fg-primary">Preview</h2>
+        <h2 className="text-base font-semibold text-fg-primary">Resumo</h2>
         <p className="text-sm text-fg-secondary">
           {draft?.parts.length}{" "}
           {draft?.parts.length === 1 ? "parte" : "partes"} estruturadas a partir
@@ -142,22 +143,6 @@ export function ImportLessonClient({
         </ul>
       </Card>
 
-      <Card padded className="flex flex-col gap-3">
-        <h2 className="text-base font-semibold text-fg-primary">
-          Draft (editável)
-        </h2>
-        <p className="text-xs text-fg-tertiary">
-          JSON da estrutura. Você pode ajustar textos, opções e gabaritos antes
-          de confirmar. Inválido = botão de confirmar desativa.
-        </p>
-        <textarea
-          value={draftJson}
-          onChange={(e) => setDraftJson(e.target.value)}
-          spellCheck={false}
-          className="h-96 w-full rounded-md border border-border-primary bg-bg-primary p-3 font-mono text-xs text-fg-primary"
-        />
-      </Card>
-
       <form action={commitImportedDraft} className="flex flex-col gap-3">
         <input type="hidden" name="lesson_id" value={lessonId} />
         <input type="hidden" name="draft" value={draftJson} />
@@ -168,57 +153,25 @@ export function ImportLessonClient({
           placeholder="Título da lição (opcional — atualiza se preenchido)"
           className="h-10 w-full rounded-md border border-border-primary bg-bg-primary px-3 text-sm text-fg-primary"
         />
-        <ConfirmButton draftJson={draftJson} existingPartsCount={existingPartsCount} />
-      </form>
-    </div>
-  );
-}
-
-function ConfirmButton({
-  draftJson,
-  existingPartsCount,
-}: {
-  draftJson: string;
-  existingPartsCount: number;
-}) {
-  const [valid, setValid] = useState(true);
-  // Revalida o JSON a cada renderização para gatear o botão.
-  let parsed = false;
-  try {
-    draftLesson.parse(JSON.parse(draftJson));
-    parsed = true;
-  } catch {
-    parsed = false;
-  }
-  if (parsed !== valid) setValid(parsed);
-
-  return (
-    <div className="flex flex-col gap-2">
-      <Button
-        type="submit"
-        variant="primary"
-        disabled={!parsed}
-        onClick={(e) => {
-          if (!parsed) {
-            e.preventDefault();
-            return;
-          }
-          if (existingPartsCount > 0) {
-            const ok = confirm(
-              `Substituir as ${existingPartsCount} parte(s) atuais pelo conteúdo importado?`,
-            );
-            if (!ok) e.preventDefault();
-          }
-        }}
-        className="self-start"
-      >
-        Confirmar e importar
-      </Button>
-      {!parsed && (
-        <p className="text-xs text-danger">
-          JSON inválido — corrija para habilitar a importação.
+        <p className="text-xs text-fg-tertiary">
+          Depois de importar você pode ajustar cada bloco na tela da lição.
         </p>
-      )}
+        <Button
+          type="submit"
+          variant="primary"
+          onClick={(e) => {
+            if (existingPartsCount > 0) {
+              const ok = confirm(
+                `Substituir as ${existingPartsCount} parte(s) atuais pelo conteúdo importado?`,
+              );
+              if (!ok) e.preventDefault();
+            }
+          }}
+          className="self-start"
+        >
+          Confirmar e importar
+        </Button>
+      </form>
     </div>
   );
 }

@@ -24,10 +24,23 @@ function Notice({ children }: { children: React.ReactNode }) {
   );
 }
 
+export interface TtsOverride {
+  lang: "en" | "es";
+  voice: string;
+  rate: number;
+}
+
 // Renderiza um bloco a partir de seu `type` + `data`. Faz o parse com o schema
 // específico de cada tipo (type-safe) e, se o conteúdo for inválido, mostra um
-// aviso em vez de quebrar a página.
-export function BlockRenderer({ block }: { block: Block }) {
+// aviso em vez de quebrar a página. `tts` (opcional) propaga as preferências do
+// aluno para leitura e pronúncia — diálogos mantêm voz por personagem.
+export function BlockRenderer({
+  block,
+  tts,
+}: {
+  block: Block;
+  tts?: TtsOverride;
+}) {
   switch (block.type) {
     case "rich_text": {
       const parsed = richTextData.safeParse(block.data);
@@ -48,7 +61,7 @@ export function BlockRenderer({ block }: { block: Block }) {
     case "reading_tts": {
       const parsed = readingData.safeParse(block.data);
       return parsed.success ? (
-        <ReadingBlock data={parsed.data} />
+        <ReadingBlock data={parsed.data} tts={tts} />
       ) : (
         <Notice>Bloco de leitura inválido.</Notice>
       );
@@ -64,7 +77,7 @@ export function BlockRenderer({ block }: { block: Block }) {
     case "pronunciation": {
       const parsed = pronunciationData.safeParse(block.data);
       return parsed.success ? (
-        <PronunciationBlock data={parsed.data} />
+        <PronunciationBlock data={parsed.data} tts={tts} />
       ) : (
         <Notice>Bloco de pronúncia inválido.</Notice>
       );

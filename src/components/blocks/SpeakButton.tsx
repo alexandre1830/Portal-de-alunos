@@ -11,8 +11,9 @@ type State = "idle" | "loading" | "playing" | "error";
 
 // Botão "Ouvir" para blocos de leitura/diálogo/pronúncia. Invoca a Edge
 // Function `tts` (gera/recupera o MP3 do cache no Storage) e toca o áudio.
-// `body` é o payload da função: { text, lang } ou { lines, lang }. A URL é
-// guardada para não reinvocar a função em re-toques.
+// `body` é o payload da função: { text, lang, voice?, rate? } ou
+// { lines, lang }. Para diálogos, voice/rate são ignorados pela função (cada
+// personagem mantém voz própria). A URL é guardada para não reinvocar a função.
 export function SpeakButton({
   body,
   label = "Ouvir",

@@ -9,6 +9,10 @@ import { Card } from "@/components/ui/Card";
 import { Stars } from "@/components/shared/Stars";
 import { toggleReviewMark } from "@/lib/review/actions";
 import { getPartView } from "@/lib/courses/queries";
+import {
+  getUserPreferences,
+  voiceForLang,
+} from "@/lib/preferences/queries";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function PartPage({
@@ -33,6 +37,14 @@ export default async function PartPage({
 
   const { part, lesson, course, blocks, progress, marked } = view;
   const done = progress?.status === "completed";
+
+  const prefs = await getUserPreferences(supabase, user.id);
+  const lang = course?.language === "es" ? "es" : "en";
+  const tts = {
+    lang: lang as "en" | "es",
+    voice: voiceForLang(prefs, lang),
+    rate: prefs.ttsRate,
+  };
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-8 px-6 py-12">
@@ -97,7 +109,7 @@ export default async function PartPage({
         <div className="flex flex-col gap-6">
           {blocks.map((block) => (
             <Card key={block.id} padded>
-              <BlockRenderer block={block} />
+              <BlockRenderer block={block} tts={tts} />
             </Card>
           ))}
         </div>

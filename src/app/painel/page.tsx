@@ -76,6 +76,12 @@ export default async function PainelPage() {
             </Link>
           )}
           <Link
+            href="/painel/configuracoes"
+            className="text-sm text-fg-secondary hover:text-fg-primary"
+          >
+            Config
+          </Link>
+          <Link
             href="/painel/senha"
             className="text-sm text-fg-secondary hover:text-fg-primary"
           >
