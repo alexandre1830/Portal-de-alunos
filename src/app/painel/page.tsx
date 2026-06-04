@@ -119,6 +119,15 @@ export default async function PainelPage() {
         </Card>
       </section>
 
+      <div className="-mt-4 flex flex-wrap gap-2 text-sm">
+        <Link
+          href="/painel/revisar"
+          className="text-fg-secondary hover:text-fg-primary"
+        >
+          Para revisar →
+        </Link>
+      </div>
+
       {/* Cursos matriculados */}
       <section className="flex flex-col gap-3">
         <h2 className="text-base font-semibold text-fg-primary">Meus cursos</h2>

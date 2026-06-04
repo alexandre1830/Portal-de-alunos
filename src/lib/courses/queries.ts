@@ -105,6 +105,7 @@ export interface PartView {
   course: Course | null;
   blocks: Block[];
   progress: PartProgress | null;
+  marked: boolean;
 }
 
 // Busca uma parte com seus blocos (ordenados) + lição/curso para navegação e o
@@ -122,21 +123,24 @@ export async function getPartView(
 
   if (!part) return null;
 
-  const [lessonRes, courseRes, blocksRes, progressRes] = await Promise.all([
-    supabase.from("lessons").select("*").eq("id", part.lesson_id).maybeSingle(),
-    supabase.from("courses").select("*").eq("id", part.course_id).maybeSingle(),
-    supabase
-      .from("blocks")
-      .select("*")
-      .eq("part_id", partId)
-      .order("position"),
-    supabase
-      .from("part_progress")
-      .select("*")
-      .eq("part_id", partId)
-      .eq("user_id", userId)
-      .maybeSingle(),
-  ]);
+  const [lessonRes, courseRes, blocksRes, progressRes, markRes] =
+    await Promise.all([
+      supabase.from("lessons").select("*").eq("id", part.lesson_id).maybeSingle(),
+      supabase.from("courses").select("*").eq("id", part.course_id).maybeSingle(),
+      supabase.from("blocks").select("*").eq("part_id", partId).order("position"),
+      supabase
+        .from("part_progress")
+        .select("*")
+        .eq("part_id", partId)
+        .eq("user_id", userId)
+        .maybeSingle(),
+      supabase
+        .from("review_marks")
+        .select("id")
+        .eq("part_id", partId)
+        .eq("user_id", userId)
+        .maybeSingle(),
+    ]);
 
   return {
     part,
@@ -144,5 +148,6 @@ export async function getPartView(
     course: courseRes.data,
     blocks: blocksRes.data ?? [],
     progress: progressRes.data,
+    marked: !!markRes.data,
   };
 }
