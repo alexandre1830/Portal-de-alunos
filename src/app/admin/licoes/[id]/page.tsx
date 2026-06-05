@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { ArrowDownIcon } from "@/components/icons/ArrowDownIcon";
+import { ArrowUpIcon } from "@/components/icons/ArrowUpIcon";
+import { TrashIcon } from "@/components/icons/TrashIcon";
 import { BackLink } from "@/components/shared/BackLink";
+import { ConfirmForm } from "@/components/shared/ConfirmForm";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import {
@@ -89,7 +93,11 @@ export default async function AdminLessonPage({
                   <span className="ml-2 text-xs text-warning">dourada</span>
                 )}
               </Link>
-              <PartControls partId={part.id} lessonId={lesson.id} />
+              <PartControls
+                partId={part.id}
+                lessonId={lesson.id}
+                partTitle={part.title}
+              />
             </div>
 
             <form action={updatePart} className="flex flex-wrap items-end gap-2">
@@ -126,7 +134,15 @@ export default async function AdminLessonPage({
   );
 }
 
-function PartControls({ partId, lessonId }: { partId: string; lessonId: string }) {
+function PartControls({
+  partId,
+  lessonId,
+  partTitle,
+}: {
+  partId: string;
+  lessonId: string;
+  partTitle: string;
+}) {
   return (
     <div className="flex items-center gap-1">
       {(["up", "down"] as const).map((dir) => (
@@ -134,18 +150,38 @@ function PartControls({ partId, lessonId }: { partId: string; lessonId: string }
           <input type="hidden" name="id" value={partId} />
           <input type="hidden" name="lesson_id" value={lessonId} />
           <input type="hidden" name="dir" value={dir} />
-          <Button type="submit" variant="ghost" size="sm">
-            {dir === "up" ? "Subir" : "Descer"}
+          <Button
+            type="submit"
+            variant="ghost"
+            size="sm"
+            aria-label={dir === "up" ? "Subir parte" : "Descer parte"}
+            title={dir === "up" ? "Subir parte" : "Descer parte"}
+          >
+            {dir === "up" ? (
+              <ArrowUpIcon className="h-4 w-4" />
+            ) : (
+              <ArrowDownIcon className="h-4 w-4" />
+            )}
           </Button>
         </form>
       ))}
-      <form action={deletePart}>
+      <ConfirmForm
+        action={deletePart}
+        message={`Tem certeza que deseja excluir a parte "${partTitle}"? Todos os blocos dentro dela serão removidos. Esta ação não pode ser desfeita.`}
+      >
         <input type="hidden" name="id" value={partId} />
         <input type="hidden" name="lesson_id" value={lessonId} />
-        <Button type="submit" variant="ghost" size="sm">
-          Excluir
+        <Button
+          type="submit"
+          variant="ghost"
+          size="sm"
+          aria-label="Excluir parte"
+          title="Excluir parte"
+          className="text-danger hover:bg-danger-bg"
+        >
+          <TrashIcon className="h-4 w-4" />
         </Button>
-      </form>
+      </ConfirmForm>
     </div>
   );
 }

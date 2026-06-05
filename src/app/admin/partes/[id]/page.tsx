@@ -2,7 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { BlockForm, type BlockInitial } from "@/components/admin/BlockForm";
+import { ArrowDownIcon } from "@/components/icons/ArrowDownIcon";
+import { ArrowUpIcon } from "@/components/icons/ArrowUpIcon";
+import { TrashIcon } from "@/components/icons/TrashIcon";
 import { BackLink } from "@/components/shared/BackLink";
+import { ConfirmForm } from "@/components/shared/ConfirmForm";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { deleteBlock, moveBlock } from "@/lib/admin/actions";
@@ -174,18 +178,38 @@ export default async function AdminPartPage({
                   <input type="hidden" name="id" value={block.id} />
                   <input type="hidden" name="part_id" value={part.id} />
                   <input type="hidden" name="dir" value={dir} />
-                  <Button type="submit" variant="ghost" size="sm">
-                    {dir === "up" ? "Subir" : "Descer"}
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    size="sm"
+                    aria-label={dir === "up" ? "Subir bloco" : "Descer bloco"}
+                    title={dir === "up" ? "Subir bloco" : "Descer bloco"}
+                  >
+                    {dir === "up" ? (
+                      <ArrowUpIcon className="h-4 w-4" />
+                    ) : (
+                      <ArrowDownIcon className="h-4 w-4" />
+                    )}
                   </Button>
                 </form>
               ))}
-              <form action={deleteBlock}>
+              <ConfirmForm
+                action={deleteBlock}
+                message="Tem certeza que deseja excluir este bloco? Esta ação não pode ser desfeita."
+              >
                 <input type="hidden" name="id" value={block.id} />
                 <input type="hidden" name="part_id" value={part.id} />
-                <Button type="submit" variant="ghost" size="sm">
-                  Excluir
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Excluir bloco"
+                  title="Excluir bloco"
+                  className="text-danger hover:bg-danger-bg"
+                >
+                  <TrashIcon className="h-4 w-4" />
                 </Button>
-              </form>
+              </ConfirmForm>
             </div>
             <BlockForm
               mode="edit"

@@ -1,5 +1,10 @@
 import Link from "next/link";
 
+import { ArrowDownIcon } from "@/components/icons/ArrowDownIcon";
+import { ArrowUpIcon } from "@/components/icons/ArrowUpIcon";
+import { PencilIcon } from "@/components/icons/PencilIcon";
+import { TrashIcon } from "@/components/icons/TrashIcon";
+import { ConfirmForm } from "@/components/shared/ConfirmForm";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import {
@@ -68,18 +73,38 @@ export default async function AdminCourseModulesPage({
                   <input type="hidden" name="id" value={module.id} />
                   <input type="hidden" name="course_id" value={courseId} />
                   <input type="hidden" name="dir" value={dir} />
-                  <Button type="submit" variant="ghost" size="sm">
-                    {dir === "up" ? "Subir" : "Descer"}
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    size="sm"
+                    aria-label={dir === "up" ? "Subir módulo" : "Descer módulo"}
+                    title={dir === "up" ? "Subir módulo" : "Descer módulo"}
+                  >
+                    {dir === "up" ? (
+                      <ArrowUpIcon className="h-4 w-4" />
+                    ) : (
+                      <ArrowDownIcon className="h-4 w-4" />
+                    )}
                   </Button>
                 </form>
               ))}
-              <form action={deleteModule}>
+              <ConfirmForm
+                action={deleteModule}
+                message={`Tem certeza que deseja excluir o módulo "${module.title}"? Todas as lições, partes e blocos dentro dele serão removidos. Esta ação não pode ser desfeita.`}
+              >
                 <input type="hidden" name="id" value={module.id} />
                 <input type="hidden" name="course_id" value={courseId} />
-                <Button type="submit" variant="ghost" size="sm">
-                  Excluir
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Excluir módulo"
+                  title="Excluir módulo"
+                  className="text-danger hover:bg-danger-bg"
+                >
+                  <TrashIcon className="h-4 w-4" />
                 </Button>
-              </form>
+              </ConfirmForm>
             </div>
           </div>
 
@@ -87,23 +112,27 @@ export default async function AdminCourseModulesPage({
             {(lessonsByModule.get(module.id) ?? []).map((lesson) => (
               <li
                 key={lesson.id}
-                className="flex items-center gap-2 rounded-md py-1"
+                className="flex items-center gap-1 rounded-md py-1"
               >
-                <div className="flex flex-1 flex-col">
-                  <span className="text-sm text-fg-primary">
-                    {lesson.title}
-                    {!lesson.is_published && (
-                      <span className="ml-2 text-xs text-fg-tertiary">
-                        (rascunho)
-                      </span>
-                    )}
-                  </span>
-                  <Link href={`/admin/licoes/${lesson.id}`}>
-                    <Button type="button" variant="ghost" size="sm">
-                      Editar lição
-                    </Button>
-                  </Link>
-                </div>
+                <span className="flex-1 text-sm text-fg-primary">
+                  {lesson.title}
+                  {!lesson.is_published && (
+                    <span className="ml-2 text-xs text-fg-tertiary">
+                      (rascunho)
+                    </span>
+                  )}
+                </span>
+                <Link href={`/admin/licoes/${lesson.id}`}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    aria-label="Editar lição"
+                    title="Editar lição"
+                  >
+                    <PencilIcon className="h-4 w-4" />
+                  </Button>
+                </Link>
                 <form action={duplicateLesson}>
                   <input type="hidden" name="id" value={lesson.id} />
                   <input type="hidden" name="course_id" value={courseId} />
@@ -117,18 +146,38 @@ export default async function AdminCourseModulesPage({
                     <input type="hidden" name="module_id" value={module.id} />
                     <input type="hidden" name="course_id" value={courseId} />
                     <input type="hidden" name="dir" value={dir} />
-                    <Button type="submit" variant="ghost" size="sm">
-                      {dir === "up" ? "Subir" : "Descer"}
+                    <Button
+                      type="submit"
+                      variant="ghost"
+                      size="sm"
+                      aria-label={dir === "up" ? "Subir lição" : "Descer lição"}
+                      title={dir === "up" ? "Subir lição" : "Descer lição"}
+                    >
+                      {dir === "up" ? (
+                        <ArrowUpIcon className="h-4 w-4" />
+                      ) : (
+                        <ArrowDownIcon className="h-4 w-4" />
+                      )}
                     </Button>
                   </form>
                 ))}
-                <form action={deleteLesson}>
+                <ConfirmForm
+                  action={deleteLesson}
+                  message={`Tem certeza que deseja excluir a lição "${lesson.title}"? Todas as partes e blocos dentro dela serão removidos. Esta ação não pode ser desfeita.`}
+                >
                   <input type="hidden" name="id" value={lesson.id} />
                   <input type="hidden" name="course_id" value={courseId} />
-                  <Button type="submit" variant="ghost" size="sm">
-                    Excluir
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    size="sm"
+                    aria-label="Excluir lição"
+                    title="Excluir lição"
+                    className="text-danger hover:bg-danger-bg"
+                  >
+                    <TrashIcon className="h-4 w-4" />
                   </Button>
-                </form>
+                </ConfirmForm>
               </li>
             ))}
           </ul>
@@ -143,10 +192,6 @@ export default async function AdminCourseModulesPage({
             <Button type="submit" variant="secondary" size="sm">
               Adicionar lição
             </Button>
-            <p className="basis-full pl-1 text-xs text-fg-tertiary">
-              Já vem com 8 partes: Abertura, Vocabulary, Lesson topic, Grammar,
-              Pronunciation, Dialogue, Exercises, Revisão (dourada).
-            </p>
           </form>
         </Card>
       ))}
