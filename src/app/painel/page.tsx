@@ -166,7 +166,14 @@ export default async function PainelPage() {
           </Card>
         </Link>
         <Link href="/painel/conquistas" className="block">
-          <Card padded interactive className="flex h-full items-center gap-3">
+          <Card
+            padded
+            interactive
+            className={
+              "relative flex h-full items-center gap-3" +
+              (dashboard.claimableCount > 0 ? " border-warning/40" : "")
+            }
+          >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bg-tertiary text-warning">
               <TrophyIcon className="h-5 w-5" />
             </span>
@@ -176,9 +183,16 @@ export default async function PainelPage() {
               </span>
               <span className="text-xs text-fg-tertiary">
                 {dashboard.achievementsCount}{" "}
-                {dashboard.achievementsCount === 1 ? "ganha" : "ganhas"}
+                {dashboard.achievementsCount === 1 ? "coletada" : "coletadas"}
               </span>
             </span>
+            {/* Badge "X para coletar" — chama a atenção do aluno para
+                conquistas atingidas mas ainda não coletadas. */}
+            {dashboard.claimableCount > 0 && (
+              <span className="absolute right-3 top-3 inline-flex animate-pulse items-center rounded-full bg-warning px-2 py-0.5 text-[10px] font-semibold text-bg-primary">
+                {dashboard.claimableCount} para coletar
+              </span>
+            )}
           </Card>
         </Link>
       </section>

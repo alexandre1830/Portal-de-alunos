@@ -31,6 +31,15 @@ export async function toggleReviewMark(formData: FormData) {
     await supabase
       .from("review_marks")
       .insert({ user_id: user.id, part_id: partId, course_id: courseId });
+
+    // Primeira marcação pode disparar a conquista "first_bookmark".
+    try {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const { awardAchievements } = await import("@/lib/achievements/award");
+      await awardAchievements(createAdminClient(), { userId: user.id });
+    } catch {
+      // Não-bloqueante.
+    }
   }
 
   revalidatePath(`/partes/${partId}`);

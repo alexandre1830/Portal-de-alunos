@@ -24,6 +24,8 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          set_code: string | null
+          tier: number | null
           title: string
           xp_reward: number
         }
@@ -32,6 +34,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          set_code?: string | null
+          tier?: number | null
           title: string
           xp_reward?: number
         }
@@ -40,6 +44,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          set_code?: string | null
+          tier?: number | null
           title?: string
           xp_reward?: number
         }
@@ -713,18 +719,21 @@ export type Database = {
       user_achievements: {
         Row: {
           achievement_id: string
+          claimed_at: string | null
           earned_at: string
           id: string
           user_id: string
         }
         Insert: {
           achievement_id: string
+          claimed_at?: string | null
           earned_at?: string
           id?: string
           user_id: string
         }
         Update: {
           achievement_id?: string
+          claimed_at?: string | null
           earned_at?: string
           id?: string
           user_id?: string
@@ -741,6 +750,47 @@ export type Database = {
             foreignKeyName: "user_achievements_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_gamification: {
+        Row: {
+          created_at: string
+          current_streak: number
+          last_activity_date: string | null
+          longest_streak: number
+          total_srs_reviews: number
+          total_xp: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number
+          last_activity_date?: string | null
+          longest_streak?: number
+          total_srs_reviews?: number
+          total_xp?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number
+          last_activity_date?: string | null
+          longest_streak?: number
+          total_srs_reviews?: number
+          total_xp?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_gamification_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -774,44 +824,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "user_preferences_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_gamification: {
-        Row: {
-          created_at: string
-          current_streak: number
-          last_activity_date: string | null
-          longest_streak: number
-          total_xp: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          current_streak?: number
-          last_activity_date?: string | null
-          longest_streak?: number
-          total_xp?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          current_streak?: number
-          last_activity_date?: string | null
-          longest_streak?: number
-          total_xp?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_gamification_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "profiles"

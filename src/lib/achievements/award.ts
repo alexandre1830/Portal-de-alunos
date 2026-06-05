@@ -2,115 +2,65 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/types/database";
 
-type AdminClient = SupabaseClient<Database>;
+import { CATALOG, type AchievementCode } from "./catalog";
+import { computeUserMetrics } from "./metrics";
 
-// Conquistas detectadas após uma mudança de progresso. Os `code` precisam
-// existir na tabela `achievements` (rode `pnpm seed:achievements`).
-const CODES = [
-  "first_part_completed",
-  "first_perfect_part",
-  "streak_3",
-  "streak_7",
-  "first_lesson_completed",
-] as const;
-type AchievementCode = (typeof CODES)[number];
+type AdminClient = SupabaseClient<Database>;
 
 export interface AwardContext {
   userId: string;
-  courseId: string;
-  partId: string;
+  // courseId/partId já não são usados pela lógica nova (todas as condições
+  // são por usuário, não por curso/parte), mas mantemos no contrato para
+  // os call-sites existentes não quebrarem.
+  courseId?: string;
+  partId?: string;
 }
 
-// Verifica condições e concede conquistas ainda não obtidas. Cada concessão
-// também gera um xp_event (source: "achievement:<code>") para alimentar XP/
-// streak via o trigger existente. Idempotente: a unique (user_id, achievement_id)
-// barra duplicatas, e checamos antes para não gerar inserts inúteis.
+// Detecta conquistas atingidas pelo usuário e MARCA como earned (insere
+// linha em user_achievements com earned_at preenchido e claimed_at=null).
+// Diferença para a v1: NÃO insere xp_event aqui — o XP só é creditado
+// quando o aluno aperta "Coletar recompensa" (vide claimAchievement).
+//
+// Idempotente: a unique (user_id, achievement_id) barra duplicatas, e
+// checamos antes para não tentar reinserir.
 export async function awardAchievements(
   admin: AdminClient,
   ctx: AwardContext,
 ): Promise<void> {
-  const { userId, courseId, partId } = ctx;
+  const { userId } = ctx;
 
-  // 1. Carrega o catálogo e o que o usuário já tem.
-  const [{ data: catalog }, { data: owned }] = await Promise.all([
-    admin
-      .from("achievements")
-      .select("id, code, xp_reward")
-      .in("code", [...CODES]),
+  // 1) Carrega catálogo (id por code) e o que o usuário já tem.
+  const [{ data: catalogRows }, { data: ownedRows }] = await Promise.all([
+    admin.from("achievements").select("id, code"),
     admin
       .from("user_achievements")
       .select("achievement_id")
       .eq("user_id", userId),
   ]);
 
-  const byCode = new Map<string, { id: string; xp_reward: number }>();
-  for (const a of catalog ?? []) {
-    byCode.set(a.code, { id: a.id, xp_reward: a.xp_reward });
-  }
-  const ownedIds = new Set((owned ?? []).map((o) => o.achievement_id));
+  const idByCode = new Map<string, string>();
+  for (const row of catalogRows ?? []) idByCode.set(row.code, row.id);
+  const ownedIds = new Set((ownedRows ?? []).map((r) => r.achievement_id));
 
-  // 2. Pré-carrega o que precisamos para todas as condições, em paralelo.
-  const [progRes, gamRes, partRes] = await Promise.all([
-    admin
-      .from("part_progress")
-      .select("part_id, status, stars")
-      .eq("user_id", userId),
-    admin
-      .from("user_gamification")
-      .select("current_streak, longest_streak")
-      .eq("user_id", userId)
-      .maybeSingle(),
-    admin.from("parts").select("id, lesson_id").eq("id", partId).maybeSingle(),
-  ]);
+  // 2) Calcula métricas atuais.
+  const metrics = await computeUserMetrics(admin, userId);
 
-  const allProgress = progRes.data ?? [];
-  const completed = allProgress.filter((p) => p.status === "completed");
-  const perfect = completed.filter((p) => p.stars === 3);
-  const streak = gamRes.data?.current_streak ?? 0;
-  const longest = gamRes.data?.longest_streak ?? 0;
-  const lessonId = partRes.data?.lesson_id ?? null;
-
-  // 3. Mapeia condições atendidas.
-  const reached: AchievementCode[] = [];
-  if (completed.length >= 1) reached.push("first_part_completed");
-  if (perfect.length >= 1) reached.push("first_perfect_part");
-  if (streak >= 3 || longest >= 3) reached.push("streak_3");
-  if (streak >= 7 || longest >= 7) reached.push("streak_7");
-
-  if (lessonId) {
-    const [{ data: lessonParts }, { data: lessonProgress }] = await Promise.all([
-      admin.from("parts").select("id").eq("lesson_id", lessonId),
-      admin
-        .from("part_progress")
-        .select("part_id")
-        .eq("user_id", userId)
-        .eq("status", "completed"),
-    ]);
-    const total = lessonParts?.length ?? 0;
-    const doneSet = new Set((lessonProgress ?? []).map((p) => p.part_id));
-    const lessonDone =
-      total > 0 && (lessonParts ?? []).every((p) => doneSet.has(p.id));
-    if (lessonDone) reached.push("first_lesson_completed");
+  // 3) Para cada entrada do catálogo cuja condição foi atingida e ainda
+  //    não está em user_achievements, insere com earned_at = now() e
+  //    claimed_at = null.
+  const toInsert: { user_id: string; achievement_id: string }[] = [];
+  for (const entry of CATALOG) {
+    if (!entry.reached(metrics)) continue;
+    const achievementId = idByCode.get(entry.code);
+    if (!achievementId || ownedIds.has(achievementId)) continue;
+    toInsert.push({ user_id: userId, achievement_id: achievementId });
   }
 
-  // 4. Concede só as novas. Para cada nova, insere user_achievement e xp_event.
-  for (const code of reached) {
-    const entry = byCode.get(code);
-    if (!entry || ownedIds.has(entry.id)) continue;
+  if (toInsert.length === 0) return;
 
-    const { error: insErr } = await admin
-      .from("user_achievements")
-      .insert({ user_id: userId, achievement_id: entry.id });
-    if (insErr) continue;
-
-    if (entry.xp_reward > 0) {
-      await admin.from("xp_events").insert({
-        user_id: userId,
-        amount: entry.xp_reward,
-        source: `achievement:${code}`,
-        part_id: partId,
-      });
-    }
-  }
-  void courseId; // reservado para conquistas por curso no futuro
+  // Insert em lote — se houver corrida com a unique constraint,
+  // ignoramos o erro (idempotência).
+  await admin.from("user_achievements").insert(toInsert);
+  // Marker: silencia o lint sobre AchievementCode não usado em runtime.
+  void (null as unknown as AchievementCode);
 }
