@@ -6,6 +6,7 @@ import { FlameIcon } from "@/components/icons/FlameIcon";
 import { GearIcon } from "@/components/icons/GearIcon";
 import { TrophyIcon } from "@/components/icons/TrophyIcon";
 import { StudyIllustration } from "@/components/illustrations/StudyIllustration";
+import { Avatar } from "@/components/shared/Avatar";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { getStudentDashboard } from "@/lib/dashboard/queries";
@@ -45,7 +46,7 @@ export default async function PainelPage() {
   const [{ data: profile }, dashboard, srsDue] = await Promise.all([
     supabase
       .from("profiles")
-      .select("full_name, email, role")
+      .select("full_name, email, role, avatar_url")
       .eq("id", user.id)
       .single(),
     getStudentDashboard(supabase, user.id),
@@ -90,14 +91,22 @@ export default async function PainelPage() {
         </div>
       </header>
 
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold text-fg-primary">
-          Olá{profile?.full_name ? `, ${profile.full_name}` : ""}!
-        </h1>
-        <p className="text-sm text-fg-secondary">
-          {profile ? ROLE_LABELS[profile.role] : "—"} ·{" "}
-          {profile?.email ?? user.email}
-        </p>
+      <div className="flex items-center gap-4">
+        <Avatar
+          src={profile?.avatar_url ?? null}
+          fullName={profile?.full_name}
+          email={profile?.email ?? user.email ?? ""}
+          size="lg"
+        />
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold text-fg-primary">
+            Olá{profile?.full_name ? `, ${profile.full_name}` : ""}!
+          </h1>
+          <p className="text-sm text-fg-secondary">
+            {profile ? ROLE_LABELS[profile.role] : "—"} ·{" "}
+            {profile?.email ?? user.email}
+          </p>
+        </div>
       </div>
 
       {/* Gamificação */}
