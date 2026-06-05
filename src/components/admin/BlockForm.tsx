@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { Button } from "@/components/ui/Button";
 import { createBlock, updateBlock } from "@/lib/admin/actions";
 import { toast } from "@/lib/toast/store";
@@ -147,7 +148,15 @@ export function BlockForm({
         />
       )}
 
-      {(type === "rich_text" || type === "reading_tts") && (
+      {type === "rich_text" && (
+        <RichTextEditor
+          name="text"
+          initialHtml={initial.text ?? ""}
+          placeholder="Escreva o conteúdo da explicação…"
+        />
+      )}
+
+      {type === "reading_tts" && (
         <textarea
           name="text"
           defaultValue={initial.text}

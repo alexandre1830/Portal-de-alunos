@@ -144,6 +144,64 @@
   }
 }
 
+/* Estilos do editor TipTap (rich text) — escopo .tiptap aplicado pelo
+   próprio EditorContent. Renderiza HTML salvo nos blocos rich_text
+   também via RichTextBlock (com a mesma classe para consistência). */
+.tiptap p {
+  margin: 0 0 0.5em 0;
+}
+.tiptap p:last-child {
+  margin-bottom: 0;
+}
+.tiptap h2,
+.tiptap h3 {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.015em;
+  margin: 0.6em 0 0.3em 0;
+}
+.tiptap h2 {
+  font-size: 1.125rem;
+}
+.tiptap h3 {
+  font-size: 1rem;
+}
+.tiptap ul,
+.tiptap ol {
+  margin: 0.3em 0 0.6em 1.5em;
+}
+.tiptap ul {
+  list-style: disc;
+}
+.tiptap ol {
+  list-style: decimal;
+}
+.tiptap blockquote {
+  border-left: 3px solid var(--color-border-secondary);
+  padding-left: 0.75rem;
+  margin: 0.5em 0;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+.tiptap strong {
+  font-weight: 600;
+}
+.tiptap em {
+  font-style: italic;
+}
+.tiptap u {
+  text-decoration: underline;
+}
+/* Placeholder vazio (mostra "data-placeholder" do attrs quando o editor
+   está sem conteúdo). */
+.tiptap.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-tertiary);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
 @keyframes celebrationConfetti {
   0% {
     transform: translateY(-20px) rotate(0deg);
