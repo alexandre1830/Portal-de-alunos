@@ -1,12 +1,11 @@
 import { notFound, redirect } from "next/navigation";
 
-import { BlockRenderer } from "@/components/blocks/BlockRenderer";
 import { BookmarkIcon } from "@/components/icons/BookmarkIcon";
 import { TrophyIcon } from "@/components/icons/TrophyIcon";
+import { PartStepper } from "@/components/partes/PartStepper";
 import { BackLink } from "@/components/shared/BackLink";
 import { Stars } from "@/components/shared/Stars";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { toggleReviewMark } from "@/lib/review/actions";
 import { getPartView } from "@/lib/courses/queries";
 import {
@@ -97,26 +96,12 @@ export default async function PartPage({
         )}
       </div>
 
-      {blocks.length === 0 ? (
-        <Card padded>
-          <p className="text-sm text-fg-secondary">
-            Esta parte ainda não tem conteúdo.
-          </p>
-        </Card>
-      ) : (
-        <div className="flex flex-col gap-6">
-          {blocks.map((block, i) => (
-            <Card
-              key={block.id}
-              padded
-              className="animate-fade-slide-in"
-              style={{ animationDelay: `${i * 60}ms` }}
-            >
-              <BlockRenderer block={block} tts={tts} />
-            </Card>
-          ))}
-        </div>
-      )}
+      <PartStepper
+        partId={part.id}
+        blocks={blocks}
+        tts={tts}
+        initiallyCompleted={done}
+      />
     </main>
   );
 }

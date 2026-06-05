@@ -5,6 +5,7 @@ import { TrophyIcon } from "@/components/icons/TrophyIcon";
 import { BackLink } from "@/components/shared/BackLink";
 import { Stars } from "@/components/shared/Stars";
 import { Card } from "@/components/ui/Card";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { getCourseStructure } from "@/lib/courses/queries";
 import { createClient } from "@/lib/supabase/server";
 import type { CourseLanguage } from "@/types/content";
@@ -78,9 +79,35 @@ export default async function CoursePage({
                       className="flex flex-col gap-3 animate-fade-slide-in"
                       style={{ animationDelay: `${i * 60}ms` }}
                     >
-                      <h3 className="font-medium text-fg-primary">
-                        {lesson.title}
-                      </h3>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <h3 className="font-medium text-fg-primary">
+                            {lesson.title}
+                          </h3>
+                          {lesson.parts.length > 0 && (() => {
+                            const totalParts = lesson.parts.length;
+                            const donePartsCount = lesson.parts.filter(
+                              (p) => p.progress?.status === "completed",
+                            ).length;
+                            return (
+                              <span className="shrink-0 text-xs text-fg-tertiary">
+                                {donePartsCount}/{totalParts}
+                              </span>
+                            );
+                          })()}
+                        </div>
+                        {lesson.parts.length > 0 && (
+                          <ProgressBar
+                            value={
+                              lesson.parts.filter(
+                                (p) => p.progress?.status === "completed",
+                              ).length
+                            }
+                            max={lesson.parts.length}
+                            ariaLabel={`Progresso na lição ${lesson.title}`}
+                          />
+                        )}
+                      </div>
 
                       {lesson.parts.length === 0 ? (
                         <p className="text-sm text-fg-tertiary">

@@ -42,12 +42,16 @@ export interface TtsOverride {
 // específico de cada tipo (type-safe) e, se o conteúdo for inválido, mostra um
 // aviso em vez de quebrar a página. `tts` (opcional) propaga as preferências do
 // aluno para leitura e pronúncia — diálogos mantêm voz por personagem.
+// `onSolved` é repassado para exercícios e usado pelo PartStepper para
+// auto-avançar quando o aluno resolve.
 export function BlockRenderer({
   block,
   tts,
+  onSolved,
 }: {
   block: Block;
   tts?: TtsOverride;
+  onSolved?: () => void;
 }) {
   switch (block.type) {
     case "rich_text": {
@@ -101,7 +105,11 @@ export function BlockRenderer({
     case "multiple_choice": {
       const parsed = multipleChoiceData.safeParse(block.data);
       return parsed.success ? (
-        <MultipleChoiceExercise blockId={block.id} data={parsed.data} />
+        <MultipleChoiceExercise
+          blockId={block.id}
+          data={parsed.data}
+          onSolved={onSolved}
+        />
       ) : (
         <Notice>Exercício inválido.</Notice>
       );
@@ -109,7 +117,11 @@ export function BlockRenderer({
     case "fill_blank": {
       const parsed = fillBlankData.safeParse(block.data);
       return parsed.success ? (
-        <FillBlankExercise blockId={block.id} data={parsed.data} />
+        <FillBlankExercise
+          blockId={block.id}
+          data={parsed.data}
+          onSolved={onSolved}
+        />
       ) : (
         <Notice>Exercício inválido.</Notice>
       );
@@ -117,7 +129,11 @@ export function BlockRenderer({
     case "translation": {
       const parsed = translationData.safeParse(block.data);
       return parsed.success ? (
-        <TranslationExercise blockId={block.id} data={parsed.data} />
+        <TranslationExercise
+          blockId={block.id}
+          data={parsed.data}
+          onSolved={onSolved}
+        />
       ) : (
         <Notice>Exercício inválido.</Notice>
       );
@@ -125,7 +141,11 @@ export function BlockRenderer({
     case "reorder_words": {
       const parsed = reorderWordsData.safeParse(block.data);
       return parsed.success ? (
-        <ReorderWordsExercise blockId={block.id} data={parsed.data} />
+        <ReorderWordsExercise
+          blockId={block.id}
+          data={parsed.data}
+          onSolved={onSolved}
+        />
       ) : (
         <Notice>Exercício inválido.</Notice>
       );
@@ -133,7 +153,11 @@ export function BlockRenderer({
     case "error_correction": {
       const parsed = errorCorrectionData.safeParse(block.data);
       return parsed.success ? (
-        <ErrorCorrectionExercise blockId={block.id} data={parsed.data} />
+        <ErrorCorrectionExercise
+          blockId={block.id}
+          data={parsed.data}
+          onSolved={onSolved}
+        />
       ) : (
         <Notice>Exercício inválido.</Notice>
       );

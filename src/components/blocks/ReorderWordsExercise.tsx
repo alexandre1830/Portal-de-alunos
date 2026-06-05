@@ -56,9 +56,11 @@ interface IndexedToken {
 export function ReorderWordsExercise({
   blockId,
   data,
+  onSolved,
 }: {
   blockId: string;
   data: ReorderWordsData;
+  onSolved?: () => void;
 }) {
   // Lista de tokens embaralhada UMA VEZ (memo por blockId).
   const shuffled = useMemo<IndexedToken[]>(() => {
@@ -112,6 +114,7 @@ export function ReorderWordsExercise({
     setPending(false);
     setResult(res);
     notifyExerciseResult(res, { answerLabel: "Ordem" });
+    if (res.ok && res.state === "perfect") onSolved?.();
   }
 
   return (

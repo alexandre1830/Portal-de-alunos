@@ -13,9 +13,11 @@ import { notifyExerciseResult } from "@/lib/toast/notify-result";
 export function ErrorCorrectionExercise({
   blockId,
   data,
+  onSolved,
 }: {
   blockId: string;
   data: ErrorCorrectionData;
+  onSolved?: () => void;
 }) {
   const [text, setText] = useState("");
   const [result, setResult] = useState<ExerciseResult | null>(null);
@@ -30,6 +32,9 @@ export function ErrorCorrectionExercise({
     setPending(false);
     setResult(res);
     notifyExerciseResult(res, { answerLabel: "Versão correta" });
+    if (res.ok && (res.state === "perfect" || res.state === "close")) {
+      onSolved?.();
+    }
   }
 
   return (

@@ -11,9 +11,11 @@ import { notifyExerciseResult } from "@/lib/toast/notify-result";
 export function FillBlankExercise({
   blockId,
   data,
+  onSolved,
 }: {
   blockId: string;
   data: FillBlankData;
+  onSolved?: () => void;
 }) {
   const [text, setText] = useState("");
   const [result, setResult] = useState<ExerciseResult | null>(null);
@@ -28,6 +30,9 @@ export function FillBlankExercise({
     setPending(false);
     setResult(res);
     notifyExerciseResult(res);
+    if (res.ok && (res.state === "perfect" || res.state === "close")) {
+      onSolved?.();
+    }
   }
 
   return (

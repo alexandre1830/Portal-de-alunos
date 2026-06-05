@@ -14,9 +14,11 @@ import { notifyExerciseResult } from "@/lib/toast/notify-result";
 export function TranslationExercise({
   blockId,
   data,
+  onSolved,
 }: {
   blockId: string;
   data: TranslationData;
+  onSolved?: () => void;
 }) {
   const [text, setText] = useState("");
   const [result, setResult] = useState<ExerciseResult | null>(null);
@@ -31,6 +33,9 @@ export function TranslationExercise({
     setPending(false);
     setResult(res);
     notifyExerciseResult(res, { answerLabel: "Tradução" });
+    if (res.ok && (res.state === "perfect" || res.state === "close")) {
+      onSolved?.();
+    }
   }
 
   return (

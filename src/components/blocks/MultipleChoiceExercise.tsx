@@ -11,9 +11,13 @@ import { cn } from "@/lib/utils/cn";
 export function MultipleChoiceExercise({
   blockId,
   data,
+  onSolved,
 }: {
   blockId: string;
   data: MultipleChoiceData;
+  // Callback opcional: chamado uma vez quando o exercício é resolvido
+  // (perfect ou close). Usado pelo PartStepper para auto-avançar.
+  onSolved?: () => void;
 }) {
   const [selected, setSelected] = useState<number | null>(null);
   const [result, setResult] = useState<ExerciseResult | null>(null);
@@ -28,6 +32,7 @@ export function MultipleChoiceExercise({
     setPending(false);
     setResult(res);
     notifyExerciseResult(res);
+    if (res.ok && res.state === "perfect") onSolved?.();
   }
 
   return (
