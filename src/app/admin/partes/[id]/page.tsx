@@ -157,9 +157,9 @@ export default async function AdminPartPage({
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
         <BackLink href={`/admin/licoes/${part.lesson_id}`} label="Lição" />
-        <Link href={`/partes/${part.id}`}>
+        <Link href={`/partes/${part.id}?from=admin`}>
           <Button type="button" variant="ghost" size="sm">
-            Pré-visualizar parte
+            Pré-visualizar como aluno
           </Button>
         </Link>
       </div>

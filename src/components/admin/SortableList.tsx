@@ -19,7 +19,6 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useState, useTransition } from "react";
 
-import { GripIcon } from "@/components/icons/GripIcon";
 import { toast } from "@/lib/toast/store";
 import { cn } from "@/lib/utils/cn";
 
@@ -71,8 +70,10 @@ export function SortableList({
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      // pequeno delay/distance evita clicks acidentais sendo lidos como drag.
-      activationConstraint: { distance: 5 },
+      // Distance maior (8px) porque agora o card inteiro é arrastável —
+      // queremos garantir que um clique acidental num botão dentro do card
+      // nunca seja interpretado como início de drag.
+      activationConstraint: { distance: 8 },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
@@ -119,6 +120,14 @@ export function SortableList({
   );
 }
 
+// O card inteiro vira a área de drag: listeners e attributes do dnd-kit
+// vão no wrapper. Com activationConstraint.distance=8, clicks em
+// buttons/links/menus dentro do card não disparam drag — o drag só
+// inicia quando o ponteiro se move > 8px enquanto pressionado.
+//
+// A11y: o wrapper recebe role=button + tabIndex para teclado (setas)
+// via KeyboardSensor; outros widgets focáveis dentro do card continuam
+// recebendo Tab normalmente.
 function SortableRow({
   id,
   children,
@@ -145,21 +154,15 @@ function SortableRow({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex items-start gap-2",
+        "min-w-0 cursor-grab touch-manipulation outline-none active:cursor-grabbing",
+        "focus-visible:ring-2 focus-visible:ring-fg-tertiary focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary",
         isDragging && "z-10 opacity-90",
       )}
+      aria-label="Arraste para reordenar"
+      {...attributes}
+      {...listeners}
     >
-      <button
-        type="button"
-        className="mt-2 flex h-7 w-6 shrink-0 cursor-grab items-center justify-center rounded text-fg-tertiary transition-colors hover:bg-bg-tertiary hover:text-fg-secondary active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fg-tertiary"
-        aria-label="Arraste para reordenar"
-        title="Arraste para reordenar"
-        {...attributes}
-        {...listeners}
-      >
-        <GripIcon className="h-4 w-4" />
-      </button>
-      <div className="min-w-0 flex-1">{children}</div>
+      {children}
     </div>
   );
 }

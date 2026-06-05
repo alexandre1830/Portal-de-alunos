@@ -1,11 +1,14 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { BookmarkIcon } from "@/components/icons/BookmarkIcon";
+import { PencilIcon } from "@/components/icons/PencilIcon";
 import { TrophyIcon } from "@/components/icons/TrophyIcon";
 import { PartStepper } from "@/components/partes/PartStepper";
 import { BackLink } from "@/components/shared/BackLink";
 import { Stars } from "@/components/shared/Stars";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { toggleReviewMark } from "@/lib/review/actions";
 import { getPartView } from "@/lib/courses/queries";
 import {
@@ -16,10 +19,13 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function PartPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ partId: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const { partId } = await params;
+  const sp = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -37,6 +43,16 @@ export default async function PartPage({
   const { part, lesson, course, blocks, progress, marked } = view;
   const done = progress?.status === "completed";
 
+  // Pré-visualização vinda do admin: só faz sentido para quem realmente
+  // é admin. Para qualquer outro role, ignoramos o ?from=admin.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+  const isAdminPreview =
+    sp.from === "admin" && profile?.role === "admin";
+
   const prefs = await getUserPreferences(supabase, user.id);
   const lang = course?.language === "es" ? "es" : "en";
   const tts = {
@@ -47,6 +63,31 @@ export default async function PartPage({
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-8 px-6 py-12">
+      {/* Banner de "modo pré-visualização" — só admin vê. Oferece um
+          atalho rápido de volta para o editor da parte. */}
+      {isAdminPreview && (
+        <Card
+          padded
+          className="flex flex-wrap items-center justify-between gap-3 border-warning/40 bg-warning-bg"
+        >
+          <div className="flex flex-col gap-0.5">
+            <span className="text-sm font-medium text-fg-primary">
+              Você está vendo como aluno
+            </span>
+            <span className="text-xs text-fg-secondary">
+              O que aparece aqui é exatamente o que o aluno vê. Suas
+              respostas neste modo afetam progresso/XP normalmente.
+            </span>
+          </div>
+          <Link href={`/admin/partes/${part.id}`}>
+            <Button type="button" variant="secondary" size="sm">
+              <PencilIcon className="h-4 w-4" />
+              Voltar para edição
+            </Button>
+          </Link>
+        </Card>
+      )}
+
       <div className="flex flex-col gap-2">
         <BackLink
           href={course ? `/cursos/${course.slug}` : "/painel"}

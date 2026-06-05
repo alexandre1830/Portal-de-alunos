@@ -96,9 +96,6 @@ export function AvatarUpload({
             </Button>
           )}
         </div>
-        <p className="text-xs text-fg-tertiary">
-          PNG, JPG, WEBP ou GIF — até 3 MB.
-        </p>
       </div>
       <input
         ref={fileRef}
