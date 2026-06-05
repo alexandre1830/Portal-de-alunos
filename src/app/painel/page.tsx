@@ -5,7 +5,9 @@ import { BookmarkIcon } from "@/components/icons/BookmarkIcon";
 import { FlameIcon } from "@/components/icons/FlameIcon";
 import { GearIcon } from "@/components/icons/GearIcon";
 import { TrophyIcon } from "@/components/icons/TrophyIcon";
+import { StudyIllustration } from "@/components/illustrations/StudyIllustration";
 import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { getStudentDashboard } from "@/lib/dashboard/queries";
 import { countDueItems } from "@/lib/srs/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -193,10 +195,11 @@ export default async function PainelPage() {
 
         {dashboard.courses.length === 0 ? (
           <Card padded>
-            <p className="text-sm text-fg-secondary">
-              Você ainda não está matriculado em nenhum curso. Assim que sua
-              matrícula for liberada, os cursos aparecem aqui.
-            </p>
+            <EmptyState
+              illustration={<StudyIllustration className="h-20 w-20" />}
+              title="Sem matrículas ainda"
+              description="Assim que seu professor liberar a sua matrícula, os cursos vão aparecer aqui."
+            />
           </Card>
         ) : (
           <ul className="flex flex-col gap-3">

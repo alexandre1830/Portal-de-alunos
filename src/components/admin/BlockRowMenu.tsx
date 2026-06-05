@@ -34,7 +34,7 @@ export function BlockRowMenu({
     startTransition(async () => {
       await moveBlock(fd);
       toast.info({
-        title: dir === "up" ? "Bloco subiu" : "Bloco desceu",
+        title: dir === "up" ? "↑ Bloco reordenado" : "↓ Bloco reordenado",
       });
     });
   }

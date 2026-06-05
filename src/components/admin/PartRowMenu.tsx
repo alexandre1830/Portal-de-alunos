@@ -40,7 +40,7 @@ export function PartRowMenu({
     startTransition(async () => {
       await movePart(fd);
       toast.info({
-        title: dir === "up" ? "Parte subiu" : "Parte desceu",
+        title: dir === "up" ? "↑ Parte reordenada" : "↓ Parte reordenada",
       });
     });
   }
@@ -52,7 +52,10 @@ export function PartRowMenu({
     startTransition(async () => {
       await deletePart(fd);
       setDeleteOpen(false);
-      toast.success({ title: `Parte "${partTitle}" excluída` });
+      toast.success({
+        title: "Parte excluída",
+        description: `"${partTitle}" foi removida junto com seus blocos.`,
+      });
     });
   }
 

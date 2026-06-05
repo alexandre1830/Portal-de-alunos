@@ -46,7 +46,10 @@ export function LessonRowMenu({
     fd.set("course_id", courseId);
     startTransition(async () => {
       await duplicateLesson(fd);
-      toast.success({ title: `Lição "${lessonTitle}" duplicada` });
+      toast.success({
+        title: "Lição duplicada",
+        description: `Uma cópia de "${lessonTitle}" foi adicionada ao módulo.`,
+      });
     });
   }
 
@@ -59,7 +62,7 @@ export function LessonRowMenu({
     startTransition(async () => {
       await moveLesson(fd);
       toast.info({
-        title: dir === "up" ? "Lição subiu" : "Lição desceu",
+        title: dir === "up" ? "↑ Lição reordenada" : "↓ Lição reordenada",
       });
     });
   }
@@ -71,7 +74,10 @@ export function LessonRowMenu({
     startTransition(async () => {
       await deleteLesson(fd);
       setDeleteOpen(false);
-      toast.success({ title: `Lição "${lessonTitle}" excluída` });
+      toast.success({
+        title: "Lição excluída",
+        description: `"${lessonTitle}" foi removida junto com suas partes.`,
+      });
     });
   }
 

@@ -125,8 +125,9 @@ export function PartStepper({
         )}
       </Card>
 
-      {/* Controles */}
-      <div className="flex items-center justify-between gap-2">
+      {/* Controles — separados do conteúdo por uma borda sutil para
+          deixar claro que são metadata da navegação, não parte do bloco. */}
+      <div className="flex items-center justify-between gap-2 border-t border-border-primary pt-4">
         <Button
           type="button"
           variant="ghost"

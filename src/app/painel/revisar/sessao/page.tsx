@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 
 import { ReviewSession } from "@/components/painel/ReviewSession";
+import { TargetIllustration } from "@/components/illustrations/TargetIllustration";
 import { BackLink } from "@/components/shared/BackLink";
 import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { listDueItems } from "@/lib/srs/queries";
 import { createClient } from "@/lib/supabase/server";
 
@@ -30,11 +32,11 @@ export default async function SessaoRevisaoPage() {
 
       {items.length === 0 ? (
         <Card padded>
-          <p className="text-sm text-fg-secondary">
-            Você não tem itens prontos para revisar agora. Quando errar um
-            exercício ou concluir uma parte com vocabulário, eles aparecem
-            aqui.
-          </p>
+          <EmptyState
+            illustration={<TargetIllustration className="h-20 w-20" />}
+            title="Nada para revisar agora"
+            description="Quando você errar um exercício ou concluir uma parte com vocabulário, novos itens aparecem aqui na hora certa."
+          />
         </Card>
       ) : (
         <ReviewSession items={items} />

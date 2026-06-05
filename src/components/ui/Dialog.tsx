@@ -65,7 +65,7 @@ export function Dialog({
       }}
       className={cn(
         // Reset do padding/border padrão do <dialog>.
-        "m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border border-border-primary bg-bg-secondary p-0 text-fg-primary shadow-xl backdrop:bg-black/40",
+        "m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border border-border-primary bg-bg-secondary p-0 text-fg-primary shadow-[var(--shadow-3)] backdrop:bg-black/40",
         // Animação ao abrir.
         "open:animate-fade-slide-in",
         className,

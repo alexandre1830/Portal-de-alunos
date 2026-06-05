@@ -41,6 +41,30 @@
   --radius-lg: 12px;
   --radius-xl: 16px;
   --radius-full: 9999px;
+
+  /*
+   * Espaçamento — escala consistente para padding/gap/margin.
+   * Usar via classes Tailwind (gap-3 = 0.75rem) ou diretamente
+   * com var(--space-N). Quatro tamanhos cobrem 95% dos casos.
+   */
+  --space-1: 0.25rem;  /* 4px  — micro (gaps internos de chips) */
+  --space-2: 0.5rem;   /* 8px  — small (entre ícone e label)  */
+  --space-3: 0.75rem;  /* 12px — entre itens próximos          */
+  --space-4: 1rem;     /* 16px — base                          */
+  --space-6: 1.5rem;   /* 24px — entre seções                  */
+  --space-8: 2rem;     /* 32px — entre blocos maiores          */
+
+  /*
+   * Elevação — 3 níveis cobrem todo o app. Sombra clara, sem cor
+   * extravagante. No tema escuro as sombras são mais escuras
+   * (ver bloco [data-theme="dark"]).
+   *   1: card interativo em hover, dropdown menu.
+   *   2: card "acento" SRS, toasts.
+   *   3: dialogs (modal).
+   */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-2: 0 4px 8px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-3: 0 12px 32px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.10);
 }
 
 [data-theme="dark"] {
@@ -64,4 +88,9 @@
 
   --color-border-primary: #404040;
   --color-border-secondary: #525252;
+
+  /* Sombras mais densas no dark para ter elevação perceptível. */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-2: 0 4px 8px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-3: 0 16px 40px rgba(0, 0, 0, 0.65), 0 6px 16px rgba(0, 0, 0, 0.45);
 }

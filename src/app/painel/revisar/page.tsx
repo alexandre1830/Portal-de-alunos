@@ -2,9 +2,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { BookmarkIcon } from "@/components/icons/BookmarkIcon";
+import { InboxIllustration } from "@/components/illustrations/InboxIllustration";
 import { BackLink } from "@/components/shared/BackLink";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { toggleReviewMark } from "@/lib/review/actions";
 import { countDueItems } from "@/lib/srs/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -76,10 +78,11 @@ export default async function RevisarPage() {
         </h2>
       {items.length === 0 ? (
         <Card padded>
-          <p className="text-sm text-fg-secondary">
-            Você ainda não marcou nenhuma parte. Dentro de uma parte, use o
-            botão de marcador para guardá-la aqui.
-          </p>
+          <EmptyState
+            illustration={<InboxIllustration className="h-20 w-20" />}
+            title="Sem marcações ainda"
+            description="Dentro de uma parte, toque no marcador para guardá-la aqui e revisitar depois."
+          />
         </Card>
       ) : (
         <ul className="flex flex-col gap-3">

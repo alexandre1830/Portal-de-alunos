@@ -12,9 +12,9 @@ const cardVariants = cva(
         false: "p-4",
       },
       interactive: {
-        // Hover: levanta um pixel, sombra suave, borda + bg respondem.
+        // Hover: levanta um pixel, sombra suave (elevation 1), borda + bg respondem.
         // Active: volta para o lugar e dá um leve scale para sensação de clique.
-        true: "cursor-pointer hover:-translate-y-0.5 hover:shadow-md hover:border-border-secondary hover:bg-bg-tertiary active:translate-y-0 active:scale-[0.99]",
+        true: "cursor-pointer hover:-translate-y-0.5 hover:shadow-[var(--shadow-1)] hover:border-border-secondary hover:bg-bg-tertiary active:translate-y-0 active:scale-[0.99]",
         false: "",
       },
       accent: {

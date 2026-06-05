@@ -40,7 +40,7 @@ export function ModuleRowMenu({
     startTransition(async () => {
       await moveModule(fd);
       toast.info({
-        title: dir === "up" ? "Módulo subiu" : "Módulo desceu",
+        title: dir === "up" ? "↑ Módulo reordenado" : "↓ Módulo reordenado",
       });
     });
   }
@@ -52,7 +52,10 @@ export function ModuleRowMenu({
     startTransition(async () => {
       await deleteModule(fd);
       setDeleteOpen(false);
-      toast.success({ title: `Módulo "${moduleTitle}" excluído` });
+      toast.success({
+        title: "Módulo excluído",
+        description: `"${moduleTitle}" foi removido junto com seu conteúdo.`,
+      });
     });
   }
 

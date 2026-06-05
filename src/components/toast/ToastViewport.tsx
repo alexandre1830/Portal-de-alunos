@@ -40,8 +40,8 @@ function Toast({ item }: { item: ToastItem }) {
       type="button"
       onClick={() => dismiss(item.id)}
       className={cn(
-        "pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg border px-4 py-3 text-left shadow-md transition-shadow",
-        "hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fg-tertiary",
+        "pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg border px-4 py-3 text-left shadow-[var(--shadow-2)] transition-shadow",
+        "hover:shadow-[var(--shadow-3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fg-tertiary",
         KIND_CLS[item.kind],
         item.leaving ? "animate-toast-out" : "animate-toast-in",
       )}

@@ -38,6 +38,11 @@
 
   --font-sans: var(--font-family-sans);
   --font-mono: var(--font-family-mono);
+
+  /* Shadows: registramos como utility (shadow-1/2/3). */
+  --shadow-1: var(--shadow-1);
+  --shadow-2: var(--shadow-2);
+  --shadow-3: var(--shadow-3);
 }
 
 @layer base {
@@ -45,6 +50,44 @@
     background-color: var(--color-background-primary);
     color: var(--color-text-primary);
     font-family: var(--font-family-sans);
+    /* Tipografia base: rendering mais nítido em telas modernas. */
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /*
+   * Animação ao alternar tema. O ThemeProvider adiciona a classe
+   * `theme-transitioning` no <html> por um curto período em volta da
+   * troca; só durante essa janela todos os elementos animam cor/borda.
+   * Isso evita interferir com transições existentes de hover/focus.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    html.theme-transitioning,
+    html.theme-transitioning *,
+    html.theme-transitioning *::before,
+    html.theme-transitioning *::after {
+      transition:
+        background-color 250ms ease,
+        border-color 250ms ease,
+        color 250ms ease,
+        fill 250ms ease,
+        stroke 250ms ease !important;
+      transition-delay: 0s !important;
+    }
+  }
+
+  /* Hierarquia tipográfica refinada: pesos e tracking distintos para
+     ajudar o scan visual. As classes existentes (text-2xl, text-base)
+     continuam definindo tamanho — aqui só ajustamos detalhes. */
+  h1 {
+    letter-spacing: -0.02em;
+  }
+  h2 {
+    letter-spacing: -0.015em;
+  }
+  h3,
+  h4 {
+    letter-spacing: -0.01em;
   }
 }
 
@@ -89,6 +132,29 @@
   }
 }
 
+@keyframes skeletonShimmer {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes celebrationConfetti {
+  0% {
+    transform: translateY(-20px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(140px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .animate-fade-slide-in {
     /* `backwards` aplica o estado inicial mesmo com animation-delay > 0
@@ -100,5 +166,11 @@
   }
   .animate-toast-out {
     animation: toastOut 180ms ease-in forwards;
+  }
+  .animate-skeleton-shimmer {
+    animation: skeletonShimmer 1500ms ease-in-out infinite;
+  }
+  .animate-confetti {
+    animation: celebrationConfetti 1200ms ease-out forwards;
   }
 }

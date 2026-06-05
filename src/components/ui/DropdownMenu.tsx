@@ -62,7 +62,7 @@ export function DropdownMenu({
         <div
           role="menu"
           className={cn(
-            "absolute top-full z-20 mt-1 min-w-44 overflow-hidden rounded-md border border-border-primary bg-bg-secondary shadow-lg animate-fade-slide-in",
+            "absolute top-full z-20 mt-1 min-w-44 overflow-hidden rounded-md border border-border-primary bg-bg-secondary shadow-[var(--shadow-2)] animate-fade-slide-in",
             align === "end" ? "right-0" : "left-0",
           )}
           // Fecha o menu após qualquer click dentro (afinal item clicado já

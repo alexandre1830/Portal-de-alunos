@@ -28,8 +28,23 @@ function subscribe(callback: () => void) {
   };
 }
 
+// Janela em que aplicamos a classe `theme-transitioning` no <html>.
+// Casado com a duration usada em globals.css (250ms) + folga.
+const THEME_TRANSITION_MS = 320;
+let transitionTimer: ReturnType<typeof setTimeout> | null = null;
+
 function setThemeGlobal(theme: Theme) {
-  document.documentElement.dataset.theme = theme;
+  const html = document.documentElement;
+  // Ativa transição suave APENAS durante a troca — fora dessa janela os
+  // demais hover/focus mantêm suas próprias durations.
+  html.classList.add("theme-transitioning");
+  if (transitionTimer) clearTimeout(transitionTimer);
+  transitionTimer = setTimeout(() => {
+    html.classList.remove("theme-transitioning");
+    transitionTimer = null;
+  }, THEME_TRANSITION_MS);
+
+  html.dataset.theme = theme;
   try {
     localStorage.setItem(STORAGE_KEY, theme);
   } catch {
