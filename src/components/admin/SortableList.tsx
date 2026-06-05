@@ -120,14 +120,39 @@ export function SortableList({
   );
 }
 
+// Seletor de elementos editáveis: se um evento (pointerdown/keydown)
+// originar de qualquer um deles, NÃO chamamos o handler do dnd-kit. Com
+// isso a digitação (incluindo Espaço, que o KeyboardSensor usa como
+// "ativar drag") nunca é interpretada como início de arraste.
+const EDITABLE_SELECTOR =
+  "input, textarea, select, button, a, [contenteditable=true], [contenteditable=''], .ProseMirror, .tiptap";
+
+// Wrapa o objeto de listeners retornado por useSortable para ignorar
+// eventos vindos de form controls / áreas editáveis. Mantém os mesmos
+// nomes de evento (onPointerDown, onKeyDown, etc.) que o dnd-kit emite.
+type Listener = (e: React.SyntheticEvent) => void;
+function filterListeners(
+  listeners: Record<string, Listener> | undefined,
+): Record<string, Listener> {
+  if (!listeners) return {};
+  const out: Record<string, Listener> = {};
+  for (const [name, handler] of Object.entries(listeners)) {
+    out[name] = (e) => {
+      const target = e.target as HTMLElement | null;
+      if (target && target.closest(EDITABLE_SELECTOR)) return;
+      handler(e);
+    };
+  }
+  return out;
+}
+
 // O card inteiro vira a área de drag: listeners e attributes do dnd-kit
 // vão no wrapper. Com activationConstraint.distance=8, clicks em
 // buttons/links/menus dentro do card não disparam drag — o drag só
-// inicia quando o ponteiro se move > 8px enquanto pressionado.
-//
-// A11y: o wrapper recebe role=button + tabIndex para teclado (setas)
-// via KeyboardSensor; outros widgets focáveis dentro do card continuam
-// recebendo Tab normalmente.
+// inicia quando o ponteiro se move > 8px enquanto pressionado. Além
+// disso, eventos vindos de áreas editáveis (input/textarea/contenteditable)
+// são ignorados (ver filterListeners), preservando digitação normal —
+// inclusive Espaço, que o KeyboardSensor usa como ativador.
 function SortableRow({
   id,
   children,
@@ -149,6 +174,10 @@ function SortableRow({
     transition,
   };
 
+  const safeListeners = filterListeners(
+    listeners as Record<string, Listener> | undefined,
+  );
+
   return (
     <div
       ref={setNodeRef}
@@ -160,7 +189,7 @@ function SortableRow({
       )}
       aria-label="Arraste para reordenar"
       {...attributes}
-      {...listeners}
+      {...safeListeners}
     >
       {children}
     </div>
