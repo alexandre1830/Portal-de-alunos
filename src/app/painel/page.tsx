@@ -111,10 +111,17 @@ export default async function PainelPage() {
 
       {/* Gamificação */}
       <section className="grid grid-cols-3 gap-3">
-        <Card padded className="flex flex-col gap-1">
-          <span className="text-2xl font-bold text-fg-primary">{xp}</span>
-          <span className="text-xs text-fg-secondary">XP total</span>
-        </Card>
+        <Link href="/painel/xp" className="block">
+          <Card
+            padded
+            interactive
+            className="flex h-full flex-col gap-1"
+            title="Ver histórico de XP"
+          >
+            <span className="text-2xl font-bold text-fg-primary">{xp}</span>
+            <span className="text-xs text-fg-secondary">XP total</span>
+          </Card>
+        </Link>
         <Card padded className="flex flex-col gap-1">
           <span className="flex items-center gap-1.5 text-2xl font-bold text-fg-primary">
             {streak}
