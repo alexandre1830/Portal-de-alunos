@@ -1,12 +1,11 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 
 import { SpeakButton } from "@/components/blocks/SpeakButton";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { savePreferences } from "@/lib/preferences/actions";
-import { initialPreferencesState } from "@/lib/preferences/types";
+import { toast } from "@/lib/toast/store";
 import {
   DEFAULT_RATE,
   MAX_RATE,
@@ -26,10 +25,12 @@ interface Props {
   availableLanguages: ("en" | "es")[];
 }
 
-// Card único "Áudio" que envolve tudo (voz por idioma + velocidade + salvar).
-// As subseções são separadas por border-b para dar identidade clara, e o
-// botão "Salvar configurações" mora no rodapé do card — fica óbvio o que
-// está sendo salvo.
+// Card "Áudio" com AUTOSAVE: qualquer mudança em voz (radio) ou velocidade
+// (slider) salva sozinha. Voz salva imediatamente; slider tem debounce de
+// 600ms para não disparar uma chamada por tick do drag.
+//
+// Indicador no canto superior direito mostra "Salvando…" durante a chamada
+// e "Salvo" por ~1.6s após sucesso, depois some.
 export function PreferencesForm({
   initialVoiceEn,
   initialVoiceEs,
@@ -43,112 +44,208 @@ export function PreferencesForm({
   const [rate, setRate] = useState(
     Number.isFinite(initialRate) ? initialRate : DEFAULT_RATE,
   );
-  const [state, formAction, pending] = useActionState(
-    savePreferences,
-    initialPreferencesState,
-  );
+
+  type Status = "idle" | "saving" | "saved";
+  const [status, setStatus] = useState<Status>("idle");
+  const [, startTransition] = useTransition();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function doSave(next: {
+    voiceEn: string;
+    voiceEs: string;
+    rate: number;
+  }) {
+    setStatus("saving");
+    startTransition(async () => {
+      const res = await savePreferences(next);
+      if (res.ok) {
+        setStatus("saved");
+        if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+        savedTimerRef.current = setTimeout(() => setStatus("idle"), 1600);
+      } else {
+        setStatus("idle");
+        toast.danger({
+          title: "Não consegui salvar",
+          description: res.error ?? "Tente novamente em instantes.",
+        });
+      }
+    });
+  }
+
+  // Aplica um novo valor de voz e dispara save imediato (clique único, sem
+  // debounce — feedback rápido).
+  function applyVoice(lang: "en" | "es", id: string) {
+    if (lang === "en") setVoiceEn(id);
+    else setVoiceEs(id);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    doSave({
+      voiceEn: lang === "en" ? id : voiceEn,
+      voiceEs: lang === "es" ? id : voiceEs,
+      rate,
+    });
+  }
+
+  // Aplica novo valor de velocidade e agenda save com debounce — slider muda
+  // rápido durante o drag.
+  function applyRate(value: number) {
+    setRate(value);
+    setStatus("saving"); // feedback imediato de "vai salvar"
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      doSave({ voiceEn, voiceEs, rate: value });
+    }, 600);
+  }
 
   const hasAnyVoiceSection = showEn || showEs;
 
   return (
     <Card padded className="flex flex-col gap-0 p-0">
-      <form action={formAction} className="flex flex-col">
-        {/* Header do card */}
-        <header className="flex flex-col gap-1 border-b border-border-primary px-5 py-4">
+      {/* Header com indicador de autosave no canto direito */}
+      <header className="flex items-start justify-between gap-3 border-b border-border-primary px-5 py-4">
+        <div className="flex flex-col gap-1">
           <h2 className="text-base font-semibold text-fg-primary">Áudio</h2>
           <p className="text-sm text-fg-secondary">
-            Voz das narrações e velocidade da fala usada nos textos e
-            exercícios de pronúncia.
+            Suas escolhas são salvas automaticamente.
           </p>
-        </header>
+        </div>
+        <SaveStatus status={status} />
+      </header>
 
-        <input type="hidden" name="tts_voice_en" value={voiceEn} />
-        <input type="hidden" name="tts_voice_es" value={voiceEs} />
-        <input type="hidden" name="tts_rate" value={rate.toFixed(2)} />
+      {showEn && (
+        <VoiceSection
+          title="Voz para textos em inglês"
+          voices={VOICES_BY_LANG.en}
+          selected={voiceEn}
+          onSelect={(id) => applyVoice("en", id)}
+          rate={rate}
+        />
+      )}
 
-        {showEn && (
-          <VoiceSection
-            title="Voz para textos em inglês"
-            voices={VOICES_BY_LANG.en}
-            selected={voiceEn}
-            onSelect={setVoiceEn}
-            rate={rate}
-          />
-        )}
+      {showEs && (
+        <VoiceSection
+          title="Voz para textos em espanhol"
+          voices={VOICES_BY_LANG.es}
+          selected={voiceEs}
+          onSelect={(id) => applyVoice("es", id)}
+          rate={rate}
+        />
+      )}
 
-        {showEs && (
-          <VoiceSection
-            title="Voz para textos em espanhol"
-            voices={VOICES_BY_LANG.es}
-            selected={voiceEs}
-            onSelect={setVoiceEs}
-            rate={rate}
-          />
-        )}
+      {!hasAnyVoiceSection && (
+        <p className="border-b border-border-primary px-5 py-4 text-sm text-fg-secondary">
+          Você ainda não está matriculado em nenhum curso. Quando estiver, as
+          opções de voz aparecem aqui de acordo com o idioma do curso.
+        </p>
+      )}
 
-        {!hasAnyVoiceSection && (
-          <p className="border-b border-border-primary px-5 py-4 text-sm text-fg-secondary">
-            Você ainda não está matriculado em nenhum curso. Quando estiver,
-            as opções de voz aparecem aqui de acordo com o idioma do curso.
-          </p>
-        )}
-
-        {/* Velocidade da fala */}
-        <section className="flex flex-col gap-3 border-b border-border-primary px-5 py-4">
-          <div className="flex items-baseline justify-between">
-            <h3 className="text-sm font-semibold text-fg-primary">
-              Velocidade da fala
-            </h3>
-            <span className="text-sm text-fg-secondary">
-              {rate.toFixed(2)}x
-            </span>
-          </div>
-          <input
-            type="range"
-            min={MIN_RATE}
-            max={MAX_RATE}
-            step={RATE_STEP}
-            value={rate}
-            onChange={(e) => setRate(Number(e.target.value))}
-            aria-label="Velocidade da fala"
-            className="w-full accent-fg-primary"
-          />
-          <div className="flex justify-between text-xs text-fg-tertiary">
-            <span>Mais devagar ({MIN_RATE.toFixed(2)}x)</span>
-            <span>Padrão ({DEFAULT_RATE.toFixed(2)}x)</span>
-            <span>Mais rápido ({MAX_RATE.toFixed(2)}x)</span>
-          </div>
-          <p className="text-xs text-fg-tertiary">
-            Vale para textos e exercícios de pronúncia. Diálogos mantêm o
-            ritmo natural (cada personagem tem voz própria).
-          </p>
-        </section>
-
-        {/* Rodapé: feedback + botão salvar */}
-        <footer className="flex items-center justify-between gap-3 px-5 py-4">
-          <div className="min-h-5 flex-1">
-            {state.error && (
-              <p role="alert" className="text-sm text-danger">
-                {state.error}
-              </p>
-            )}
-            {state.notice && (
-              <p role="status" className="text-sm text-success">
-                {state.notice}
-              </p>
-            )}
-          </div>
-          <Button type="submit" loading={pending}>
-            Salvar configurações
-          </Button>
-        </footer>
-      </form>
+      {/* Velocidade da fala */}
+      <section className="flex flex-col gap-3 px-5 py-4">
+        <div className="flex items-baseline justify-between">
+          <h3 className="text-sm font-semibold text-fg-primary">
+            Velocidade da fala
+          </h3>
+          <span className="text-sm text-fg-secondary">
+            {rate.toFixed(2)}x
+          </span>
+        </div>
+        <input
+          type="range"
+          min={MIN_RATE}
+          max={MAX_RATE}
+          step={RATE_STEP}
+          value={rate}
+          onChange={(e) => applyRate(Number(e.target.value))}
+          aria-label="Velocidade da fala"
+          className="w-full accent-fg-primary"
+        />
+        <div className="flex justify-between text-xs text-fg-tertiary">
+          <span>Mais devagar ({MIN_RATE.toFixed(2)}x)</span>
+          <span>Padrão ({DEFAULT_RATE.toFixed(2)}x)</span>
+          <span>Mais rápido ({MAX_RATE.toFixed(2)}x)</span>
+        </div>
+        <p className="text-xs text-fg-tertiary">
+          Vale para textos e exercícios de pronúncia. Diálogos mantêm o ritmo
+          natural (cada personagem tem voz própria).
+        </p>
+      </section>
     </Card>
   );
 }
 
-// Subseção de voz dentro do card "Áudio". Não é mais um Card próprio — é
-// um <section> com border-b para casar com o resto da estrutura.
+// Pequeno chip no header indicando o estado do autosave. Quando idle não
+// renderiza nada — evita poluição visual quando não há nada acontecendo.
+function SaveStatus({ status }: { status: "idle" | "saving" | "saved" }) {
+  if (status === "idle") return null;
+  return (
+    <span
+      role="status"
+      aria-live="polite"
+      className={cn(
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-opacity",
+        status === "saved"
+          ? "bg-success-bg text-success"
+          : "bg-bg-tertiary text-fg-secondary",
+      )}
+    >
+      {status === "saving" ? (
+        <>
+          <Spinner />
+          Salvando…
+        </>
+      ) : (
+        <>
+          <CheckIcon />
+          Salvo
+        </>
+      )}
+    </span>
+  );
+}
+
+function Spinner() {
+  return (
+    <svg
+      className="h-3 w-3 animate-spin"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle
+        className="opacity-30"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+      />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg
+      className="h-3 w-3"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+// Subseção de voz dentro do card "Áudio".
 function VoiceSection({
   title,
   voices,
