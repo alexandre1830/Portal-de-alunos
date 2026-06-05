@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { KeyIcon } from "@/components/icons/KeyIcon";
-import { AvatarUpload } from "@/components/painel/AvatarUpload";
 import { PreferencesForm } from "@/components/painel/PreferencesForm";
 import { SignOutButton } from "@/components/painel/SignOutButton";
 import { ThemeSwitch } from "@/components/painel/ThemeSwitch";
@@ -19,13 +18,9 @@ export default async function ConfiguracoesPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, email, avatar_url")
-    .eq("id", user.id)
-    .single();
-
   // Idiomas das matrículas ativas → quais seções de voz mostrar.
+  // (A foto de perfil agora é editada clicando direto no avatar do
+  // /painel, então não consultamos profile aqui.)
   const { data: enrollments } = await supabase
     .from("enrollments")
     .select("course:courses(language)")
@@ -47,22 +42,9 @@ export default async function ConfiguracoesPage() {
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold text-fg-primary">Configurações</h1>
         <p className="text-sm text-fg-secondary">
-          Ajuste sua foto, a aparência, a voz dos áudios, sua senha e
-          gerencie a sessão.
+          Ajuste a aparência, a voz dos áudios, sua senha e gerencie a sessão.
         </p>
       </div>
-
-      {/* 0. Foto de perfil */}
-      <Card padded className="flex flex-col gap-3">
-        <h2 className="text-base font-semibold text-fg-primary">
-          Foto de perfil
-        </h2>
-        <AvatarUpload
-          initialSrc={profile?.avatar_url ?? null}
-          fullName={profile?.full_name ?? null}
-          email={profile?.email ?? user.email ?? ""}
-        />
-      </Card>
 
       {/* 1. Tema */}
       <Card padded className="flex flex-col gap-3">

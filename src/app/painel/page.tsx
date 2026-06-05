@@ -6,7 +6,7 @@ import { FlameIcon } from "@/components/icons/FlameIcon";
 import { GearIcon } from "@/components/icons/GearIcon";
 import { TrophyIcon } from "@/components/icons/TrophyIcon";
 import { StudyIllustration } from "@/components/illustrations/StudyIllustration";
-import { Avatar } from "@/components/shared/Avatar";
+import { AvatarEditor } from "@/components/painel/AvatarEditor";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { getStudentDashboard } from "@/lib/dashboard/queries";
@@ -92,9 +92,9 @@ export default async function PainelPage() {
       </header>
 
       <div className="flex items-center gap-4">
-        <Avatar
-          src={profile?.avatar_url ?? null}
-          fullName={profile?.full_name}
+        <AvatarEditor
+          initialSrc={profile?.avatar_url ?? null}
+          fullName={profile?.full_name ?? null}
           email={profile?.email ?? user.email ?? ""}
           size="lg"
         />
@@ -160,7 +160,7 @@ export default async function PainelPage() {
                 Para revisar
               </span>
               <span className="text-xs text-fg-tertiary">
-                Suas marcações e a fila SRS
+                Suas marcações
               </span>
             </span>
           </Card>
