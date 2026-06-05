@@ -1,21 +1,22 @@
 import Link from "next/link";
 
+import { AddLessonDialog } from "@/components/admin/AddLessonDialog";
+import { EditModuleDialog } from "@/components/admin/EditModuleDialog";
 import { ArrowDownIcon } from "@/components/icons/ArrowDownIcon";
 import { ArrowUpIcon } from "@/components/icons/ArrowUpIcon";
+import { CopyIcon } from "@/components/icons/CopyIcon";
 import { PencilIcon } from "@/components/icons/PencilIcon";
 import { TrashIcon } from "@/components/icons/TrashIcon";
 import { ConfirmForm } from "@/components/shared/ConfirmForm";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import {
-  createLesson,
   createModule,
   deleteLesson,
   deleteModule,
   duplicateLesson,
   moveLesson,
   moveModule,
-  updateModule,
 } from "@/lib/admin/actions";
 import { requireAdmin } from "@/lib/admin/guard";
 
@@ -53,21 +54,19 @@ export default async function AdminCourseModulesPage({
   return (
     <section className="flex flex-col gap-4">
       {(modules ?? []).map((module) => (
-        <Card key={module.id} padded className="flex flex-col gap-3">
-          <div className="flex items-end gap-2">
-            <form action={updateModule} className="flex flex-1 items-end gap-2">
-              <input type="hidden" name="id" value={module.id} />
-              <input type="hidden" name="course_id" value={courseId} />
-              <input
-                name="title"
-                defaultValue={module.title}
-                className={inputCls}
-              />
-              <Button type="submit" variant="secondary" size="sm">
-                Salvar
-              </Button>
-            </form>
+        <Card key={module.id} padded className="flex flex-col gap-0 p-0">
+          {/* Header do módulo: título display + ações (pencil, mover, excluir).
+              A linha inferior cria a separação visual com a lista de lições. */}
+          <div className="flex items-center gap-2 border-b border-border-primary px-5 py-4">
+            <h3 className="flex-1 truncate text-base font-semibold text-fg-primary">
+              {module.title}
+            </h3>
             <div className="flex items-center gap-1">
+              <EditModuleDialog
+                moduleId={module.id}
+                courseId={courseId}
+                currentTitle={module.title}
+              />
               {(["up", "down"] as const).map((dir) => (
                 <form key={dir} action={moveModule}>
                   <input type="hidden" name="id" value={module.id} />
@@ -108,13 +107,16 @@ export default async function AdminCourseModulesPage({
             </div>
           </div>
 
-          <ul className="flex flex-col gap-2 pl-3">
+          {/* Lista de lições do módulo. Cada item separado por linha
+              divisória sutil; bg ligeiramente recuado para indicar
+              hierarquia. */}
+          <ul className="flex flex-col divide-y divide-border-primary bg-bg-primary/40">
             {(lessonsByModule.get(module.id) ?? []).map((lesson) => (
               <li
                 key={lesson.id}
-                className="flex items-center gap-1 rounded-md py-1"
+                className="flex items-center gap-1 px-5 py-2"
               >
-                <span className="flex-1 text-sm text-fg-primary">
+                <span className="flex-1 truncate text-sm text-fg-primary">
                   {lesson.title}
                   {!lesson.is_published && (
                     <span className="ml-2 text-xs text-fg-tertiary">
@@ -136,8 +138,14 @@ export default async function AdminCourseModulesPage({
                 <form action={duplicateLesson}>
                   <input type="hidden" name="id" value={lesson.id} />
                   <input type="hidden" name="course_id" value={courseId} />
-                  <Button type="submit" variant="ghost" size="sm">
-                    Duplicar
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    size="sm"
+                    aria-label="Duplicar lição"
+                    title="Duplicar lição"
+                  >
+                    <CopyIcon className="h-4 w-4" />
                   </Button>
                 </form>
                 {(["up", "down"] as const).map((dir) => (
@@ -182,17 +190,10 @@ export default async function AdminCourseModulesPage({
             ))}
           </ul>
 
-          <form
-            action={createLesson}
-            className="flex flex-wrap items-end gap-2 pl-3"
-          >
-            <input type="hidden" name="module_id" value={module.id} />
-            <input type="hidden" name="course_id" value={courseId} />
-            <input name="title" placeholder="Nova lição" className={inputCls} />
-            <Button type="submit" variant="secondary" size="sm">
-              Adicionar lição
-            </Button>
-          </form>
+          {/* Rodapé do card: ação para adicionar nova lição (abre Dialog) */}
+          <div className="flex items-center justify-end border-t border-border-primary px-5 py-3">
+            <AddLessonDialog moduleId={module.id} courseId={courseId} />
+          </div>
         </Card>
       ))}
 
