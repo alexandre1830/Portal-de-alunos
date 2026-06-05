@@ -11,6 +11,9 @@ import { createClient } from "@/lib/supabase/server";
 export interface MarkPartCompletedResult {
   ok: boolean;
   error: string | null;
+  // True quando a parte transicionou agora para completed (e o cliente
+  // deve mostrar a celebração).
+  justCompleted?: boolean;
 }
 
 // Marca a parte como concluída manualmente, para partes SEM exercícios.
@@ -98,5 +101,5 @@ export async function markPartCompleted(
 
   revalidatePath(`/partes/${partId}`);
 
-  return { ok: true, error: null };
+  return { ok: true, error: null, justCompleted: !wasCompleted };
 }

@@ -12,12 +12,16 @@ export function MultipleChoiceExercise({
   blockId,
   data,
   onSolved,
+  onPartCompleted,
 }: {
   blockId: string;
   data: MultipleChoiceData;
   // Callback opcional: chamado uma vez quando o exercício é resolvido
   // (perfect ou close). Usado pelo PartStepper para auto-avançar.
   onSolved?: () => void;
+  // Callback opcional: chamado quando ESTE exercício foi o último a faltar
+  // e a parte ficou concluída agora. Stepper usa para abrir a celebração.
+  onPartCompleted?: (info: { stars: number | null; xpAwarded: number }) => void;
 }) {
   const [selected, setSelected] = useState<number | null>(null);
   const [result, setResult] = useState<ExerciseResult | null>(null);
@@ -33,6 +37,12 @@ export function MultipleChoiceExercise({
     setResult(res);
     notifyExerciseResult(res);
     if (res.ok && res.state === "perfect") onSolved?.();
+    if (res.ok && res.partJustCompleted) {
+      onPartCompleted?.({
+        stars: res.partStars ?? null,
+        xpAwarded: res.xpAwarded,
+      });
+    }
   }
 
   return (

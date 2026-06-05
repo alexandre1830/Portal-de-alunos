@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 
 import { BlockRenderer, type TtsOverride } from "@/components/blocks/BlockRenderer";
+import { PartCompletionDialog } from "@/components/partes/PartCompletionDialog";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -30,11 +31,13 @@ export function PartStepper({
   blocks,
   tts,
   initiallyCompleted,
+  courseHref,
 }: {
   partId: string;
   blocks: Block[];
   tts?: TtsOverride;
   initiallyCompleted: boolean;
+  courseHref?: string;
 }) {
   const total = blocks.length;
   const [index, setIndex] = useState(0);
@@ -44,6 +47,21 @@ export function PartStepper({
   const [unlockedAhead, setUnlockedAhead] = useState<Set<number>>(new Set());
   const [completed, setCompleted] = useState(initiallyCompleted);
   const [pending, startTransition] = useTransition();
+  // Estado da tela de celebração: abre quando a parte transiciona para
+  // completed nesta sessão (uma vez por sessão).
+  const [celebration, setCelebration] = useState<{
+    open: boolean;
+    stars: number | null;
+    xpAwarded: number;
+    seed: number;
+  }>({ open: false, stars: null, xpAwarded: 0, seed: 1 });
+
+  // Gera um seed novo para o confetti SEMPRE em handler — fora de render,
+  // conforme regra de pureza do React 19. O dialog usa o mesmo seed por
+  // toda a animação enquanto estiver aberto.
+  function newSeed(): number {
+    return Math.floor(Math.random() * 1e9) + 1;
+  }
 
   const hasExerciseInPart = blocks.some((b) => isExerciseType(b.type));
   const current = blocks[index];
@@ -78,7 +96,17 @@ export function PartStepper({
       const res = await markPartCompleted(partId);
       if (res.ok) {
         setCompleted(true);
-        toast.success({ title: "Parte concluída!" });
+        if (res.justCompleted) {
+          // Parte sem exercícios não rende estrelas (stars = null no dialog).
+          setCelebration({
+            open: true,
+            stars: null,
+            xpAwarded: 0,
+            seed: newSeed(),
+          });
+        } else {
+          toast.success({ title: "Parte concluída!" });
+        }
       } else if (res.error) {
         toast.danger({ title: res.error });
       }
@@ -121,6 +149,15 @@ export function PartStepper({
             block={current}
             tts={tts}
             onSolved={() => markSolved(index)}
+            onPartCompleted={(info) => {
+              setCompleted(true);
+              setCelebration({
+                open: true,
+                stars: info.stars,
+                xpAwarded: info.xpAwarded,
+                seed: newSeed(),
+              });
+            }}
           />
         )}
       </Card>
@@ -162,6 +199,17 @@ export function PartStepper({
           />
         )}
       </div>
+
+      <PartCompletionDialog
+        open={celebration.open}
+        onClose={() =>
+          setCelebration((c) => ({ ...c, open: false }))
+        }
+        stars={celebration.stars}
+        xpAwarded={celebration.xpAwarded}
+        confettiSeed={celebration.seed}
+        courseHref={courseHref}
+      />
     </div>
   );
 }

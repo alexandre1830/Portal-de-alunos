@@ -101,6 +101,7 @@ export default async function PartPage({
         blocks={blocks}
         tts={tts}
         initiallyCompleted={done}
+        courseHref={course ? `/cursos/${course.slug}` : undefined}
       />
     </main>
   );

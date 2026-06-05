@@ -15,10 +15,12 @@ export function TranslationExercise({
   blockId,
   data,
   onSolved,
+  onPartCompleted,
 }: {
   blockId: string;
   data: TranslationData;
   onSolved?: () => void;
+  onPartCompleted?: (info: { stars: number | null; xpAwarded: number }) => void;
 }) {
   const [text, setText] = useState("");
   const [result, setResult] = useState<ExerciseResult | null>(null);
@@ -35,6 +37,12 @@ export function TranslationExercise({
     notifyExerciseResult(res, { answerLabel: "Tradução" });
     if (res.ok && (res.state === "perfect" || res.state === "close")) {
       onSolved?.();
+    }
+    if (res.ok && res.partJustCompleted) {
+      onPartCompleted?.({
+        stars: res.partStars ?? null,
+        xpAwarded: res.xpAwarded,
+      });
     }
   }
 

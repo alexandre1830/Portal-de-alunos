@@ -40,6 +40,10 @@ export interface ExerciseResult {
   correctAnswer: string | null;
   xpAwarded: number;
   error: string | null;
+  // Informações de conclusão da parte para o cliente disparar a tela de
+  // celebração. `partJustCompleted` é true APENAS na transição (uma vez).
+  partJustCompleted?: boolean;
+  partStars?: number;
 }
 
 const inputSchema = z.object({
@@ -223,7 +227,7 @@ export async function submitExercise(raw: {
     });
   }
 
-  const justCompleted = await recomputePartProgress(
+  const { justCompleted, stars: partStars } = await recomputePartProgress(
     admin,
     user.id,
     block.part_id,
@@ -240,7 +244,15 @@ export async function submitExercise(raw: {
     partId: block.part_id,
   });
 
-  return { ok: true, state, correctAnswer, xpAwarded, error: null };
+  return {
+    ok: true,
+    state,
+    correctAnswer,
+    xpAwarded,
+    error: null,
+    partJustCompleted: justCompleted,
+    partStars: justCompleted ? partStars : undefined,
+  };
 }
 
 // Para cada bloco de vocabulário da parte concluída, cria itens SRS para
@@ -270,15 +282,17 @@ async function seedVocabSrsForPart(
 }
 
 // Recalcula o progresso da parte: completa quando todos os exercícios foram
-// resolvidos; estrelas pela proporção de acertos de primeira. Devolve true
-// quando esta chamada transicionou a parte de "não-completa" para "completa"
-// — usado para disparar side-effects (semear SRS de vocab) só uma vez.
+// resolvidos; estrelas pela proporção de acertos de primeira. Devolve um
+// objeto com:
+//   - justCompleted: true APENAS na chamada que transicionou para completa
+//     (usado para semear SRS de vocab uma vez e disparar celebração no UI);
+//   - stars: nota final da parte (0-3) — útil para a tela de celebração.
 async function recomputePartProgress(
   admin: AdminClient,
   userId: string,
   partId: string,
   courseId: string,
-): Promise<boolean> {
+): Promise<{ justCompleted: boolean; stars: number }> {
   const { data: exerciseBlocks } = await admin
     .from("blocks")
     .select("id")
@@ -286,7 +300,7 @@ async function recomputePartProgress(
     .in("type", EXERCISE_TYPES);
 
   const total = exerciseBlocks?.length ?? 0;
-  if (total === 0) return false;
+  if (total === 0) return { justCompleted: false, stars: 0 };
 
   const { data: attempts } = await admin
     .from("exercise_attempts")
@@ -322,5 +336,5 @@ async function recomputePartProgress(
     { onConflict: "user_id,part_id" },
   );
 
-  return allSolved && !wasCompleted;
+  return { justCompleted: allSolved && !wasCompleted, stars };
 }

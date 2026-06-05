@@ -57,10 +57,12 @@ export function ReorderWordsExercise({
   blockId,
   data,
   onSolved,
+  onPartCompleted,
 }: {
   blockId: string;
   data: ReorderWordsData;
   onSolved?: () => void;
+  onPartCompleted?: (info: { stars: number | null; xpAwarded: number }) => void;
 }) {
   // Lista de tokens embaralhada UMA VEZ (memo por blockId).
   const shuffled = useMemo<IndexedToken[]>(() => {
@@ -115,6 +117,12 @@ export function ReorderWordsExercise({
     setResult(res);
     notifyExerciseResult(res, { answerLabel: "Ordem" });
     if (res.ok && res.state === "perfect") onSolved?.();
+    if (res.ok && res.partJustCompleted) {
+      onPartCompleted?.({
+        stars: res.partStars ?? null,
+        xpAwarded: res.xpAwarded,
+      });
+    }
   }
 
   return (

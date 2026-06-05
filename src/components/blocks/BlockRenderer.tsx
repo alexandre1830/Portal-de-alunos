@@ -48,10 +48,12 @@ export function BlockRenderer({
   block,
   tts,
   onSolved,
+  onPartCompleted,
 }: {
   block: Block;
   tts?: TtsOverride;
   onSolved?: () => void;
+  onPartCompleted?: (info: { stars: number | null; xpAwarded: number }) => void;
 }) {
   switch (block.type) {
     case "rich_text": {
@@ -109,6 +111,7 @@ export function BlockRenderer({
           blockId={block.id}
           data={parsed.data}
           onSolved={onSolved}
+          onPartCompleted={onPartCompleted}
         />
       ) : (
         <Notice>Exercício inválido.</Notice>
@@ -121,6 +124,7 @@ export function BlockRenderer({
           blockId={block.id}
           data={parsed.data}
           onSolved={onSolved}
+          onPartCompleted={onPartCompleted}
         />
       ) : (
         <Notice>Exercício inválido.</Notice>
@@ -133,6 +137,7 @@ export function BlockRenderer({
           blockId={block.id}
           data={parsed.data}
           onSolved={onSolved}
+          onPartCompleted={onPartCompleted}
         />
       ) : (
         <Notice>Exercício inválido.</Notice>
@@ -145,6 +150,7 @@ export function BlockRenderer({
           blockId={block.id}
           data={parsed.data}
           onSolved={onSolved}
+          onPartCompleted={onPartCompleted}
         />
       ) : (
         <Notice>Exercício inválido.</Notice>
@@ -157,6 +163,7 @@ export function BlockRenderer({
           blockId={block.id}
           data={parsed.data}
           onSolved={onSolved}
+          onPartCompleted={onPartCompleted}
         />
       ) : (
         <Notice>Exercício inválido.</Notice>
