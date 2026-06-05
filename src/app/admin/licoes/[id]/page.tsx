@@ -2,16 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AddPartDialog } from "@/components/admin/AddPartDialog";
-import { EditLessonDialog } from "@/components/admin/EditLessonDialog";
-import { EditPartDialog } from "@/components/admin/EditPartDialog";
-import { ArrowDownIcon } from "@/components/icons/ArrowDownIcon";
-import { ArrowUpIcon } from "@/components/icons/ArrowUpIcon";
-import { TrashIcon } from "@/components/icons/TrashIcon";
+import { LessonHeaderMenu } from "@/components/admin/LessonHeaderMenu";
+import { PartRowMenu } from "@/components/admin/PartRowMenu";
 import { BackLink } from "@/components/shared/BackLink";
-import { ConfirmForm } from "@/components/shared/ConfirmForm";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { deletePart, movePart } from "@/lib/admin/actions";
 import { requireAdmin } from "@/lib/admin/guard";
 
 export default async function AdminLessonPage({
@@ -39,7 +34,7 @@ export default async function AdminLessonPage({
     <div className="flex flex-col gap-8">
       <BackLink href={`/admin/cursos/${lesson.course_id}`} label="Curso" />
 
-      {/* Header da lição: título display + status + pencil para editar */}
+      {/* Header da lição: título + pill + menu de 3 pontinhos. */}
       <Card padded className="flex items-center gap-3">
         <div className="flex flex-1 flex-col gap-1">
           <h1 className="text-xl font-semibold text-fg-primary">
@@ -55,7 +50,7 @@ export default async function AdminLessonPage({
             {lesson.is_published ? "Publicada" : "Rascunho"}
           </span>
         </div>
-        <EditLessonDialog
+        <LessonHeaderMenu
           lessonId={lesson.id}
           courseId={lesson.course_id}
           currentTitle={lesson.title}
@@ -106,73 +101,15 @@ export default async function AdminLessonPage({
                 <span className="text-xs text-warning">dourada</span>
               )}
             </Link>
-            <EditPartDialog
-              partId={part.id}
-              lessonId={lesson.id}
-              currentTitle={part.title}
-              currentKind={part.kind}
-            />
-            <PartControls
+            <PartRowMenu
               partId={part.id}
               lessonId={lesson.id}
               partTitle={part.title}
+              partKind={part.kind}
             />
           </Card>
         ))}
       </section>
-    </div>
-  );
-}
-
-function PartControls({
-  partId,
-  lessonId,
-  partTitle,
-}: {
-  partId: string;
-  lessonId: string;
-  partTitle: string;
-}) {
-  return (
-    <div className="flex items-center gap-1">
-      {(["up", "down"] as const).map((dir) => (
-        <form key={dir} action={movePart}>
-          <input type="hidden" name="id" value={partId} />
-          <input type="hidden" name="lesson_id" value={lessonId} />
-          <input type="hidden" name="dir" value={dir} />
-          <Button
-            type="submit"
-            variant="ghost"
-            size="sm"
-            aria-label={dir === "up" ? "Subir parte" : "Descer parte"}
-            title={dir === "up" ? "Subir parte" : "Descer parte"}
-          >
-            {dir === "up" ? (
-              <ArrowUpIcon className="h-4 w-4" />
-            ) : (
-              <ArrowDownIcon className="h-4 w-4" />
-            )}
-          </Button>
-        </form>
-      ))}
-      <ConfirmForm
-        action={deletePart}
-        title="Excluir parte"
-        message={`Tem certeza que deseja excluir a parte "${partTitle}"? Todos os blocos dentro dela serão removidos. Esta ação não pode ser desfeita.`}
-      >
-        <input type="hidden" name="id" value={partId} />
-        <input type="hidden" name="lesson_id" value={lessonId} />
-        <Button
-          type="submit"
-          variant="ghost"
-          size="sm"
-          aria-label="Excluir parte"
-          title="Excluir parte"
-          className="text-danger hover:bg-danger-bg"
-        >
-          <TrashIcon className="h-4 w-4" />
-        </Button>
-      </ConfirmForm>
     </div>
   );
 }

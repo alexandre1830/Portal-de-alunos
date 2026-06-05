@@ -1,23 +1,8 @@
-import Link from "next/link";
-
 import { AddLessonDialog } from "@/components/admin/AddLessonDialog";
 import { AddModuleDialog } from "@/components/admin/AddModuleDialog";
-import { EditModuleDialog } from "@/components/admin/EditModuleDialog";
-import { ArrowDownIcon } from "@/components/icons/ArrowDownIcon";
-import { ArrowUpIcon } from "@/components/icons/ArrowUpIcon";
-import { CopyIcon } from "@/components/icons/CopyIcon";
-import { PencilIcon } from "@/components/icons/PencilIcon";
-import { TrashIcon } from "@/components/icons/TrashIcon";
-import { ConfirmForm } from "@/components/shared/ConfirmForm";
-import { Button } from "@/components/ui/Button";
+import { LessonRowMenu } from "@/components/admin/LessonRowMenu";
+import { ModuleRowMenu } from "@/components/admin/ModuleRowMenu";
 import { Card } from "@/components/ui/Card";
-import {
-  deleteLesson,
-  deleteModule,
-  duplicateLesson,
-  moveLesson,
-  moveModule,
-} from "@/lib/admin/actions";
 import { requireAdmin } from "@/lib/admin/guard";
 
 export default async function AdminCourseModulesPage({
@@ -52,67 +37,24 @@ export default async function AdminCourseModulesPage({
     <section className="flex flex-col gap-4">
       {(modules ?? []).map((module) => (
         <Card key={module.id} padded className="flex flex-col gap-0 p-0">
-          {/* Header do módulo: título display + ações (pencil, mover, excluir).
-              A linha inferior cria a separação visual com a lista de lições. */}
+          {/* Header do módulo: título + menu de 3 pontinhos. */}
           <div className="flex items-center gap-2 border-b border-border-primary px-5 py-4">
             <h3 className="flex-1 truncate text-base font-semibold text-fg-primary">
               {module.title}
             </h3>
-            <div className="flex items-center gap-1">
-              <EditModuleDialog
-                moduleId={module.id}
-                courseId={courseId}
-                currentTitle={module.title}
-              />
-              {(["up", "down"] as const).map((dir) => (
-                <form key={dir} action={moveModule}>
-                  <input type="hidden" name="id" value={module.id} />
-                  <input type="hidden" name="course_id" value={courseId} />
-                  <input type="hidden" name="dir" value={dir} />
-                  <Button
-                    type="submit"
-                    variant="ghost"
-                    size="sm"
-                    aria-label={dir === "up" ? "Subir módulo" : "Descer módulo"}
-                    title={dir === "up" ? "Subir módulo" : "Descer módulo"}
-                  >
-                    {dir === "up" ? (
-                      <ArrowUpIcon className="h-4 w-4" />
-                    ) : (
-                      <ArrowDownIcon className="h-4 w-4" />
-                    )}
-                  </Button>
-                </form>
-              ))}
-              <ConfirmForm
-                action={deleteModule}
-                title="Excluir módulo"
-                message={`Tem certeza que deseja excluir o módulo "${module.title}"? Todas as lições, partes e blocos dentro dele serão removidos. Esta ação não pode ser desfeita.`}
-              >
-                <input type="hidden" name="id" value={module.id} />
-                <input type="hidden" name="course_id" value={courseId} />
-                <Button
-                  type="submit"
-                  variant="ghost"
-                  size="sm"
-                  aria-label="Excluir módulo"
-                  title="Excluir módulo"
-                  className="text-danger hover:bg-danger-bg"
-                >
-                  <TrashIcon className="h-4 w-4" />
-                </Button>
-              </ConfirmForm>
-            </div>
+            <ModuleRowMenu
+              moduleId={module.id}
+              courseId={courseId}
+              moduleTitle={module.title}
+            />
           </div>
 
-          {/* Lista de lições do módulo. Cada item separado por linha
-              divisória sutil; bg ligeiramente recuado para indicar
-              hierarquia. */}
+          {/* Lista de lições — título + menu de 3 pontinhos por linha. */}
           <ul className="flex flex-col divide-y divide-border-primary bg-bg-primary/40">
             {(lessonsByModule.get(module.id) ?? []).map((lesson) => (
               <li
                 key={lesson.id}
-                className="flex items-center gap-1 px-5 py-2"
+                className="flex items-center gap-2 px-5 py-2"
               >
                 <span className="flex-1 truncate text-sm text-fg-primary">
                   {lesson.title}
@@ -122,74 +64,17 @@ export default async function AdminCourseModulesPage({
                     </span>
                   )}
                 </span>
-                <Link href={`/admin/licoes/${lesson.id}`}>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    aria-label="Editar lição"
-                    title="Editar lição"
-                  >
-                    <PencilIcon className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <form action={duplicateLesson}>
-                  <input type="hidden" name="id" value={lesson.id} />
-                  <input type="hidden" name="course_id" value={courseId} />
-                  <Button
-                    type="submit"
-                    variant="ghost"
-                    size="sm"
-                    aria-label="Duplicar lição"
-                    title="Duplicar lição"
-                  >
-                    <CopyIcon className="h-4 w-4" />
-                  </Button>
-                </form>
-                {(["up", "down"] as const).map((dir) => (
-                  <form key={dir} action={moveLesson}>
-                    <input type="hidden" name="id" value={lesson.id} />
-                    <input type="hidden" name="module_id" value={module.id} />
-                    <input type="hidden" name="course_id" value={courseId} />
-                    <input type="hidden" name="dir" value={dir} />
-                    <Button
-                      type="submit"
-                      variant="ghost"
-                      size="sm"
-                      aria-label={dir === "up" ? "Subir lição" : "Descer lição"}
-                      title={dir === "up" ? "Subir lição" : "Descer lição"}
-                    >
-                      {dir === "up" ? (
-                        <ArrowUpIcon className="h-4 w-4" />
-                      ) : (
-                        <ArrowDownIcon className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </form>
-                ))}
-                <ConfirmForm
-                  action={deleteLesson}
-                  title="Excluir lição"
-                  message={`Tem certeza que deseja excluir a lição "${lesson.title}"? Todas as partes e blocos dentro dela serão removidos. Esta ação não pode ser desfeita.`}
-                >
-                  <input type="hidden" name="id" value={lesson.id} />
-                  <input type="hidden" name="course_id" value={courseId} />
-                  <Button
-                    type="submit"
-                    variant="ghost"
-                    size="sm"
-                    aria-label="Excluir lição"
-                    title="Excluir lição"
-                    className="text-danger hover:bg-danger-bg"
-                  >
-                    <TrashIcon className="h-4 w-4" />
-                  </Button>
-                </ConfirmForm>
+                <LessonRowMenu
+                  lessonId={lesson.id}
+                  moduleId={module.id}
+                  courseId={courseId}
+                  lessonTitle={lesson.title}
+                />
               </li>
             ))}
           </ul>
 
-          {/* Rodapé do card: ação para adicionar nova lição (abre Dialog) */}
+          {/* Rodapé do card: adicionar nova lição (abre Dialog). */}
           <div className="flex items-center justify-end border-t border-border-primary px-5 py-3">
             <AddLessonDialog moduleId={module.id} courseId={courseId} />
           </div>
