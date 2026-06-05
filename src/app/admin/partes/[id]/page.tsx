@@ -195,6 +195,7 @@ export default async function AdminPartPage({
               ))}
               <ConfirmForm
                 action={deleteBlock}
+                title="Excluir bloco"
                 message="Tem certeza que deseja excluir este bloco? Esta ação não pode ser desfeita."
               >
                 <input type="hidden" name="id" value={block.id} />

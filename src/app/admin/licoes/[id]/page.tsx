@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { AddPartDialog } from "@/components/admin/AddPartDialog";
+import { EditLessonDialog } from "@/components/admin/EditLessonDialog";
+import { EditPartDialog } from "@/components/admin/EditPartDialog";
 import { ArrowDownIcon } from "@/components/icons/ArrowDownIcon";
 import { ArrowUpIcon } from "@/components/icons/ArrowUpIcon";
 import { TrashIcon } from "@/components/icons/TrashIcon";
@@ -8,17 +11,8 @@ import { BackLink } from "@/components/shared/BackLink";
 import { ConfirmForm } from "@/components/shared/ConfirmForm";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import {
-  createPart,
-  deletePart,
-  movePart,
-  updateLesson,
-  updatePart,
-} from "@/lib/admin/actions";
+import { deletePart, movePart } from "@/lib/admin/actions";
 import { requireAdmin } from "@/lib/admin/guard";
-
-const inputCls =
-  "h-10 w-full rounded-md border border-border-primary bg-bg-primary px-3 text-sm text-fg-primary";
 
 export default async function AdminLessonPage({
   params,
@@ -45,19 +39,28 @@ export default async function AdminLessonPage({
     <div className="flex flex-col gap-8">
       <BackLink href={`/admin/cursos/${lesson.course_id}`} label="Curso" />
 
-      <Card padded>
-        <form action={updateLesson} className="flex flex-col gap-3">
-          <input type="hidden" name="id" value={lesson.id} />
-          <input type="hidden" name="course_id" value={lesson.course_id} />
-          <input name="title" defaultValue={lesson.title} className={inputCls} />
-          <label className="flex items-center gap-2 text-sm text-fg-secondary">
-            <input type="checkbox" name="is_published" defaultChecked={lesson.is_published} />
-            Publicada
-          </label>
-          <Button type="submit" className="self-start">
-            Salvar lição
-          </Button>
-        </form>
+      {/* Header da lição: título display + status + pencil para editar */}
+      <Card padded className="flex items-center gap-3">
+        <div className="flex flex-1 flex-col gap-1">
+          <h1 className="text-xl font-semibold text-fg-primary">
+            {lesson.title}
+          </h1>
+          <span
+            className={
+              lesson.is_published
+                ? "self-start rounded-full bg-success-bg px-2.5 py-1 text-xs text-success"
+                : "self-start rounded-full border border-border-primary px-2.5 py-1 text-xs text-fg-tertiary"
+            }
+          >
+            {lesson.is_published ? "Publicada" : "Rascunho"}
+          </span>
+        </div>
+        <EditLessonDialog
+          lessonId={lesson.id}
+          courseId={lesson.course_id}
+          currentTitle={lesson.title}
+          isPublished={lesson.is_published}
+        />
       </Card>
 
       <Card padded className="flex flex-col gap-2">
@@ -79,56 +82,43 @@ export default async function AdminLessonPage({
       </Card>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-base font-semibold text-fg-primary">Partes</h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-base font-semibold text-fg-primary">Partes</h2>
+          <AddPartDialog lessonId={lesson.id} courseId={lesson.course_id} />
+        </div>
+
+        {(parts ?? []).length === 0 && (
+          <Card padded>
+            <p className="text-sm text-fg-secondary">
+              Esta lição ainda não tem partes.
+            </p>
+          </Card>
+        )}
 
         {(parts ?? []).map((part) => (
-          <Card key={part.id} padded className="flex flex-col gap-3">
-            <div className="flex items-center gap-2">
-              <Link
-                href={`/admin/partes/${part.id}`}
-                className="flex-1 font-medium text-fg-primary hover:underline"
-              >
-                {part.title}
-                {part.kind === "golden" && (
-                  <span className="ml-2 text-xs text-warning">dourada</span>
-                )}
-              </Link>
-              <PartControls
-                partId={part.id}
-                lessonId={lesson.id}
-                partTitle={part.title}
-              />
-            </div>
-
-            <form action={updatePart} className="flex flex-wrap items-end gap-2">
-              <input type="hidden" name="id" value={part.id} />
-              <input type="hidden" name="lesson_id" value={lesson.id} />
-              <input name="title" defaultValue={part.title} className={`${inputCls} max-w-xs`} />
-              <select name="kind" defaultValue={part.kind} className={`${inputCls} max-w-[10rem]`}>
-                <option value="regular">Regular</option>
-                <option value="golden">Dourada</option>
-              </select>
-              <Button type="submit" variant="secondary" size="sm">
-                Salvar
-              </Button>
-            </form>
+          <Card key={part.id} padded className="flex items-center gap-2">
+            <Link
+              href={`/admin/partes/${part.id}`}
+              className="flex flex-1 flex-col hover:underline"
+            >
+              <span className="font-medium text-fg-primary">{part.title}</span>
+              {part.kind === "golden" && (
+                <span className="text-xs text-warning">dourada</span>
+              )}
+            </Link>
+            <EditPartDialog
+              partId={part.id}
+              lessonId={lesson.id}
+              currentTitle={part.title}
+              currentKind={part.kind}
+            />
+            <PartControls
+              partId={part.id}
+              lessonId={lesson.id}
+              partTitle={part.title}
+            />
           </Card>
         ))}
-
-        <Card padded>
-          <form action={createPart} className="flex flex-wrap items-end gap-2">
-            <input type="hidden" name="lesson_id" value={lesson.id} />
-            <input type="hidden" name="course_id" value={lesson.course_id} />
-            <input name="title" placeholder="Nova parte" className={`${inputCls} max-w-xs`} />
-            <select name="kind" defaultValue="regular" className={`${inputCls} max-w-[10rem]`}>
-              <option value="regular">Regular</option>
-              <option value="golden">Dourada</option>
-            </select>
-            <Button type="submit" variant="secondary" size="sm">
-              Adicionar parte
-            </Button>
-          </form>
-        </Card>
       </section>
     </div>
   );
@@ -167,6 +157,7 @@ function PartControls({
       ))}
       <ConfirmForm
         action={deletePart}
+        title="Excluir parte"
         message={`Tem certeza que deseja excluir a parte "${partTitle}"? Todos os blocos dentro dela serão removidos. Esta ação não pode ser desfeita.`}
       >
         <input type="hidden" name="id" value={partId} />

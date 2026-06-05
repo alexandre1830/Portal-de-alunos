@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AddLessonDialog } from "@/components/admin/AddLessonDialog";
+import { AddModuleDialog } from "@/components/admin/AddModuleDialog";
 import { EditModuleDialog } from "@/components/admin/EditModuleDialog";
 import { ArrowDownIcon } from "@/components/icons/ArrowDownIcon";
 import { ArrowUpIcon } from "@/components/icons/ArrowUpIcon";
@@ -11,7 +12,6 @@ import { ConfirmForm } from "@/components/shared/ConfirmForm";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import {
-  createModule,
   deleteLesson,
   deleteModule,
   duplicateLesson,
@@ -19,9 +19,6 @@ import {
   moveModule,
 } from "@/lib/admin/actions";
 import { requireAdmin } from "@/lib/admin/guard";
-
-const inputCls =
-  "h-10 w-full rounded-md border border-border-primary bg-bg-primary px-3 text-sm text-fg-primary";
 
 export default async function AdminCourseModulesPage({
   params,
@@ -89,6 +86,7 @@ export default async function AdminCourseModulesPage({
               ))}
               <ConfirmForm
                 action={deleteModule}
+                title="Excluir módulo"
                 message={`Tem certeza que deseja excluir o módulo "${module.title}"? Todas as lições, partes e blocos dentro dele serão removidos. Esta ação não pode ser desfeita.`}
               >
                 <input type="hidden" name="id" value={module.id} />
@@ -171,6 +169,7 @@ export default async function AdminCourseModulesPage({
                 ))}
                 <ConfirmForm
                   action={deleteLesson}
+                  title="Excluir lição"
                   message={`Tem certeza que deseja excluir a lição "${lesson.title}"? Todas as partes e blocos dentro dela serão removidos. Esta ação não pode ser desfeita.`}
                 >
                   <input type="hidden" name="id" value={lesson.id} />
@@ -197,15 +196,9 @@ export default async function AdminCourseModulesPage({
         </Card>
       ))}
 
-      <Card padded>
-        <form action={createModule} className="flex items-end gap-2">
-          <input type="hidden" name="course_id" value={courseId} />
-          <input name="title" placeholder="Novo módulo" className={inputCls} />
-          <Button type="submit" variant="secondary" size="sm">
-            Adicionar módulo
-          </Button>
-        </form>
-      </Card>
+      <div className="flex justify-end">
+        <AddModuleDialog courseId={courseId} />
+      </div>
     </section>
   );
 }

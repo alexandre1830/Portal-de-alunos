@@ -1,12 +1,8 @@
 import Link from "next/link";
 
-import { Button } from "@/components/ui/Button";
+import { CreateCourseDialog } from "@/components/admin/CreateCourseDialog";
 import { Card } from "@/components/ui/Card";
-import { createCourse } from "@/lib/admin/actions";
 import { requireAdmin } from "@/lib/admin/guard";
-
-const inputCls =
-  "h-10 w-full rounded-md border border-border-primary bg-bg-primary px-3 text-sm text-fg-primary";
 
 export default async function AdminCoursesPage() {
   const { supabase } = await requireAdmin();
@@ -17,11 +13,14 @@ export default async function AdminCoursesPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-2xl font-semibold text-fg-primary">Cursos</h1>
-        <p className="text-sm text-fg-secondary">
-          Liste, crie e gerencie os cursos do portal.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-fg-primary">Cursos</h1>
+          <p className="text-sm text-fg-secondary">
+            Liste, crie e gerencie os cursos do portal.
+          </p>
+        </div>
+        <CreateCourseDialog />
       </div>
 
       <section className="flex flex-col gap-3">
@@ -58,30 +57,6 @@ export default async function AdminCoursesPage() {
           ))
         )}
       </section>
-
-      <Card padded className="flex flex-col gap-3">
-        <h2 className="text-base font-semibold text-fg-primary">Novo curso</h2>
-        <form action={createCourse} className="flex flex-col gap-3">
-          <input name="title" required placeholder="Título" className={inputCls} />
-          <input name="slug" placeholder="slug (opcional)" className={inputCls} />
-          <div className="flex gap-3">
-            <select name="language" className={inputCls} defaultValue="en">
-              <option value="en">Inglês</option>
-              <option value="es">Espanhol</option>
-            </select>
-            <select name="level" className={inputCls} defaultValue="a1">
-              {["a1", "a2", "b1", "b2", "c1", "c2"].map((l) => (
-                <option key={l} value={l}>
-                  {l.toUpperCase()}
-                </option>
-              ))}
-            </select>
-          </div>
-          <Button type="submit" className="self-start">
-            Criar curso
-          </Button>
-        </form>
-      </Card>
     </div>
   );
 }
