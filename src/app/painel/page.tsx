@@ -103,7 +103,6 @@ export default async function PainelPage() {
             Olá{profile?.full_name ? `, ${profile.full_name}` : ""}!
           </h1>
           <p className="text-sm text-fg-secondary">
-            {profile ? ROLE_LABELS[profile.role] : "—"} ·{" "}
             {profile?.email ?? user.email}
           </p>
         </div>
