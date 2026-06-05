@@ -64,8 +64,7 @@ export default async function AdminLessonPage({
           Importar PDF
         </h2>
         <p className="text-sm text-fg-secondary">
-          Suba o PDF da lição e a Claude API gera um rascunho com partes e
-          blocos. Você revisa antes de gravar.
+          Faça upload do PDF da lição e a Inteligência Artificial gera um rascunho automaticamente para você.
         </p>
         <Link
           href={`/admin/licoes/${lesson.id}/importar`}
