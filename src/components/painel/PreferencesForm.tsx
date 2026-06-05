@@ -245,7 +245,14 @@ function CheckIcon() {
   );
 }
 
-// Subseção de voz dentro do card "Áudio".
+// Subseção de voz dentro do card "Áudio". Cada voz é uma linha clicável:
+//   - Linha de cima (acento, em destaque): "Americano (EUA)".
+//   - Linha de baixo (gênero, sutil):      "Feminino".
+// A voz selecionada ganha background e borda em destaque; sem rádio,
+// porque o contexto deixa claro que é uma seleção exclusiva.
+//
+// Acessibilidade: cada linha tem role=radio + aria-checked + tabIndex,
+// e responde a Space/Enter para selecionar. O ul tem role=radiogroup.
 function VoiceSection({
   title,
   voices,
@@ -262,43 +269,60 @@ function VoiceSection({
   return (
     <section className="flex flex-col gap-3 border-b border-border-primary px-5 py-4">
       <h3 className="text-sm font-semibold text-fg-primary">{title}</h3>
-      <ul className="flex flex-col divide-y divide-border-primary">
+      <ul
+        role="radiogroup"
+        aria-label={title}
+        className="flex flex-col gap-1.5"
+      >
         {voices.map((v) => {
           const active = v.id === selected;
           return (
-            <li
-              key={v.id}
-              className="flex items-center justify-between gap-3 py-2"
-            >
-              <label
+            <li key={v.id}>
+              <div
+                role="radio"
+                tabIndex={0}
+                aria-checked={active}
+                aria-label={`${v.accent} ${v.gender === "female" ? "Feminino" : "Masculino"}`}
+                onClick={() => onSelect(v.id)}
+                onKeyDown={(e) => {
+                  if (e.key === " " || e.key === "Enter") {
+                    e.preventDefault();
+                    onSelect(v.id);
+                  }
+                }}
                 className={cn(
-                  "flex flex-1 cursor-pointer items-center gap-3 text-sm",
-                  active ? "text-fg-primary" : "text-fg-secondary",
+                  "flex cursor-pointer items-center justify-between gap-3 rounded-md border px-3 py-2 transition-colors",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fg-tertiary",
+                  active
+                    ? "border-fg-primary bg-bg-tertiary"
+                    : "border-transparent hover:bg-bg-tertiary/60",
                 )}
               >
-                <input
-                  type="radio"
-                  checked={active}
-                  onChange={() => onSelect(v.id)}
-                  className="accent-fg-primary"
-                />
-                <span className="flex flex-col">
-                  <span className="font-medium">{v.label}</span>
+                <div className="flex flex-1 flex-col">
+                  <span className="text-sm font-medium text-fg-primary">
+                    {v.accent}
+                  </span>
                   <span className="text-xs text-fg-tertiary">
-                    {v.accent} ·{" "}
                     {v.gender === "female" ? "Feminino" : "Masculino"}
                   </span>
-                </span>
-              </label>
-              <SpeakButton
-                iconOnly
-                body={{
-                  text: v.example,
-                  lang: v.language,
-                  voice: v.id,
-                  rate,
-                }}
-              />
+                </div>
+                {/* SpeakButton mora num "stop propagation" para o clique no
+                    botão de áudio não acionar a seleção da voz. */}
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                >
+                  <SpeakButton
+                    iconOnly
+                    body={{
+                      text: v.example,
+                      lang: v.language,
+                      voice: v.id,
+                      rate,
+                    }}
+                  />
+                </div>
+              </div>
             </li>
           );
         })}
