@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { BlockForm, type BlockInitial } from "@/components/admin/BlockForm";
 import { BlockRowMenu } from "@/components/admin/BlockRowMenu";
+import { SortableBlocksList } from "@/components/admin/SortableBlocksList";
 import { BackLink } from "@/components/shared/BackLink";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -166,21 +167,31 @@ export default async function AdminPartPage({
       <h1 className="text-2xl font-semibold text-fg-primary">{part.title}</h1>
 
       <section className="flex flex-col gap-4">
-        {(blocks ?? []).map((block) => (
-          <Card key={block.id} padded className="flex flex-col gap-3">
-            <div className="flex items-center justify-end">
-              <BlockRowMenu blockId={block.id} partId={part.id} />
-            </div>
-            <BlockForm
-              mode="edit"
-              partId={part.id}
-              courseId={part.course_id}
-              blockId={block.id}
-              type={block.type}
-              initial={toInitial(block.type, block.data, solutions.get(block.id))}
-            />
-          </Card>
-        ))}
+        <SortableBlocksList
+          partId={part.id}
+          items={(blocks ?? []).map((block) => ({
+            id: block.id,
+            content: (
+              <Card padded className="flex flex-col gap-3">
+                <div className="flex items-center justify-end">
+                  <BlockRowMenu blockId={block.id} partId={part.id} />
+                </div>
+                <BlockForm
+                  mode="edit"
+                  partId={part.id}
+                  courseId={part.course_id}
+                  blockId={block.id}
+                  type={block.type}
+                  initial={toInitial(
+                    block.type,
+                    block.data,
+                    solutions.get(block.id),
+                  )}
+                />
+              </Card>
+            ),
+          }))}
+        />
       </section>
 
       <Card padded className="flex flex-col gap-3">

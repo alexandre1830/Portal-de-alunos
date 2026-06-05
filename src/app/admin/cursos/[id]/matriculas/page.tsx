@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import { EnrollForm } from "@/components/admin/EnrollForm";
+import { TrashIcon } from "@/components/icons/TrashIcon";
+import { ConfirmForm } from "@/components/shared/ConfirmForm";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { unenrollStudent } from "@/lib/admin/actions";
@@ -45,13 +47,25 @@ export default async function AdminCourseEnrollmentsPage({
                     </span>
                   )}
                 </span>
-                <form action={unenrollStudent}>
+                <ConfirmForm
+                  action={unenrollStudent}
+                  title="Remover matrícula"
+                  message={`Tem certeza que deseja remover ${enr.user?.email ?? "este aluno"} do curso? O histórico de XP e progresso é preservado, mas o aluno perde o acesso ao conteúdo.`}
+                  confirmLabel="Remover"
+                >
                   <input type="hidden" name="id" value={enr.id} />
                   <input type="hidden" name="course_id" value={courseId} />
-                  <Button type="submit" variant="ghost" size="sm">
-                    Remover
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    size="sm"
+                    aria-label="Remover matrícula"
+                    title="Remover matrícula"
+                    className="text-danger hover:bg-danger-bg"
+                  >
+                    <TrashIcon className="h-4 w-4" />
                   </Button>
-                </form>
+                </ConfirmForm>
               </li>
             ))}
           </ul>

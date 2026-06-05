@@ -1,7 +1,12 @@
+import Link from "next/link";
+
 import { AddLessonDialog } from "@/components/admin/AddLessonDialog";
 import { AddModuleDialog } from "@/components/admin/AddModuleDialog";
 import { LessonRowMenu } from "@/components/admin/LessonRowMenu";
 import { ModuleRowMenu } from "@/components/admin/ModuleRowMenu";
+import { ModuleTitle } from "@/components/admin/ModuleTitle";
+import { SortableLessonsList } from "@/components/admin/SortableLessonsList";
+import { SortableModulesList } from "@/components/admin/SortableModulesList";
 import { Card } from "@/components/ui/Card";
 import { requireAdmin } from "@/lib/admin/guard";
 
@@ -33,15 +38,20 @@ export default async function AdminCourseModulesPage({
     lessonsByModule.set(lesson.module_id, arr);
   }
 
-  return (
-    <section className="flex flex-col gap-4">
-      {(modules ?? []).map((module) => (
-        <Card key={module.id} padded className="flex flex-col gap-0 p-0">
-          {/* Header do módulo: título + menu de 3 pontinhos. */}
+  // Pré-renderiza cada item como ReactNode para o SortableList client.
+  const moduleItems = (modules ?? []).map((module) => {
+    const moduleLessons = lessonsByModule.get(module.id) ?? [];
+    return {
+      id: module.id,
+      content: (
+        <Card padded className="flex flex-col gap-0 p-0">
+          {/* Header do módulo */}
           <div className="flex items-center gap-2 border-b border-border-primary px-5 py-4">
-            <h3 className="flex-1 truncate text-base font-semibold text-fg-primary">
-              {module.title}
-            </h3>
+            <ModuleTitle
+              moduleId={module.id}
+              courseId={courseId}
+              title={module.title}
+            />
             <ModuleRowMenu
               moduleId={module.id}
               courseId={courseId}
@@ -49,37 +59,53 @@ export default async function AdminCourseModulesPage({
             />
           </div>
 
-          {/* Lista de lições — título + menu de 3 pontinhos por linha. */}
-          <ul className="flex flex-col divide-y divide-border-primary bg-bg-primary/40">
-            {(lessonsByModule.get(module.id) ?? []).map((lesson) => (
-              <li
-                key={lesson.id}
-                className="flex items-center gap-2 px-5 py-2"
-              >
-                <span className="flex-1 truncate text-sm text-fg-primary">
-                  {lesson.title}
-                  {!lesson.is_published && (
-                    <span className="ml-2 text-xs text-fg-tertiary">
-                      (rascunho)
-                    </span>
-                  )}
-                </span>
-                <LessonRowMenu
-                  lessonId={lesson.id}
-                  moduleId={module.id}
-                  courseId={courseId}
-                  lessonTitle={lesson.title}
-                />
-              </li>
-            ))}
-          </ul>
+          {/* Lista de lições (sortable interna) */}
+          {moduleLessons.length > 0 ? (
+            <div className="bg-bg-primary/40 py-1">
+              <SortableLessonsList
+                moduleId={module.id}
+                courseId={courseId}
+                items={moduleLessons.map((lesson) => ({
+                  id: lesson.id,
+                  content: (
+                    <div className="flex items-center gap-2 px-3 py-2">
+                      <Link
+                        href={`/admin/licoes/${lesson.id}`}
+                        className="flex-1 truncate text-sm text-fg-primary transition-colors hover:text-fg-secondary"
+                        title="Abrir editor da lição"
+                      >
+                        {lesson.title}
+                        {!lesson.is_published && (
+                          <span className="ml-2 text-xs text-fg-tertiary">
+                            (rascunho)
+                          </span>
+                        )}
+                      </Link>
+                      <LessonRowMenu
+                        lessonId={lesson.id}
+                        moduleId={module.id}
+                        courseId={courseId}
+                        lessonTitle={lesson.title}
+                      />
+                    </div>
+                  ),
+                }))}
+              />
+            </div>
+          ) : null}
 
-          {/* Rodapé do card: adicionar nova lição (abre Dialog). */}
+          {/* Rodapé do card: adicionar nova lição */}
           <div className="flex items-center justify-end border-t border-border-primary px-5 py-3">
             <AddLessonDialog moduleId={module.id} courseId={courseId} />
           </div>
         </Card>
-      ))}
+      ),
+    };
+  });
+
+  return (
+    <section className="flex flex-col gap-4">
+      <SortableModulesList courseId={courseId} items={moduleItems} />
 
       <div className="flex justify-end">
         <AddModuleDialog courseId={courseId} />

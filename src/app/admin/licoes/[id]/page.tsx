@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { AddPartDialog } from "@/components/admin/AddPartDialog";
 import { LessonHeaderMenu } from "@/components/admin/LessonHeaderMenu";
 import { PartRowMenu } from "@/components/admin/PartRowMenu";
+import { SortablePartsList } from "@/components/admin/SortablePartsList";
 import { BackLink } from "@/components/shared/BackLink";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -82,33 +83,42 @@ export default async function AdminLessonPage({
           <AddPartDialog lessonId={lesson.id} courseId={lesson.course_id} />
         </div>
 
-        {(parts ?? []).length === 0 && (
+        {(parts ?? []).length === 0 ? (
           <Card padded>
             <p className="text-sm text-fg-secondary">
               Esta lição ainda não tem partes.
             </p>
           </Card>
+        ) : (
+          <SortablePartsList
+            lessonId={lesson.id}
+            items={(parts ?? []).map((part) => ({
+              id: part.id,
+              content: (
+                <Card padded className="flex items-center gap-2">
+                  <Link
+                    href={`/admin/partes/${part.id}`}
+                    className="flex flex-1 flex-col hover:underline"
+                    title="Abrir editor da parte"
+                  >
+                    <span className="font-medium text-fg-primary">
+                      {part.title}
+                    </span>
+                    {part.kind === "golden" && (
+                      <span className="text-xs text-warning">dourada</span>
+                    )}
+                  </Link>
+                  <PartRowMenu
+                    partId={part.id}
+                    lessonId={lesson.id}
+                    partTitle={part.title}
+                    partKind={part.kind}
+                  />
+                </Card>
+              ),
+            }))}
+          />
         )}
-
-        {(parts ?? []).map((part) => (
-          <Card key={part.id} padded className="flex items-center gap-2">
-            <Link
-              href={`/admin/partes/${part.id}`}
-              className="flex flex-1 flex-col hover:underline"
-            >
-              <span className="font-medium text-fg-primary">{part.title}</span>
-              {part.kind === "golden" && (
-                <span className="text-xs text-warning">dourada</span>
-              )}
-            </Link>
-            <PartRowMenu
-              partId={part.id}
-              lessonId={lesson.id}
-              partTitle={part.title}
-              partKind={part.kind}
-            />
-          </Card>
-        ))}
       </section>
     </div>
   );

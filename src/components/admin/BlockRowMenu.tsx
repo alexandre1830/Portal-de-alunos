@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/DropdownMenu";
 import { deleteBlock, moveBlock } from "@/lib/admin/actions";
+import { toast } from "@/lib/toast/store";
 
 // Menu de ações de uma linha de bloco (subir, descer, excluir). A edição
 // de bloco é feita pelo BlockForm logo abaixo, em modo inline.
@@ -32,6 +33,9 @@ export function BlockRowMenu({
     fd.set("dir", dir);
     startTransition(async () => {
       await moveBlock(fd);
+      toast.info({
+        title: dir === "up" ? "Bloco subiu" : "Bloco desceu",
+      });
     });
   }
 
@@ -42,6 +46,7 @@ export function BlockRowMenu({
     startTransition(async () => {
       await deleteBlock(fd);
       setDeleteOpen(false);
+      toast.success({ title: "Bloco excluído" });
     });
   }
 

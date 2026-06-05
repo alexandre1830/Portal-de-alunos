@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/DropdownMenu";
 import { deletePart, movePart } from "@/lib/admin/actions";
+import { toast } from "@/lib/toast/store";
 
 // Menu de ações de uma linha de parte.
 export function PartRowMenu({
@@ -38,6 +39,9 @@ export function PartRowMenu({
     fd.set("dir", dir);
     startTransition(async () => {
       await movePart(fd);
+      toast.info({
+        title: dir === "up" ? "Parte subiu" : "Parte desceu",
+      });
     });
   }
 
@@ -48,6 +52,7 @@ export function PartRowMenu({
     startTransition(async () => {
       await deletePart(fd);
       setDeleteOpen(false);
+      toast.success({ title: `Parte "${partTitle}" excluída` });
     });
   }
 

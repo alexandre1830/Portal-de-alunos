@@ -19,6 +19,7 @@ import {
   duplicateLesson,
   moveLesson,
 } from "@/lib/admin/actions";
+import { toast } from "@/lib/toast/store";
 
 // Menu de ações de uma linha de lição: abrir editor (link), duplicar,
 // subir/descer, excluir. "Editar lição" abre /admin/licoes/[id] em vez
@@ -45,6 +46,7 @@ export function LessonRowMenu({
     fd.set("course_id", courseId);
     startTransition(async () => {
       await duplicateLesson(fd);
+      toast.success({ title: `Lição "${lessonTitle}" duplicada` });
     });
   }
 
@@ -56,6 +58,9 @@ export function LessonRowMenu({
     fd.set("dir", dir);
     startTransition(async () => {
       await moveLesson(fd);
+      toast.info({
+        title: dir === "up" ? "Lição subiu" : "Lição desceu",
+      });
     });
   }
 
@@ -66,6 +71,7 @@ export function LessonRowMenu({
     startTransition(async () => {
       await deleteLesson(fd);
       setDeleteOpen(false);
+      toast.success({ title: `Lição "${lessonTitle}" excluída` });
     });
   }
 

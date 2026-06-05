@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/DropdownMenu";
 import { deleteModule, moveModule } from "@/lib/admin/actions";
+import { toast } from "@/lib/toast/store";
 
 // Agrupa todas as ações de um módulo (editar, subir, descer, excluir)
 // dentro de um menu de 3 pontos. Os dialogs ficam montados aqui — o trigger
@@ -38,6 +39,9 @@ export function ModuleRowMenu({
     fd.set("dir", dir);
     startTransition(async () => {
       await moveModule(fd);
+      toast.info({
+        title: dir === "up" ? "Módulo subiu" : "Módulo desceu",
+      });
     });
   }
 
@@ -48,6 +52,7 @@ export function ModuleRowMenu({
     startTransition(async () => {
       await deleteModule(fd);
       setDeleteOpen(false);
+      toast.success({ title: `Módulo "${moduleTitle}" excluído` });
     });
   }
 

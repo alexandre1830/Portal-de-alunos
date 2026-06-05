@@ -527,6 +527,75 @@ export async function moveBlock(formData: FormData) {
 }
 
 // ====================================================================
+// Reorder em massa (drag-and-drop)
+// ====================================================================
+// Recebe os ids na ORDEM FINAL desejada. Atualiza position para cada um
+// baseado no índice. Não usa transação Postgres explícita (o Supabase JS
+// client não suporta) — em vez disso, dispara um UPDATE por linha em
+// paralelo. Se uma falhar, ainda assim acabamos com posições consistentes
+// porque cada linha recebe um valor absoluto, não relativo.
+//
+// Defesa em profundidade: só atualizamos linhas cujo scope (scopeVal) bate
+// com a tabela — RLS já garante que admin pode editar, mas o filtro extra
+// evita um id "errado" cruzar escopos.
+async function reorderAll(
+  supabase: Awaited<ReturnType<typeof requireAdmin>>["supabase"],
+  table: "modules" | "lessons" | "parts" | "blocks",
+  scopeCol: string,
+  scopeVal: string,
+  ids: string[],
+): Promise<void> {
+  if (ids.length === 0) return;
+  // Position começa em 0 e cresce de 1 em 1. Mantém a convenção do nextPosition.
+  await Promise.all(
+    ids.map((id, i) =>
+      supabase
+        .from(table)
+        .update({ position: i })
+        .eq("id", id)
+        .eq(scopeCol, scopeVal),
+    ),
+  );
+}
+
+export async function reorderModules(
+  courseId: string,
+  ids: string[],
+): Promise<void> {
+  const { supabase } = await requireAdmin();
+  await reorderAll(supabase, "modules", "course_id", courseId, ids);
+  revalidatePath(`/admin/cursos/${courseId}/modulos`);
+}
+
+export async function reorderLessons(
+  moduleId: string,
+  courseId: string,
+  ids: string[],
+): Promise<void> {
+  const { supabase } = await requireAdmin();
+  await reorderAll(supabase, "lessons", "module_id", moduleId, ids);
+  revalidatePath(`/admin/cursos/${courseId}/modulos`);
+}
+
+export async function reorderParts(
+  lessonId: string,
+  ids: string[],
+): Promise<void> {
+  const { supabase } = await requireAdmin();
+  await reorderAll(supabase, "parts", "lesson_id", lessonId, ids);
+  revalidatePath(`/admin/licoes/${lessonId}`);
+}
+
+export async function reorderBlocks(
+  partId: string,
+  ids: string[],
+): Promise<void> {
+  const { supabase } = await requireAdmin();
+  await reorderAll(supabase, "blocks", "part_id", partId, ids);
+  revalidatePath(`/admin/partes/${partId}`);
+}
+
+// ====================================================================
 // Matrículas
 // ====================================================================
 export async function enrollStudent(
