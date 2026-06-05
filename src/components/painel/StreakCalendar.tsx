@@ -1,12 +1,19 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
 import { FlameIcon } from "@/components/icons/FlameIcon";
 import { cn } from "@/lib/utils/cn";
 
-// Calendário tipo "heatmap" inspirado no Duolingo. Mostra os últimos
-// `weeks` x 7 dias em colunas (uma coluna por semana, 7 linhas seg→dom).
-// Dias com atividade ficam preenchidos; sem atividade ficam vazios.
-// O dia de "hoje" tem um anel sutil.
+// Calendário mensal de streak — inspirado no Duolingo.
+// Mostra um mês por vez (dom→sáb), com dias praticados destacados em
+// laranja. Dias consecutivos dentro da mesma semana ganham um fundo
+// contínuo (pill), para deixar visível a "corrente". O dia de hoje
+// ganha um pin azul em forma de gota, mesmo sem prática registrada.
+//
+// Client component porque tem estado de mês visível (setas < e >).
 
-const WEEKDAY_LABELS = ["S", "T", "Q", "Q", "S", "S", "D"]; // seg→dom
+const WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 function toISODate(d: Date): string {
   const y = d.getFullYear();
@@ -15,137 +22,188 @@ function toISODate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-function monthLabel(d: Date): string {
-  return d.toLocaleDateString("pt-BR", { month: "short" });
+function monthYearLabel(d: Date): string {
+  return d.toLocaleDateString("pt-BR", {
+    month: "long",
+    year: "numeric",
+  });
 }
 
 export function StreakCalendar({
   activeDates,
-  weeks = 12,
+  initialYear,
+  initialMonth,
   className,
 }: {
   activeDates: Set<string>;
-  weeks?: number;
+  // Mês inicial. Convencionalmente o mês de hoje.
+  initialYear: number;
+  // 0-11 (igual ao Date.getMonth()).
+  initialMonth: number;
   className?: string;
 }) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const [view, setView] = useState<{ year: number; month: number }>({
+    year: initialYear,
+    month: initialMonth,
+  });
+
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
   const todayKey = toISODate(today);
 
-  // Encontra a segunda-feira da semana de hoje (Date.getDay() devolve 0=dom..6=sab).
-  const dayOfWeek = today.getDay();
-  const offsetToMonday = (dayOfWeek + 6) % 7; // 0=seg ... 6=dom
-  const thisMonday = new Date(today);
-  thisMonday.setDate(today.getDate() - offsetToMonday);
+  const firstOfMonth = new Date(view.year, view.month, 1);
+  const lastOfMonth = new Date(view.year, view.month + 1, 0);
+  const daysInMonth = lastOfMonth.getDate();
+  // 0=dom..6=sáb — alinha com WEEKDAY_LABELS (semana começando no domingo,
+  // como mostra o design de referência).
+  const firstWeekday = firstOfMonth.getDay();
 
-  // Primeira segunda do grid: weeks-1 semanas antes da segunda atual.
-  const firstMonday = new Date(thisMonday);
-  firstMonday.setDate(thisMonday.getDate() - (weeks - 1) * 7);
+  // Constrói as linhas (semanas) — sempre múltiplo de 7, células antes do
+  // dia 1 e depois do último dia ficam vazias.
+  type Cell =
+    | { kind: "empty" }
+    | {
+        kind: "day";
+        day: number;
+        key: string;
+        active: boolean;
+        isToday: boolean;
+        // Posição na "run" de dias consecutivos ativos da mesma semana.
+        runLeft: boolean;
+        runRight: boolean;
+      };
 
-  // Monta a matriz: 7 linhas × weeks colunas, em dias incrementais.
-  // Cada coluna é uma semana; dentro da coluna, dias seg→dom (top→bottom).
-  type Cell = {
-    date: Date;
-    key: string;
-    isFuture: boolean;
-    active: boolean;
-    isToday: boolean;
-  };
-  const columns: Cell[][] = [];
-  for (let w = 0; w < weeks; w++) {
-    const col: Cell[] = [];
-    for (let dow = 0; dow < 7; dow++) {
-      const d = new Date(firstMonday);
-      d.setDate(firstMonday.getDate() + w * 7 + dow);
-      const key = toISODate(d);
-      col.push({
-        date: d,
-        key,
-        isFuture: d.getTime() > today.getTime(),
-        active: activeDates.has(key),
-        isToday: key === todayKey,
-      });
-    }
-    columns.push(col);
-  }
+  const weeks: Cell[][] = [];
+  let currentWeek: Cell[] = [];
+  // Preenche o offset inicial com células vazias.
+  for (let i = 0; i < firstWeekday; i++) currentWeek.push({ kind: "empty" });
 
-  // Para o eixo X com meses, marcamos a primeira coluna em que o mês mudou.
-  const monthMarkers: { columnIndex: number; label: string }[] = [];
-  let lastMonth = -1;
-  for (let c = 0; c < columns.length; c++) {
-    const firstDay = columns[c]![0]!.date;
-    if (firstDay.getMonth() !== lastMonth) {
-      monthMarkers.push({ columnIndex: c, label: monthLabel(firstDay) });
-      lastMonth = firstDay.getMonth();
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(view.year, view.month, day);
+    const key = toISODate(date);
+    const active = activeDates.has(key);
+    currentWeek.push({
+      kind: "day",
+      day,
+      key,
+      active,
+      isToday: key === todayKey,
+      runLeft: false,
+      runRight: false,
+    });
+    if (currentWeek.length === 7) {
+      weeks.push(currentWeek);
+      currentWeek = [];
     }
   }
+  // Completa a última semana com células vazias.
+  if (currentWeek.length > 0) {
+    while (currentWeek.length < 7) currentWeek.push({ kind: "empty" });
+    weeks.push(currentWeek);
+  }
+
+  // Marca as conexões da "pill" — runLeft/runRight para cada célula ativa
+  // colada a outra ativa na mesma semana.
+  for (const week of weeks) {
+    for (let i = 0; i < week.length; i++) {
+      const cell = week[i]!;
+      if (cell.kind !== "day" || !cell.active) continue;
+      const left = i > 0 ? week[i - 1]! : null;
+      const right = i < 6 ? week[i + 1]! : null;
+      if (left && left.kind === "day" && left.active) cell.runLeft = true;
+      if (right && right.kind === "day" && right.active) cell.runRight = true;
+    }
+  }
+
+  function prevMonth() {
+    setView((v) => {
+      const m = v.month - 1;
+      if (m < 0) return { year: v.year - 1, month: 11 };
+      return { year: v.year, month: m };
+    });
+  }
+
+  function nextMonth() {
+    setView((v) => {
+      const m = v.month + 1;
+      if (m > 11) return { year: v.year + 1, month: 0 };
+      return { year: v.year, month: m };
+    });
+  }
+
+  // Não deixa avançar para um mês inteiramente no futuro — o primeiro dia
+  // do próximo mês precisa ser <= hoje.
+  const canGoNext = new Date(view.year, view.month + 1, 1) <= today;
 
   return (
-    <div className={cn("flex w-full flex-col gap-2", className)}>
-      <div className="flex gap-2">
-        {/* Coluna de rótulos dos dias da semana */}
-        <div className="flex flex-col justify-between py-0.5">
-          {WEEKDAY_LABELS.map((label, i) => (
-            <span
-              key={i}
-              className="text-[10px] leading-none text-fg-tertiary"
-              aria-hidden="true"
-            >
-              {label}
-            </span>
-          ))}
-        </div>
-
-        {/* Grid de células */}
-        <div
-          role="grid"
-          aria-label="Calendário de prática"
-          className="flex flex-1 gap-1"
+    <div className={cn("flex w-full flex-col gap-3", className)}>
+      {/* Cabeçalho com setas */}
+      <div className="flex items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={prevMonth}
+          aria-label="Mês anterior"
+          className="rounded-full p-1.5 text-fg-secondary transition-colors hover:bg-bg-tertiary hover:text-fg-primary"
         >
-          {columns.map((col, ci) => (
-            <div
-              key={ci}
-              role="row"
-              className="flex flex-1 flex-col gap-1"
-            >
-              {col.map((cell) => (
-                <Cell key={cell.key} cell={cell} />
-              ))}
-            </div>
-          ))}
-        </div>
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <span className="text-sm font-medium capitalize text-fg-primary">
+          {monthYearLabel(firstOfMonth)}
+        </span>
+        <button
+          type="button"
+          onClick={nextMonth}
+          aria-label="Próximo mês"
+          disabled={!canGoNext}
+          className="rounded-full p-1.5 text-fg-secondary transition-colors hover:bg-bg-tertiary hover:text-fg-primary disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
       </div>
 
-      {/* Linha de rótulos dos meses */}
-      <div className="flex gap-1 pl-5">
-        {columns.map((_, ci) => {
-          const marker = monthMarkers.find((m) => m.columnIndex === ci);
-          return (
-            <span
-              key={ci}
-              className="flex-1 text-center text-[10px] text-fg-tertiary"
-              aria-hidden="true"
-            >
-              {marker?.label}
-            </span>
-          );
-        })}
+      {/* Rótulos da semana */}
+      <div className="grid grid-cols-7 gap-1">
+        {WEEKDAY_LABELS.map((label) => (
+          <span
+            key={label}
+            className="text-center text-xs font-medium text-fg-tertiary"
+            aria-hidden="true"
+          >
+            {label}
+          </span>
+        ))}
+      </div>
+
+      {/* Grid de dias */}
+      <div
+        role="grid"
+        aria-label={`Calendário de prática — ${monthYearLabel(firstOfMonth)}`}
+        className="flex flex-col gap-1"
+      >
+        {weeks.map((week, wi) => (
+          <div key={wi} role="row" className="grid grid-cols-7 gap-1">
+            {week.map((cell, ci) => (
+              <CellView key={ci} cell={cell} />
+            ))}
+          </div>
+        ))}
       </div>
 
       {/* Legenda */}
-      <div className="mt-1 flex items-center gap-3 text-[10px] text-fg-tertiary">
+      <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-fg-tertiary">
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded-sm bg-bg-tertiary" />
-          Sem prática
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="inline-flex h-3 w-3 items-center justify-center rounded-sm bg-warning/20 text-warning">
-            <FlameIcon className="h-2 w-2" />
+          <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-warning text-bg-primary">
+            <FlameIcon className="h-2.5 w-2.5" />
           </span>
           Praticou
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded-sm border border-fg-primary bg-bg-tertiary" />
+          <span className="relative h-4 w-4">
+            <span className="absolute inset-0 rounded-full border border-info bg-info/15" />
+          </span>
           Hoje
         </span>
       </div>
@@ -153,36 +211,129 @@ export function StreakCalendar({
   );
 }
 
-function Cell({
-  cell,
-}: {
-  cell: {
-    date: Date;
-    key: string;
-    isFuture: boolean;
-    active: boolean;
-    isToday: boolean;
-  };
-}) {
-  if (cell.isFuture) {
-    // Dia futuro: célula transparente para preservar o grid sem destaque.
-    return <div className="aspect-square min-w-0" role="gridcell" />;
+type DayCell = {
+  kind: "day";
+  day: number;
+  key: string;
+  active: boolean;
+  isToday: boolean;
+  runLeft: boolean;
+  runRight: boolean;
+};
+type EmptyCell = { kind: "empty" };
+
+function CellView({ cell }: { cell: DayCell | EmptyCell }) {
+  if (cell.kind === "empty") {
+    return <div role="gridcell" className="aspect-square" />;
   }
+
+  const { day, active, isToday, runLeft, runRight } = cell;
+
   return (
     <div
       role="gridcell"
-      title={`${cell.date.toLocaleDateString("pt-BR", { day: "numeric", month: "short" })}${cell.active ? " — praticou" : ""}`}
-      className={cn(
-        "flex aspect-square min-w-0 items-center justify-center rounded-sm transition-colors",
-        cell.active
-          ? "bg-warning/20 text-warning"
-          : "bg-bg-tertiary",
-        cell.isToday && "ring-1 ring-fg-primary",
-      )}
+      className="relative flex aspect-square items-center justify-center"
+      title={
+        active
+          ? `Dia ${day} — praticou${isToday ? " (hoje)" : ""}`
+          : `Dia ${day}${isToday ? " (hoje)" : ""}`
+      }
     >
-      {cell.active && (
-        <FlameIcon className="h-2.5 w-2.5" />
+      {/* Fundo "pill" para runs de dias consecutivos ativos na mesma semana.
+          Cobre toda a célula horizontalmente e estende para os vizinhos
+          ativos sem arredondar a borda voltada para o próximo. */}
+      {active && (
+        <span
+          aria-hidden="true"
+          className={cn(
+            "absolute inset-y-1 left-0 right-0 bg-warning/15",
+            runLeft && runRight && "rounded-none",
+            !runLeft && !runRight && "rounded-full",
+            runLeft && !runRight && "rounded-r-full",
+            !runLeft && runRight && "rounded-l-full",
+          )}
+        />
+      )}
+
+      {/* Círculo do dia */}
+      <span
+        className={cn(
+          "relative z-10 flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium",
+          active
+            ? "bg-warning text-bg-primary"
+            : isToday
+              ? "border border-info text-info"
+              : "text-fg-secondary",
+        )}
+      >
+        {active && <FlameIcon className="absolute h-3 w-3 opacity-30" />}
+        <span className="relative">{day}</span>
+      </span>
+
+      {/* Pin "hoje" — gota azul sobre o círculo, visível mesmo quando hoje
+          ainda não foi praticado (lembra: "você está aqui"). */}
+      {isToday && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-2 left-1/2 z-20 -translate-x-1/2"
+        >
+          <TodayPin />
+        </span>
       )}
     </div>
+  );
+}
+
+function ChevronLeft({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="m15 18-6-6 6-6" />
+    </svg>
+  );
+}
+
+function ChevronRight({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  );
+}
+
+function TodayPin() {
+  // Gota azul (pin) que se sobrepõe ao topo do círculo do dia, indicando
+  // "hoje" — análogo ao marcador do design de referência (Duolingo).
+  return (
+    <svg
+      width={16}
+      height={20}
+      viewBox="0 0 16 20"
+      aria-hidden="true"
+      className="drop-shadow"
+    >
+      <path
+        d="M8 0a8 8 0 0 1 8 8c0 5-8 12-8 12S0 13 0 8a8 8 0 0 1 8-8Z"
+        className="fill-info"
+      />
+      <circle cx={8} cy={8} r={5} className="fill-bg-primary" />
+    </svg>
   );
 }

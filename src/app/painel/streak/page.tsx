@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { FlameIcon } from "@/components/icons/FlameIcon";
 import { TargetIllustration } from "@/components/illustrations/TargetIllustration";
 import { StreakCalendar } from "@/components/painel/StreakCalendar";
+import { StreakGoals } from "@/components/painel/StreakGoals";
 import { BackLink } from "@/components/shared/BackLink";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -26,7 +27,17 @@ export default async function StreakPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const streak = await getStreakData(supabase, user.id, 84); // 12 semanas
+  // 365 dias cobrem todos os marcos de meta (até 365) e dão fôlego para
+  // navegar para meses anteriores no calendário sem rebuscar dados.
+  const streak = await getStreakData(supabase, user.id, 365);
+
+  // Dias com prática no mês corrente — para o KPI ao lado do streak atual.
+  const now = new Date();
+  const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-`;
+  let activeDaysInMonth = 0;
+  for (const key of streak.activeDates) {
+    if (key.startsWith(monthPrefix)) activeDaysInMonth++;
+  }
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-6 px-6 py-12">
@@ -57,24 +68,17 @@ export default async function StreakPage() {
         </Card>
         <Card padded className="flex flex-col gap-1">
           <span className="text-2xl font-bold text-fg-primary">
-            {streak.activeDaysInPeriod}
+            {activeDaysInMonth}
           </span>
-          <span className="text-xs text-fg-secondary">
-            Dias ativos (12 sem)
-          </span>
+          <span className="text-xs text-fg-secondary">Dias ativos no mês</span>
         </Card>
       </section>
 
-      {/* Calendário */}
+      {/* Calendário do mês */}
       <Card padded className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-base font-semibold text-fg-primary">
-            Últimas 12 semanas
-          </h2>
-          <span className="text-xs text-fg-tertiary">
-            Cada quadradinho é um dia
-          </span>
-        </div>
+        <h2 className="text-base font-semibold text-fg-primary">
+          Calendário do streak
+        </h2>
         {streak.activeDates.size === 0 ? (
           <EmptyState
             illustration={<TargetIllustration className="h-20 w-20" />}
@@ -82,9 +86,24 @@ export default async function StreakPage() {
             description="Pratique hoje para acender sua primeira chama. Mesmo um exercício já conta!"
           />
         ) : (
-          <StreakCalendar activeDates={streak.activeDates} weeks={12} />
+          <StreakCalendar
+            activeDates={streak.activeDates}
+            initialYear={now.getFullYear()}
+            initialMonth={now.getMonth()}
+          />
         )}
       </Card>
+
+      {/* Metas de streak */}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-base font-semibold text-fg-primary">
+          Meta de streak
+        </h2>
+        <StreakGoals
+          currentStreak={streak.currentStreak}
+          longestStreak={streak.longestStreak}
+        />
+      </section>
 
       {/* Última atividade */}
       {streak.lastActivityDate && (
