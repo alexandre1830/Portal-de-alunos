@@ -87,13 +87,18 @@ export async function getXpHistory(
 }
 
 export interface XpBySource {
+  // Identificador bruto do evento (ex.: "exercise:multiple_choice",
+  // "achievement:first_lesson_completed").
   source: string;
+  // Label amigável já resolvido para exibir.
+  label: string;
   xp: number;
 }
 
 // Soma XP por `source` ao longo de todo o histórico do aluno. Útil para
-// um breakdown ("onde meu XP veio de?"). Limita a 6 categorias top + agrupa
-// o resto em "outros".
+// um breakdown ("onde meu XP veio de?"). Limita a 6 categorias top +
+// agrupa o resto em "outros". Resolve títulos amigáveis para sources do
+// tipo "achievement:<code>" consultando a tabela achievements.
 export async function getXpBySource(
   supabase: Client,
   userId: string,
@@ -108,14 +113,42 @@ export async function getXpBySource(
     buckets.set(row.source, (buckets.get(row.source) ?? 0) + row.amount);
   }
 
+  // Junta com a tabela de achievements para extrair títulos amigáveis.
+  // Codes vêm do prefixo "achievement:<code>".
+  const achievementCodes = [...buckets.keys()]
+    .filter((s) => s.startsWith("achievement:"))
+    .map((s) => s.slice("achievement:".length));
+  const titles = new Map<string, string>();
+  if (achievementCodes.length > 0) {
+    const { data: rows } = await supabase
+      .from("achievements")
+      .select("code, title")
+      .in("code", achievementCodes);
+    for (const r of rows ?? []) titles.set(r.code, r.title);
+  }
+
+  function labelFor(source: string): string {
+    if (source.startsWith("achievement:")) {
+      const code = source.slice("achievement:".length);
+      return titles.get(code) ?? humanizeCode(code);
+    }
+    return source;
+  }
+
   const sorted = [...buckets.entries()]
-    .map(([source, xp]) => ({ source, xp }))
+    .map(([source, xp]) => ({ source, label: labelFor(source), xp }))
     .sort((a, b) => b.xp - a.xp);
 
   if (sorted.length <= 6) return sorted;
   const top = sorted.slice(0, 5);
-  const others = sorted
-    .slice(5)
-    .reduce((acc, s) => acc + s.xp, 0);
-  return [...top, { source: "outros", xp: others }];
+  const others = sorted.slice(5).reduce((acc, s) => acc + s.xp, 0);
+  return [...top, { source: "outros", label: "Outros", xp: others }];
+}
+
+// "first_lesson_completed" -> "First lesson completed" — fallback usado só
+// quando o achievement não está catalogado na tabela `achievements`.
+function humanizeCode(code: string): string {
+  const text = code.replace(/_/g, " ").trim();
+  if (text.length === 0) return "Conquista";
+  return text[0]!.toUpperCase() + text.slice(1);
 }

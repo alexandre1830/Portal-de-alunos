@@ -122,17 +122,31 @@ export default async function PainelPage() {
             <span className="text-xs text-fg-secondary">XP total</span>
           </Card>
         </Link>
-        <Card padded className="flex flex-col gap-1">
-          <span className="flex items-center gap-1.5 text-2xl font-bold text-fg-primary">
-            {streak}
-            <FlameIcon className="h-5 w-5 text-warning" />
-          </span>
-          <span className="text-xs text-fg-secondary">Streak atual</span>
-        </Card>
-        <Card padded className="flex flex-col gap-1">
-          <span className="text-2xl font-bold text-fg-primary">{longest}</span>
-          <span className="text-xs text-fg-secondary">Maior streak</span>
-        </Card>
+        <Link href="/painel/streak" className="block">
+          <Card
+            padded
+            interactive
+            className="flex h-full flex-col gap-1"
+            title="Ver calendário de streak"
+          >
+            <span className="flex items-center gap-1.5 text-2xl font-bold text-fg-primary">
+              {streak}
+              <FlameIcon className="h-5 w-5 text-warning" />
+            </span>
+            <span className="text-xs text-fg-secondary">Streak atual</span>
+          </Card>
+        </Link>
+        <Link href="/painel/streak" className="block">
+          <Card
+            padded
+            interactive
+            className="flex h-full flex-col gap-1"
+            title="Ver calendário de streak"
+          >
+            <span className="text-2xl font-bold text-fg-primary">{longest}</span>
+            <span className="text-xs text-fg-secondary">Maior streak</span>
+          </Card>
+        </Link>
       </section>
 
       {/* Atalhos: revisar manualmente + conquistas */}

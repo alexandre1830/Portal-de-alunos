@@ -8,8 +8,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { createClient } from "@/lib/supabase/server";
 import { getXpBySource, getXpHistory } from "@/lib/xp/queries";
 
-// Rótulos amigáveis para cada `source` de xp_events. Os ids vêm do código
-// (ex.: "exercise:multiple_choice"); aqui transformamos em algo legível.
+// Rótulos amigáveis para sources de exercícios/speaking. Achievements vêm
+// do label resolvido pela query (que faz join com a tabela achievements).
 const SOURCE_LABELS: Record<string, string> = {
   "exercise:multiple_choice": "Múltipla escolha",
   "exercise:fill_blank": "Lacuna",
@@ -18,12 +18,10 @@ const SOURCE_LABELS: Record<string, string> = {
   "exercise:error_correction": "Correção de erro",
   "speaking:voice": "Speaking (voz)",
   "speaking:text": "Speaking (texto)",
-  achievement: "Conquistas",
-  outros: "Outros",
 };
 
-function labelFor(source: string): string {
-  return SOURCE_LABELS[source] ?? source;
+function prettyLabel(source: string, fallback: string): string {
+  return SOURCE_LABELS[source] ?? fallback;
 }
 
 export default async function XpHistoryPage() {
@@ -107,7 +105,9 @@ export default async function XpHistoryPage() {
               return (
                 <li key={s.source} className="flex flex-col gap-1">
                   <div className="flex items-baseline justify-between gap-2 text-sm">
-                    <span className="text-fg-primary">{labelFor(s.source)}</span>
+                    <span className="text-fg-primary">
+                      {prettyLabel(s.source, s.label)}
+                    </span>
                     <span className="text-fg-secondary">{s.xp} XP</span>
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-bg-tertiary">
