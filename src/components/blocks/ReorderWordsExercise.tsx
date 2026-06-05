@@ -58,11 +58,13 @@ export function ReorderWordsExercise({
   data,
   onSolved,
   onPartCompleted,
+  previewMode = false,
 }: {
   blockId: string;
   data: ReorderWordsData;
   onSolved?: () => void;
   onPartCompleted?: (info: { stars: number | null; xpAwarded: number }) => void;
+  previewMode?: boolean;
 }) {
   // Lista de tokens embaralhada UMA VEZ (memo por blockId).
   const shuffled = useMemo<IndexedToken[]>(() => {
@@ -112,7 +114,11 @@ export function ReorderWordsExercise({
   async function handleSubmit() {
     if (!allUsed || pending || solved) return;
     setPending(true);
-    const res = await submitExercise({ blockId, selectedIndices: selected });
+    const res = await submitExercise({
+      blockId,
+      selectedIndices: selected,
+      previewMode,
+    });
     setPending(false);
     setResult(res);
     notifyExerciseResult(res, { answerLabel: "Ordem" });

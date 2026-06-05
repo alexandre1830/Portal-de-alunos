@@ -15,11 +15,13 @@ export function ErrorCorrectionExercise({
   data,
   onSolved,
   onPartCompleted,
+  previewMode = false,
 }: {
   blockId: string;
   data: ErrorCorrectionData;
   onSolved?: () => void;
   onPartCompleted?: (info: { stars: number | null; xpAwarded: number }) => void;
+  previewMode?: boolean;
 }) {
   const [text, setText] = useState("");
   const [result, setResult] = useState<ExerciseResult | null>(null);
@@ -30,7 +32,7 @@ export function ErrorCorrectionExercise({
   async function handleSubmit() {
     if (text.trim().length === 0 || pending || solved) return;
     setPending(true);
-    const res = await submitExercise({ blockId, text });
+    const res = await submitExercise({ blockId, text, previewMode });
     setPending(false);
     setResult(res);
     notifyExerciseResult(res, { answerLabel: "Versão correta" });

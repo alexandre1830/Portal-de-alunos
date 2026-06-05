@@ -63,8 +63,9 @@ export default async function PartPage({
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-8 px-6 py-12">
-      {/* Banner de "modo pré-visualização" — só admin vê. Oferece um
-          atalho rápido de volta para o editor da parte. */}
+      {/* Banner de "modo pré-visualização" — só admin vê. Em preview, o
+          único caminho de volta é por aqui, e nada do que o admin fizer
+          afeta XP/progresso/SRS (o servidor faz dry-run). */}
       {isAdminPreview && (
         <Card
           padded
@@ -75,8 +76,8 @@ export default async function PartPage({
               Você está vendo como aluno
             </span>
             <span className="text-xs text-fg-secondary">
-              O que aparece aqui é exatamente o que o aluno vê. Suas
-              respostas neste modo afetam progresso/XP normalmente.
+              Suas ações aqui não contam — nada de XP, progresso, conquistas
+              ou itens de revisão são gravados.
             </span>
           </div>
           <Link href={`/admin/partes/${part.id}`}>
@@ -89,10 +90,14 @@ export default async function PartPage({
       )}
 
       <div className="flex flex-col gap-2">
-        <BackLink
-          href={course ? `/cursos/${course.slug}` : "/painel"}
-          label={course ? course.title : "Voltar"}
-        />
+        {/* BackLink só aparece no modo aluno — em preview, o admin volta
+            pelo banner amarelo (caminho único de saída). */}
+        {!isAdminPreview && (
+          <BackLink
+            href={course ? `/cursos/${course.slug}` : "/painel"}
+            label={course ? course.title : "Voltar"}
+          />
+        )}
         <div className="flex items-center justify-between gap-3">
           <h1 className="flex items-center gap-2 text-2xl font-semibold text-fg-primary">
             {part.kind === "golden" && (
@@ -101,8 +106,12 @@ export default async function PartPage({
             {part.title}
           </h1>
           <div className="flex items-center gap-3">
-            {done && <Stars value={progress?.stars ?? 0} />}
-            {course && (
+            {done && !isAdminPreview && (
+              <Stars value={progress?.stars ?? 0} />
+            )}
+            {/* Bookmark "para revisar" também é exclusivo do aluno — o admin
+                em preview não precisa marcar para revisar. */}
+            {course && !isAdminPreview && (
               <form action={toggleReviewMark}>
                 <input type="hidden" name="part_id" value={part.id} />
                 <input type="hidden" name="course_id" value={course.id} />
@@ -141,8 +150,17 @@ export default async function PartPage({
         partId={part.id}
         blocks={blocks}
         tts={tts}
-        initiallyCompleted={done}
-        courseHref={course ? `/cursos/${course.slug}` : undefined}
+        initiallyCompleted={done && !isAdminPreview}
+        previewMode={isAdminPreview}
+        // courseHref só faz sentido para o aluno; em preview o caminho de
+        // volta é o botão "Voltar para edição" do banner.
+        courseHref={
+          isAdminPreview
+            ? undefined
+            : course
+              ? `/cursos/${course.slug}`
+              : undefined
+        }
       />
     </main>
   );

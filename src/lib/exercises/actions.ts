@@ -54,6 +54,11 @@ const inputSchema = z.object({
   text: z.string().optional(),
   // Resposta de reorder_words: array de índices originais na ordem montada.
   selectedIndices: z.array(z.number().int().nonnegative()).optional(),
+  // Modo "pré-visualização" do admin: corrige normalmente, mas NÃO persiste
+  // (sem XP, exercise_attempts, part_progress, SRS, conquistas) e dispensa
+  // a checagem de matrícula. O servidor só honra a flag se o user de fato
+  // tiver role=admin; para outros perfis a flag é ignorada.
+  previewMode: z.boolean().optional(),
 });
 
 function fail(error: string): ExerciseResult {
@@ -65,10 +70,12 @@ export async function submitExercise(raw: {
   selectedIndex?: number;
   text?: string;
   selectedIndices?: number[];
+  previewMode?: boolean;
 }): Promise<ExerciseResult> {
   const parsed = inputSchema.safeParse(raw);
   if (!parsed.success) return fail("Entrada inválida.");
-  const { blockId, selectedIndex, text, selectedIndices } = parsed.data;
+  const { blockId, selectedIndex, text, selectedIndices, previewMode } =
+    parsed.data;
 
   const supabase = await createClient();
   const {
@@ -78,6 +85,18 @@ export async function submitExercise(raw: {
 
   const admin = createAdminClient();
 
+  // Verifica se a preview do admin pode ser honrada: requer role=admin no
+  // servidor (não confiamos só na flag do cliente).
+  let isAdminPreview = false;
+  if (previewMode) {
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    isAdminPreview = profile?.role === "admin";
+  }
+
   const { data: block } = await admin
     .from("blocks")
     .select("id, type, part_id, course_id, data")
@@ -85,15 +104,19 @@ export async function submitExercise(raw: {
     .maybeSingle();
   if (!block) return fail("Exercício não encontrado.");
 
-  // Segurança: só aluno com matrícula ativa pode responder.
-  const { data: enrollment } = await admin
-    .from("enrollments")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("course_id", block.course_id)
-    .eq("status", "active")
-    .maybeSingle();
-  if (!enrollment) return fail("Você não está matriculado neste curso.");
+  // Segurança: só aluno com matrícula ativa pode responder — exceto admin
+  // em modo pré-visualização (ele pode não estar matriculado e ainda
+  // assim precisa testar o fluxo).
+  if (!isAdminPreview) {
+    const { data: enrollment } = await admin
+      .from("enrollments")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("course_id", block.course_id)
+      .eq("status", "active")
+      .maybeSingle();
+    if (!enrollment) return fail("Você não está matriculado neste curso.");
+  }
 
   const { data: solutionRow } = await admin
     .from("exercise_solutions")
@@ -174,6 +197,21 @@ export async function submitExercise(raw: {
     if (state === "incorrect") correctAnswer = canonical;
   } else {
     return fail("Tipo de exercício não suportado.");
+  }
+
+  // Dry-run: admin em pré-visualização recebe a correção, mas nada
+  // disto entra no banco — sem tentativa, sem XP, sem SRS, sem progresso,
+  // sem conquistas. A frase canônica em "incorrect" continua exibida.
+  if (isAdminPreview) {
+    return {
+      ok: true,
+      state,
+      correctAnswer,
+      xpAwarded: 0,
+      error: null,
+      // partJustCompleted fica undefined — admin não vê a celebração nem
+      // estrelas, porque nada está sendo persistido.
+    };
   }
 
   // --- Tentativas (idempotência de XP) ---

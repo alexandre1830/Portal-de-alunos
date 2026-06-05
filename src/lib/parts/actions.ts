@@ -22,10 +22,11 @@ export interface MarkPartCompletedResult {
 //
 // Defesa em profundidade:
 //  - autenticação do usuário
-//  - matrícula ativa no curso da parte
+//  - matrícula ativa no curso da parte (ou modo pré-visualização admin)
 //  - confirmação de que a parte realmente NÃO tem blocks de exercício
 export async function markPartCompleted(
   partId: string,
+  previewMode?: boolean,
 ): Promise<MarkPartCompletedResult> {
   const supabase = await createClient();
   const {
@@ -35,6 +36,17 @@ export async function markPartCompleted(
 
   const admin = createAdminClient();
 
+  // Honra previewMode somente para admin.
+  let isAdminPreview = false;
+  if (previewMode) {
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    isAdminPreview = profile?.role === "admin";
+  }
+
   const { data: part } = await admin
     .from("parts")
     .select("id, course_id")
@@ -42,15 +54,17 @@ export async function markPartCompleted(
     .maybeSingle();
   if (!part) return { ok: false, error: "Parte não encontrada." };
 
-  const { data: enrollment } = await admin
-    .from("enrollments")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("course_id", part.course_id)
-    .eq("status", "active")
-    .maybeSingle();
-  if (!enrollment) {
-    return { ok: false, error: "Você não está matriculado neste curso." };
+  if (!isAdminPreview) {
+    const { data: enrollment } = await admin
+      .from("enrollments")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("course_id", part.course_id)
+      .eq("status", "active")
+      .maybeSingle();
+    if (!enrollment) {
+      return { ok: false, error: "Você não está matriculado neste curso." };
+    }
   }
 
   // Bloqueia partes com exercícios — elas concluem automaticamente.
@@ -65,6 +79,12 @@ export async function markPartCompleted(
       ok: false,
       error: "Esta parte conclui automaticamente ao acertar os exercícios.",
     };
+  }
+
+  // Dry-run admin: devolve ok=true sem persistir nada (zero conquistas,
+  // zero part_progress, zero revalidate).
+  if (isAdminPreview) {
+    return { ok: true, error: null, justCompleted: false };
   }
 
   // Idempotente: se já está completed, não duplica completed_at.

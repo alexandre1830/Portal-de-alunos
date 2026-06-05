@@ -26,6 +26,8 @@ const inputSchema = z.object({
   phraseIndex: z.number().int().nonnegative(),
   transcript: z.string().min(1),
   viaText: z.boolean().optional(),
+  // Pré-visualização do admin — corrige normalmente mas não persiste nada.
+  previewMode: z.boolean().optional(),
 });
 
 function fail(error: string): SpeakingResult {
@@ -51,10 +53,17 @@ export async function submitSpeaking(raw: {
   phraseIndex: number;
   transcript: string;
   viaText?: boolean;
+  previewMode?: boolean;
 }): Promise<SpeakingResult> {
   const parsed = inputSchema.safeParse(raw);
   if (!parsed.success) return fail("Entrada inválida.");
-  const { blockId, phraseIndex, transcript, viaText = false } = parsed.data;
+  const {
+    blockId,
+    phraseIndex,
+    transcript,
+    viaText = false,
+    previewMode,
+  } = parsed.data;
 
   const supabase = await createClient();
   const {
@@ -63,6 +72,17 @@ export async function submitSpeaking(raw: {
   if (!user) return fail("Sessão expirada. Entre novamente.");
 
   const admin = createAdminClient();
+
+  // Honra previewMode somente para admin.
+  let isAdminPreview = false;
+  if (previewMode) {
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    isAdminPreview = profile?.role === "admin";
+  }
 
   const { data: block } = await admin
     .from("blocks")
@@ -73,15 +93,18 @@ export async function submitSpeaking(raw: {
     return fail("Bloco não encontrado.");
   }
 
-  // Segurança: só aluno com matrícula ativa pode submeter.
-  const { data: enrollment } = await admin
-    .from("enrollments")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("course_id", block.course_id)
-    .eq("status", "active")
-    .maybeSingle();
-  if (!enrollment) return fail("Você não está matriculado neste curso.");
+  // Segurança: só aluno com matrícula ativa pode submeter — exceto admin
+  // em pré-visualização.
+  if (!isAdminPreview) {
+    const { data: enrollment } = await admin
+      .from("enrollments")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("course_id", block.course_id)
+      .eq("status", "active")
+      .maybeSingle();
+    if (!enrollment) return fail("Você não está matriculado neste curso.");
+  }
 
   const dataParsed = speakingData.safeParse(block.data);
   if (!dataParsed.success) return fail("Bloco mal configurado.");
@@ -91,6 +114,18 @@ export async function submitSpeaking(raw: {
 
   // --- Correção ---
   const state = gradeSpeaking(transcript, target);
+
+  // Dry-run admin: devolve a avaliação, mas sem XP nem persistência.
+  if (isAdminPreview) {
+    return {
+      ok: true,
+      state,
+      correctPhrase: state === "incorrect" ? target : null,
+      xpAwarded: 0,
+      error: null,
+    };
+  }
+
   // Fallback por texto rende metade do XP (não testou pronúncia).
   const baseXp = XP_BY_STATE[state];
   const earnableXp = viaText ? Math.floor(baseXp / 2) : baseXp;

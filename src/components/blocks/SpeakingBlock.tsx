@@ -21,10 +21,12 @@ export function SpeakingBlock({
   blockId,
   data,
   tts,
+  previewMode = false,
 }: {
   blockId: string;
   data: SpeakingData;
   tts?: TtsOverride;
+  previewMode?: boolean;
 }) {
   // BCP-47 do reconhecedor segue a voz preferida do aluno (ex.: en-IN).
   // Fallback: en-US.
@@ -44,6 +46,7 @@ export function SpeakingBlock({
               phrase={phrase}
               lang={lang}
               tts={tts}
+              previewMode={previewMode}
             />
           </li>
         ))}
@@ -58,12 +61,14 @@ function SpeakingPhrase({
   phrase,
   lang,
   tts,
+  previewMode = false,
 }: {
   blockId: string;
   phraseIndex: number;
   phrase: string;
   lang: string;
   tts?: TtsOverride;
+  previewMode?: boolean;
 }) {
   const speech = useSpeechRecognition(lang);
   const [textFallback, setTextFallback] = useState("");
@@ -81,6 +86,7 @@ function SpeakingPhrase({
       phraseIndex,
       transcript,
       viaText,
+      previewMode,
     });
     setPending(false);
     setResult(res);

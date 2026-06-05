@@ -32,12 +32,16 @@ export function PartStepper({
   tts,
   initiallyCompleted,
   courseHref,
+  previewMode = false,
 }: {
   partId: string;
   blocks: Block[];
   tts?: TtsOverride;
   initiallyCompleted: boolean;
   courseHref?: string;
+  // Em pré-visualização do admin, propaga para o BlockRenderer (e para
+  // markPartCompleted) — o servidor faz dry-run.
+  previewMode?: boolean;
 }) {
   const total = blocks.length;
   const [index, setIndex] = useState(0);
@@ -93,7 +97,7 @@ export function PartStepper({
   function handleMarkCompleted() {
     if (completed || pending) return;
     startTransition(async () => {
-      const res = await markPartCompleted(partId);
+      const res = await markPartCompleted(partId, previewMode);
       if (res.ok) {
         setCompleted(true);
         if (res.justCompleted) {
@@ -148,6 +152,7 @@ export function PartStepper({
           <BlockRenderer
             block={current}
             tts={tts}
+            previewMode={previewMode}
             onSolved={() => markSolved(index)}
             onPartCompleted={(info) => {
               setCompleted(true);

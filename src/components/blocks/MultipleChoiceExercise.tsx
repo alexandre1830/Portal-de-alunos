@@ -13,15 +13,13 @@ export function MultipleChoiceExercise({
   data,
   onSolved,
   onPartCompleted,
+  previewMode = false,
 }: {
   blockId: string;
   data: MultipleChoiceData;
-  // Callback opcional: chamado uma vez quando o exercício é resolvido
-  // (perfect ou close). Usado pelo PartStepper para auto-avançar.
   onSolved?: () => void;
-  // Callback opcional: chamado quando ESTE exercício foi o último a faltar
-  // e a parte ficou concluída agora. Stepper usa para abrir a celebração.
   onPartCompleted?: (info: { stars: number | null; xpAwarded: number }) => void;
+  previewMode?: boolean;
 }) {
   const [selected, setSelected] = useState<number | null>(null);
   const [result, setResult] = useState<ExerciseResult | null>(null);
@@ -32,7 +30,11 @@ export function MultipleChoiceExercise({
   async function handleSubmit() {
     if (selected === null || pending || solved) return;
     setPending(true);
-    const res = await submitExercise({ blockId, selectedIndex: selected });
+    const res = await submitExercise({
+      blockId,
+      selectedIndex: selected,
+      previewMode,
+    });
     setPending(false);
     setResult(res);
     notifyExerciseResult(res);

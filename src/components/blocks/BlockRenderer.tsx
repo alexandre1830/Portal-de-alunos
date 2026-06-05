@@ -49,11 +49,15 @@ export function BlockRenderer({
   tts,
   onSolved,
   onPartCompleted,
+  previewMode = false,
 }: {
   block: Block;
   tts?: TtsOverride;
   onSolved?: () => void;
   onPartCompleted?: (info: { stars: number | null; xpAwarded: number }) => void;
+  // Quando true, propaga para os exercícios — eles incluem na chamada da
+  // Server Action para o backend não persistir nada (XP, progresso, SRS).
+  previewMode?: boolean;
 }) {
   switch (block.type) {
     case "rich_text": {
@@ -99,7 +103,12 @@ export function BlockRenderer({
     case "speaking": {
       const parsed = speakingData.safeParse(block.data);
       return parsed.success ? (
-        <SpeakingBlock blockId={block.id} data={parsed.data} tts={tts} />
+        <SpeakingBlock
+          blockId={block.id}
+          data={parsed.data}
+          tts={tts}
+          previewMode={previewMode}
+        />
       ) : (
         <Notice>Bloco de speaking inválido.</Notice>
       );
@@ -112,6 +121,7 @@ export function BlockRenderer({
           data={parsed.data}
           onSolved={onSolved}
           onPartCompleted={onPartCompleted}
+          previewMode={previewMode}
         />
       ) : (
         <Notice>Exercício inválido.</Notice>
@@ -125,6 +135,7 @@ export function BlockRenderer({
           data={parsed.data}
           onSolved={onSolved}
           onPartCompleted={onPartCompleted}
+          previewMode={previewMode}
         />
       ) : (
         <Notice>Exercício inválido.</Notice>
@@ -138,6 +149,7 @@ export function BlockRenderer({
           data={parsed.data}
           onSolved={onSolved}
           onPartCompleted={onPartCompleted}
+          previewMode={previewMode}
         />
       ) : (
         <Notice>Exercício inválido.</Notice>
@@ -151,6 +163,7 @@ export function BlockRenderer({
           data={parsed.data}
           onSolved={onSolved}
           onPartCompleted={onPartCompleted}
+          previewMode={previewMode}
         />
       ) : (
         <Notice>Exercício inválido.</Notice>
@@ -164,6 +177,7 @@ export function BlockRenderer({
           data={parsed.data}
           onSolved={onSolved}
           onPartCompleted={onPartCompleted}
+          previewMode={previewMode}
         />
       ) : (
         <Notice>Exercício inválido.</Notice>
