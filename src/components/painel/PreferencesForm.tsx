@@ -26,6 +26,10 @@ interface Props {
   availableLanguages: ("en" | "es")[];
 }
 
+// Card único "Áudio" que envolve tudo (voz por idioma + velocidade + salvar).
+// As subseções são separadas por border-b para dar identidade clara, e o
+// botão "Salvar configurações" mora no rodapé do card — fica óbvio o que
+// está sendo salvo.
 export function PreferencesForm({
   initialVoiceEn,
   initialVoiceEs,
@@ -44,89 +48,107 @@ export function PreferencesForm({
     initialPreferencesState,
   );
 
+  const hasAnyVoiceSection = showEn || showEs;
+
   return (
-    <form action={formAction} className="flex flex-col gap-6">
-      <input type="hidden" name="tts_voice_en" value={voiceEn} />
-      <input type="hidden" name="tts_voice_es" value={voiceEs} />
-      <input type="hidden" name="tts_rate" value={rate.toFixed(2)} />
-
-      {showEn && (
-        <VoiceSection
-          title="Voz para textos em inglês"
-          voices={VOICES_BY_LANG.en}
-          selected={voiceEn}
-          onSelect={setVoiceEn}
-          rate={rate}
-        />
-      )}
-
-      {showEs && (
-        <VoiceSection
-          title="Voz para textos em espanhol"
-          voices={VOICES_BY_LANG.es}
-          selected={voiceEs}
-          onSelect={setVoiceEs}
-          rate={rate}
-        />
-      )}
-
-      {!showEn && !showEs && (
-        <Card padded>
+    <Card padded className="flex flex-col gap-0 p-0">
+      <form action={formAction} className="flex flex-col">
+        {/* Header do card */}
+        <header className="flex flex-col gap-1 border-b border-border-primary px-5 py-4">
+          <h2 className="text-base font-semibold text-fg-primary">Áudio</h2>
           <p className="text-sm text-fg-secondary">
-            Você ainda não está matriculado em nenhum curso. Quando estiver, as
-            opções de voz aparecem aqui de acordo com o idioma do curso.
+            Voz das narrações e velocidade da fala usada nos textos e
+            exercícios de pronúncia.
           </p>
-        </Card>
-      )}
+        </header>
 
-      <Card padded className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-base font-semibold text-fg-primary">
-            Velocidade da fala
-          </h2>
-          <span className="text-sm text-fg-secondary">
-            {rate.toFixed(2)}x
-          </span>
-        </div>
-        <input
-          type="range"
-          min={MIN_RATE}
-          max={MAX_RATE}
-          step={RATE_STEP}
-          value={rate}
-          onChange={(e) => setRate(Number(e.target.value))}
-          aria-label="Velocidade da fala"
-          className="w-full accent-fg-primary"
-        />
-        <div className="flex justify-between text-xs text-fg-tertiary">
-          <span>Mais devagar ({MIN_RATE.toFixed(2)}x)</span>
-          <span>Padrão ({DEFAULT_RATE.toFixed(2)}x)</span>
-          <span>Mais rápido ({MAX_RATE.toFixed(2)}x)</span>
-        </div>
-        <p className="text-xs text-fg-tertiary">
-          Vale para textos e exercícios de pronúncia. Diálogos mantêm o ritmo
-          natural (cada personagem tem voz própria).
-        </p>
-      </Card>
+        <input type="hidden" name="tts_voice_en" value={voiceEn} />
+        <input type="hidden" name="tts_voice_es" value={voiceEs} />
+        <input type="hidden" name="tts_rate" value={rate.toFixed(2)} />
 
-      {state.error && (
-        <p role="alert" className="text-sm text-danger">
-          {state.error}
-        </p>
-      )}
-      {state.notice && (
-        <p role="status" className="text-sm text-success">
-          {state.notice}
-        </p>
-      )}
+        {showEn && (
+          <VoiceSection
+            title="Voz para textos em inglês"
+            voices={VOICES_BY_LANG.en}
+            selected={voiceEn}
+            onSelect={setVoiceEn}
+            rate={rate}
+          />
+        )}
 
-      <Button type="submit" loading={pending} className="self-start">
-        Salvar configurações
-      </Button>
-    </form>
+        {showEs && (
+          <VoiceSection
+            title="Voz para textos em espanhol"
+            voices={VOICES_BY_LANG.es}
+            selected={voiceEs}
+            onSelect={setVoiceEs}
+            rate={rate}
+          />
+        )}
+
+        {!hasAnyVoiceSection && (
+          <p className="border-b border-border-primary px-5 py-4 text-sm text-fg-secondary">
+            Você ainda não está matriculado em nenhum curso. Quando estiver,
+            as opções de voz aparecem aqui de acordo com o idioma do curso.
+          </p>
+        )}
+
+        {/* Velocidade da fala */}
+        <section className="flex flex-col gap-3 border-b border-border-primary px-5 py-4">
+          <div className="flex items-baseline justify-between">
+            <h3 className="text-sm font-semibold text-fg-primary">
+              Velocidade da fala
+            </h3>
+            <span className="text-sm text-fg-secondary">
+              {rate.toFixed(2)}x
+            </span>
+          </div>
+          <input
+            type="range"
+            min={MIN_RATE}
+            max={MAX_RATE}
+            step={RATE_STEP}
+            value={rate}
+            onChange={(e) => setRate(Number(e.target.value))}
+            aria-label="Velocidade da fala"
+            className="w-full accent-fg-primary"
+          />
+          <div className="flex justify-between text-xs text-fg-tertiary">
+            <span>Mais devagar ({MIN_RATE.toFixed(2)}x)</span>
+            <span>Padrão ({DEFAULT_RATE.toFixed(2)}x)</span>
+            <span>Mais rápido ({MAX_RATE.toFixed(2)}x)</span>
+          </div>
+          <p className="text-xs text-fg-tertiary">
+            Vale para textos e exercícios de pronúncia. Diálogos mantêm o
+            ritmo natural (cada personagem tem voz própria).
+          </p>
+        </section>
+
+        {/* Rodapé: feedback + botão salvar */}
+        <footer className="flex items-center justify-between gap-3 px-5 py-4">
+          <div className="min-h-5 flex-1">
+            {state.error && (
+              <p role="alert" className="text-sm text-danger">
+                {state.error}
+              </p>
+            )}
+            {state.notice && (
+              <p role="status" className="text-sm text-success">
+                {state.notice}
+              </p>
+            )}
+          </div>
+          <Button type="submit" loading={pending}>
+            Salvar configurações
+          </Button>
+        </footer>
+      </form>
+    </Card>
   );
 }
 
+// Subseção de voz dentro do card "Áudio". Não é mais um Card próprio — é
+// um <section> com border-b para casar com o resto da estrutura.
 function VoiceSection({
   title,
   voices,
@@ -141,8 +163,8 @@ function VoiceSection({
   rate: number;
 }) {
   return (
-    <Card padded className="flex flex-col gap-3">
-      <h2 className="text-base font-semibold text-fg-primary">{title}</h2>
+    <section className="flex flex-col gap-3 border-b border-border-primary px-5 py-4">
+      <h3 className="text-sm font-semibold text-fg-primary">{title}</h3>
       <ul className="flex flex-col divide-y divide-border-primary">
         {voices.map((v) => {
           const active = v.id === selected;
@@ -166,7 +188,8 @@ function VoiceSection({
                 <span className="flex flex-col">
                   <span className="font-medium">{v.label}</span>
                   <span className="text-xs text-fg-tertiary">
-                    {v.accent} · {v.gender === "female" ? "Feminino" : "Masculino"}
+                    {v.accent} ·{" "}
+                    {v.gender === "female" ? "Feminino" : "Masculino"}
                   </span>
                 </span>
               </label>
@@ -183,6 +206,6 @@ function VoiceSection({
           );
         })}
       </ul>
-    </Card>
+    </section>
   );
 }

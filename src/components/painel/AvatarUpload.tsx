@@ -78,7 +78,6 @@ export function AvatarUpload({
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
-            size="sm"
             variant="secondary"
             onClick={pickFile}
             loading={pending}
@@ -89,7 +88,6 @@ export function AvatarUpload({
           {src && (
             <Button
               type="button"
-              size="sm"
               variant="ghost"
               onClick={handleRemove}
               disabled={pending}
