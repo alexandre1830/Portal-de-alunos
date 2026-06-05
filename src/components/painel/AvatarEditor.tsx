@@ -2,7 +2,6 @@
 
 import { useRef, useState, useTransition } from "react";
 
-import { PencilIcon } from "@/components/icons/PencilIcon";
 import { Avatar, type AvatarSize } from "@/components/shared/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -84,23 +83,16 @@ export function AvatarEditor({
 
   return (
     <>
-      {/* Wrapper clicável — pareceria estranho como <button> "vazio"
-          então damos foco/contorno explícitos pra acessibilidade. */}
+      {/* Wrapper clicável — sem emblema visível; o cursor-pointer +
+          hover scale é o que sinaliza editabilidade. */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Editar foto de perfil"
         title="Editar foto de perfil"
-        className="group relative inline-flex shrink-0 cursor-pointer rounded-full outline-none transition-transform hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-fg-primary"
+        className="inline-flex shrink-0 cursor-pointer rounded-full outline-none transition-transform hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-fg-primary"
       >
         <Avatar src={src} fullName={fullName} email={email} size={size} />
-        {/* Emblema "lápis" no canto inferior direito */}
-        <span
-          aria-hidden="true"
-          className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-bg-primary bg-fg-primary text-bg-primary opacity-90 transition-opacity group-hover:opacity-100"
-        >
-          <PencilIcon className="h-3 w-3" />
-        </span>
       </button>
 
       <Dialog

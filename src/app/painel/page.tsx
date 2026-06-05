@@ -7,8 +7,10 @@ import { GearIcon } from "@/components/icons/GearIcon";
 import { TrophyIcon } from "@/components/icons/TrophyIcon";
 import { StudyIllustration } from "@/components/illustrations/StudyIllustration";
 import { AvatarEditor } from "@/components/painel/AvatarEditor";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { getStudentDashboard } from "@/lib/dashboard/queries";
 import { countDueItems } from "@/lib/srs/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -246,35 +248,100 @@ export default async function PainelPage() {
           </Card>
         ) : (
           <ul className="flex flex-col gap-3">
-            {dashboard.courses.map((course, i) => (
-              <li
-                key={course.id}
-                className="animate-fade-slide-in"
-                style={{ animationDelay: `${i * 60}ms` }}
-              >
-                <Link href={`/cursos/${course.slug}`} className="block">
-                  <Card
-                    padded
-                    interactive
-                    className="flex items-center justify-between gap-4"
-                  >
-                    <div className="flex flex-col gap-1">
-                      <span className="font-medium text-fg-primary">
-                        {course.title}
+            {dashboard.courses.map((course, i) => {
+              const cont = dashboard.continueByCourseId.get(course.id);
+              const courseDone =
+                cont &&
+                cont.partsTotalInCourse > 0 &&
+                cont.partsDoneInCourse === cont.partsTotalInCourse;
+              return (
+                <li
+                  key={course.id}
+                  className="animate-fade-slide-in"
+                  style={{ animationDelay: `${i * 60}ms` }}
+                >
+                  <Card padded className="flex flex-col gap-3">
+                    {/* Header: nome do curso (link sutil pra visão geral)
+                        + pill idioma/nível. */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex flex-col gap-0.5">
+                        <Link
+                          href={`/cursos/${course.slug}`}
+                          className="font-medium text-fg-primary transition-colors hover:text-fg-primary/80 hover:underline"
+                          title="Ver todas as lições do curso"
+                        >
+                          {course.title}
+                        </Link>
+                        {course.description && (
+                          <span className="text-sm text-fg-secondary">
+                            {course.description}
+                          </span>
+                        )}
+                      </div>
+                      <span className="shrink-0 rounded-full border border-border-primary px-2.5 py-1 text-xs text-fg-secondary">
+                        {LANGUAGE_LABELS[course.language]} ·{" "}
+                        {levelLabel(course.level)}
                       </span>
-                      {course.description && (
-                        <span className="text-sm text-fg-secondary">
-                          {course.description}
-                        </span>
-                      )}
                     </div>
-                    <span className="shrink-0 rounded-full border border-border-primary px-2.5 py-1 text-xs text-fg-secondary">
-                      {LANGUAGE_LABELS[course.language]} · {levelLabel(course.level)}
-                    </span>
+
+                    {/* Preview da lição atual + barra + botão Continuar.
+                        Só aparece se o curso tem partes (cont != null e
+                        total > 0). */}
+                    {cont && cont.partsTotalInCourse > 0 ? (
+                      <div className="flex flex-col gap-3 rounded-md border border-border-primary bg-bg-tertiary/40 p-3">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs uppercase tracking-wide text-fg-tertiary">
+                            {courseDone
+                              ? "Curso concluído"
+                              : "Continue de onde parou"}
+                          </span>
+                          {cont.nextLessonTitle && (
+                            <span className="text-sm font-medium text-fg-primary">
+                              {cont.nextLessonTitle}
+                            </span>
+                          )}
+                          <span className="text-xs text-fg-tertiary">
+                            Lição {cont.lessonIndex} de {cont.totalLessons}
+                            {" · "}
+                            {cont.partsDoneInLesson}/{cont.partsTotalInLesson}{" "}
+                            {cont.partsTotalInLesson === 1
+                              ? "parte feita"
+                              : "partes feitas"}
+                          </span>
+                        </div>
+                        <ProgressBar
+                          value={cont.partsDoneInLesson}
+                          max={Math.max(cont.partsTotalInLesson, 1)}
+                          ariaLabel="Progresso na lição"
+                        />
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-xs text-fg-tertiary">
+                            {cont.partsDoneInCourse}/{cont.partsTotalInCourse}{" "}
+                            no curso
+                          </span>
+                          {cont.nextPartId && (
+                            <Link href={`/partes/${cont.nextPartId}`}>
+                              <Button type="button" size="sm">
+                                {courseDone ? "Revisar parte" : "Continuar"}
+                              </Button>
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      // Curso sem partes publicadas ainda — só oferece
+                      // o link para a estrutura do curso.
+                      <Link
+                        href={`/cursos/${course.slug}`}
+                        className="text-sm text-fg-secondary hover:underline"
+                      >
+                        Ver curso →
+                      </Link>
+                    )}
                   </Card>
-                </Link>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
