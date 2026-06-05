@@ -31,9 +31,22 @@ export default async function StreakPage() {
   // navegar para meses anteriores no calendário sem rebuscar dados.
   const streak = await getStreakData(supabase, user.id, 365);
 
+  // "Hoje" em BRT — o servidor pode estar rodando em qualquer fuso (Vercel
+  // usa UTC). Resolvemos via Intl no mesmo TZ usado pelo trigger SQL e pela
+  // resolução de activeDates, para o calendário e o KPI ficarem coerentes.
+  const todayBRT = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+  // todayBRT == "YYYY-MM-DD"
+  const [yearStr, monthStr] = todayBRT.split("-");
+  const currentYear = Number(yearStr);
+  const currentMonth = Number(monthStr) - 1; // 0-11
+
   // Dias com prática no mês corrente — para o KPI ao lado do streak atual.
-  const now = new Date();
-  const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-`;
+  const monthPrefix = `${yearStr}-${monthStr}-`;
   let activeDaysInMonth = 0;
   for (const key of streak.activeDates) {
     if (key.startsWith(monthPrefix)) activeDaysInMonth++;
@@ -88,8 +101,8 @@ export default async function StreakPage() {
         ) : (
           <StreakCalendar
             activeDates={streak.activeDates}
-            initialYear={now.getFullYear()}
-            initialMonth={now.getMonth()}
+            initialYear={currentYear}
+            initialMonth={currentMonth}
           />
         )}
       </Card>

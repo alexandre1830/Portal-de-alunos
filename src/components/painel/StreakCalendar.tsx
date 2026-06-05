@@ -270,16 +270,6 @@ function CellView({ cell }: { cell: DayCell | EmptyCell }) {
         <span className="relative">{day}</span>
       </span>
 
-      {/* Pin "hoje" — gota azul sobre o círculo, visível mesmo quando hoje
-          ainda não foi praticado (lembra: "você está aqui"). */}
-      {isToday && (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute -top-2 left-1/2 z-20 -translate-x-1/2"
-        >
-          <TodayPin />
-        </span>
-      )}
     </div>
   );
 }
@@ -318,22 +308,3 @@ function ChevronRight({ className }: { className?: string }) {
   );
 }
 
-function TodayPin() {
-  // Gota azul (pin) que se sobrepõe ao topo do círculo do dia, indicando
-  // "hoje" — análogo ao marcador do design de referência (Duolingo).
-  return (
-    <svg
-      width={16}
-      height={20}
-      viewBox="0 0 16 20"
-      aria-hidden="true"
-      className="drop-shadow"
-    >
-      <path
-        d="M8 0a8 8 0 0 1 8 8c0 5-8 12-8 12S0 13 0 8a8 8 0 0 1 8-8Z"
-        className="fill-info"
-      />
-      <circle cx={8} cy={8} r={5} className="fill-bg-primary" />
-    </svg>
-  );
-}

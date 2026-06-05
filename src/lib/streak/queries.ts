@@ -14,11 +14,21 @@ export interface StreakData {
   activeDaysInPeriod: number;
 }
 
-function toISODate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+// Fuso usado para resolver "que dia foi essa atividade?". Precisa
+// bater com o usado em supabase/migrations/.../apply_xp_event(), senão
+// o calendário renderizado dessincroniza dos agregados de streak.
+const STREAK_TZ = "America/Sao_Paulo";
+
+function toISODateInTz(iso: string, tz: string): string {
+  // Intl com en-CA produz exatamente "YYYY-MM-DD" — formato estável
+  // para chave de Set e comparação.
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(iso));
+  return parts;
 }
 
 // Carrega os números agregados de gamificação + o conjunto de dias com
@@ -49,7 +59,7 @@ export async function getStreakData(
 
   const activeDates = new Set<string>();
   for (const e of events ?? []) {
-    activeDates.add(toISODate(new Date(e.created_at)));
+    activeDates.add(toISODateInTz(e.created_at, STREAK_TZ));
   }
 
   return {
