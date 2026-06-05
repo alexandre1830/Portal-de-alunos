@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { submitExercise, type ExerciseResult } from "@/lib/exercises/actions";
 import type { FillBlankData } from "@/lib/blocks/schemas";
+import { notifyExerciseResult } from "@/lib/toast/notify-result";
 
 export function FillBlankExercise({
   blockId,
@@ -26,6 +27,7 @@ export function FillBlankExercise({
     const res = await submitExercise({ blockId, text });
     setPending(false);
     setResult(res);
+    notifyExerciseResult(res);
   }
 
   return (
@@ -43,13 +45,6 @@ export function FillBlankExercise({
         }}
       />
 
-      {result?.ok && result.state && <Feedback result={result} />}
-      {result && !result.ok && result.error && (
-        <p role="alert" className="text-sm text-danger">
-          {result.error}
-        </p>
-      )}
-
       {!solved && (
         <div>
           <Button
@@ -65,31 +60,4 @@ export function FillBlankExercise({
       )}
     </div>
   );
-}
-
-function Feedback({ result }: { result: ExerciseResult }) {
-  if (result.state === "perfect") {
-    return (
-      <p role="status" className="text-sm text-success">
-        Perfeito!{result.xpAwarded > 0 ? ` +${result.xpAwarded} XP` : ""}
-      </p>
-    );
-  }
-  if (result.state === "close") {
-    return (
-      <p role="status" className="text-sm text-warning">
-        Quase lá — typo tolerado.
-        {result.xpAwarded > 0 ? ` +${result.xpAwarded} XP` : ""}
-      </p>
-    );
-  }
-  if (result.state === "incorrect") {
-    return (
-      <p role="status" className="text-sm text-danger">
-        Não foi dessa vez.
-        {result.correctAnswer ? ` Resposta certa: ${result.correctAnswer}.` : ""}
-      </p>
-    );
-  }
-  return null;
 }

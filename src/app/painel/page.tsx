@@ -200,8 +200,12 @@ export default async function PainelPage() {
           </Card>
         ) : (
           <ul className="flex flex-col gap-3">
-            {dashboard.courses.map((course) => (
-              <li key={course.id}>
+            {dashboard.courses.map((course, i) => (
+              <li
+                key={course.id}
+                className="animate-fade-slide-in"
+                style={{ animationDelay: `${i * 60}ms` }}
+              >
                 <Link href={`/cursos/${course.slug}`} className="block">
                   <Card
                     padded

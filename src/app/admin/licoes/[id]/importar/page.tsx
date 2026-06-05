@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { BackLink } from "@/components/shared/BackLink";
 import { notFound } from "next/navigation";
 
 import { ImportLessonClient } from "@/components/admin/ImportLessonClient";
@@ -26,12 +26,7 @@ export default async function ImportarLicaoPage({
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col gap-6 px-6 py-12">
-      <Link
-        href={`/admin/licoes/${id}`}
-        className="text-sm text-fg-secondary hover:text-fg-primary"
-      >
-        ← Voltar para a lição
-      </Link>
+      <BackLink href={`/admin/licoes/${id}`} label="Voltar para a lição" />
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold text-fg-primary">
           Importar PDF para a lição

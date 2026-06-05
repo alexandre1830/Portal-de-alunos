@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { BlockForm, type BlockInitial } from "@/components/admin/BlockForm";
+import { BackLink } from "@/components/shared/BackLink";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { deleteBlock, moveBlock } from "@/lib/admin/actions";
@@ -154,17 +155,11 @@ export default async function AdminPartPage({
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
-        <Link
-          href={`/admin/licoes/${part.lesson_id}`}
-          className="text-sm text-fg-secondary hover:text-fg-primary"
-        >
-          ← Lição
-        </Link>
-        <Link
-          href={`/partes/${part.id}`}
-          className="text-sm text-fg-secondary hover:text-fg-primary"
-        >
-          Pré-visualizar parte
+        <BackLink href={`/admin/licoes/${part.lesson_id}`} label="Lição" />
+        <Link href={`/partes/${part.id}`}>
+          <Button type="button" variant="ghost" size="sm">
+            Pré-visualizar parte
+          </Button>
         </Link>
       </div>
 

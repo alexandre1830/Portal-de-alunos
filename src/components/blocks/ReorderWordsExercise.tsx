@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import type { ReorderWordsData } from "@/lib/blocks/schemas";
 import { submitExercise, type ExerciseResult } from "@/lib/exercises/actions";
+import { notifyExerciseResult } from "@/lib/toast/notify-result";
 import { cn } from "@/lib/utils/cn";
 
 // Renderer de "reordenar palavras":
@@ -110,6 +111,7 @@ export function ReorderWordsExercise({
     const res = await submitExercise({ blockId, selectedIndices: selected });
     setPending(false);
     setResult(res);
+    notifyExerciseResult(res, { answerLabel: "Ordem" });
   }
 
   return (
@@ -153,13 +155,6 @@ export function ReorderWordsExercise({
           );
         })}
       </div>
-
-      {result?.ok && result.state && <Feedback result={result} />}
-      {result && !result.ok && result.error && (
-        <p role="alert" className="text-sm text-danger">
-          {result.error}
-        </p>
-      )}
 
       <div className="flex flex-wrap gap-2">
         {!solved && (
@@ -218,23 +213,3 @@ function Chip({
   );
 }
 
-function Feedback({ result }: { result: ExerciseResult }) {
-  if (result.state === "perfect") {
-    return (
-      <p role="status" className="text-sm text-success">
-        Frase correta!{result.xpAwarded > 0 ? ` +${result.xpAwarded} XP` : ""}
-      </p>
-    );
-  }
-  if (result.state === "incorrect") {
-    return (
-      <p role="status" className="text-sm text-danger">
-        Não foi dessa vez.
-        {result.correctAnswer
-          ? ` Ordem certa: ${result.correctAnswer}.`
-          : ""}
-      </p>
-    );
-  }
-  return null;
-}

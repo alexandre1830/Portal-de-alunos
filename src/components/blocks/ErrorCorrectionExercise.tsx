@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import type { ErrorCorrectionData } from "@/lib/blocks/schemas";
 import { submitExercise, type ExerciseResult } from "@/lib/exercises/actions";
+import { notifyExerciseResult } from "@/lib/toast/notify-result";
 
 // Renderer de correção de erro. Mostra a frase errada (data.sentence) e pede
-// a versão corrigida. Mesmo padrão de feedback do FillBlank.
+// a versão corrigida. Feedback por toast.
 export function ErrorCorrectionExercise({
   blockId,
   data,
@@ -28,6 +29,7 @@ export function ErrorCorrectionExercise({
     const res = await submitExercise({ blockId, text });
     setPending(false);
     setResult(res);
+    notifyExerciseResult(res, { answerLabel: "Versão correta" });
   }
 
   return (
@@ -52,13 +54,6 @@ export function ErrorCorrectionExercise({
         }}
       />
 
-      {result?.ok && result.state && <Feedback result={result} />}
-      {result && !result.ok && result.error && (
-        <p role="alert" className="text-sm text-danger">
-          {result.error}
-        </p>
-      )}
-
       {!solved && (
         <div>
           <Button
@@ -74,31 +69,4 @@ export function ErrorCorrectionExercise({
       )}
     </div>
   );
-}
-
-function Feedback({ result }: { result: ExerciseResult }) {
-  if (result.state === "perfect") {
-    return (
-      <p role="status" className="text-sm text-success">
-        Perfeito!{result.xpAwarded > 0 ? ` +${result.xpAwarded} XP` : ""}
-      </p>
-    );
-  }
-  if (result.state === "close") {
-    return (
-      <p role="status" className="text-sm text-warning">
-        Quase lá — typo tolerado.
-        {result.xpAwarded > 0 ? ` +${result.xpAwarded} XP` : ""}
-      </p>
-    );
-  }
-  if (result.state === "incorrect") {
-    return (
-      <p role="status" className="text-sm text-danger">
-        Não foi dessa vez.
-        {result.correctAnswer ? ` Versão correta: ${result.correctAnswer}.` : ""}
-      </p>
-    );
-  }
-  return null;
 }

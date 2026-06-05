@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { ReviewSession } from "@/components/painel/ReviewSession";
+import { BackLink } from "@/components/shared/BackLink";
 import { Card } from "@/components/ui/Card";
 import { listDueItems } from "@/lib/srs/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -17,12 +17,7 @@ export default async function SessaoRevisaoPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-6 px-6 py-12">
-      <Link
-        href="/painel/revisar"
-        className="text-sm text-fg-secondary hover:text-fg-primary"
-      >
-        ← Voltar
-      </Link>
+      <BackLink href="/painel/revisar" />
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold text-fg-primary">
           Sessão de revisão

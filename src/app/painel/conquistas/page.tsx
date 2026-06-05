@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { TrophyIcon } from "@/components/icons/TrophyIcon";
+import { BackLink } from "@/components/shared/BackLink";
 import { Card } from "@/components/ui/Card";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils/cn";
@@ -43,12 +43,7 @@ export default async function ConquistasPage() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-8 px-6 py-12">
       <div className="flex flex-col gap-2">
-        <Link
-          href="/painel"
-          className="text-sm text-fg-secondary hover:text-fg-primary"
-        >
-          ← Voltar ao painel
-        </Link>
+        <BackLink href="/painel" label="Voltar ao painel" />
         <h1 className="text-2xl font-semibold text-fg-primary">Conquistas</h1>
         <p className="text-sm text-fg-secondary">
           {obtained.length} de {items.length} conquistadas.
@@ -69,8 +64,12 @@ export default async function ConquistasPage() {
             Conquistadas
           </h2>
           <ul className="flex flex-col gap-3">
-            {obtained.map((a) => (
-              <li key={a.id}>
+            {obtained.map((a, i) => (
+              <li
+                key={a.id}
+                className="animate-fade-slide-in"
+                style={{ animationDelay: `${i * 50}ms` }}
+              >
                 <Card padded className="flex items-start gap-3">
                   <TrophyIcon className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
                   <div className="flex flex-1 flex-col">

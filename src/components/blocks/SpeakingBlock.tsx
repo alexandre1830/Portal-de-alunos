@@ -14,6 +14,7 @@ import {
   submitSpeaking,
   type SpeakingResult,
 } from "@/lib/speaking/actions";
+import { toast } from "@/lib/toast/store";
 import { languageCodeForVoice } from "@/lib/tts/voices";
 
 export function SpeakingBlock({
@@ -83,6 +84,7 @@ function SpeakingPhrase({
     });
     setPending(false);
     setResult(res);
+    notifySpeaking(res, phrase);
   }
 
   function tryAgain() {
@@ -184,62 +186,44 @@ function SpeakingPhrase({
         </div>
       )}
 
-      {/* Transcrição capturada */}
+      {/* Transcrição capturada — mantida inline para o aluno comparar com a frase original */}
       {speech.supported && speech.transcript && (
         <p className="text-sm italic text-fg-secondary">
           “{speech.transcript}”
         </p>
       )}
 
-      {/* Erros do reconhecedor */}
+      {/* Erros do reconhecedor — inline (não some) para orientar a permitir mic etc. */}
       {speech.error && (
         <p role="alert" className="text-sm text-danger">
           {speech.error}
-        </p>
-      )}
-
-      {/* Feedback do grading */}
-      {result?.ok && result.state && (
-        <Feedback result={result} target={phrase} />
-      )}
-      {result && !result.ok && result.error && (
-        <p role="alert" className="text-sm text-danger">
-          {result.error}
         </p>
       )}
     </div>
   );
 }
 
-function Feedback({
-  result,
-  target,
-}: {
-  result: SpeakingResult;
-  target: string;
-}) {
-  if (result.state === "perfect") {
-    return (
-      <p role="status" className="text-sm text-success">
-        Perfeito!{result.xpAwarded > 0 ? ` +${result.xpAwarded} XP` : ""}
-      </p>
-    );
+function notifySpeaking(result: SpeakingResult, target: string): void {
+  if (!result.ok) {
+    if (result.error) toast.danger({ title: result.error });
+    return;
   }
-  if (result.state === "close") {
-    return (
-      <p role="status" className="text-sm text-warning">
-        Quase lá — bem perto da frase original.
-        {result.xpAwarded > 0 ? ` +${result.xpAwarded} XP` : ""}
-      </p>
-    );
+  const xp = result.xpAwarded > 0 ? ` (+${result.xpAwarded} XP)` : "";
+  switch (result.state) {
+    case "perfect":
+      toast.success({ title: `Perfeito!${xp}` });
+      return;
+    case "close":
+      toast.warning({
+        title: `Quase lá${xp}`,
+        description: "Você ficou bem perto da frase original.",
+      });
+      return;
+    case "incorrect":
+      toast.danger({
+        title: "Não foi dessa vez",
+        description: `A frase era: ${target}`,
+      });
+      return;
   }
-  if (result.state === "incorrect") {
-    return (
-      <p role="status" className="text-sm text-danger">
-        Não foi dessa vez.{" "}
-        <span className="text-fg-secondary">A frase era: “{target}”.</span>
-      </p>
-    );
-  }
-  return null;
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackLink } from "@/components/shared/BackLink";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import {
@@ -38,12 +39,7 @@ export default async function AdminLessonPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <Link
-        href={`/admin/cursos/${lesson.course_id}`}
-        className="text-sm text-fg-secondary hover:text-fg-primary"
-      >
-        ← Curso
-      </Link>
+      <BackLink href={`/admin/cursos/${lesson.course_id}`} label="Curso" />
 
       <Card padded>
         <form action={updateLesson} className="flex flex-col gap-3">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackLink } from "@/components/shared/BackLink";
 import { Stars } from "@/components/shared/Stars";
 import { Card } from "@/components/ui/Card";
 import { getCourseStudents } from "@/lib/professor/queries";
@@ -48,12 +49,7 @@ export default async function ProfessorCoursePage({
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-1">
-        <Link
-          href="/professor/cursos"
-          className="text-sm text-fg-secondary hover:text-fg-primary"
-        >
-          ← Meus cursos
-        </Link>
+        <BackLink href="/professor/cursos" label="Meus cursos" />
         <h1 className="text-2xl font-semibold text-fg-primary">{course.title}</h1>
         <span className="text-sm text-fg-secondary">
           {course.language.toUpperCase()} · {course.level.toUpperCase()} ·{" "}

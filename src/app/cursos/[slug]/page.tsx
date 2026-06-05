@@ -2,8 +2,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { TrophyIcon } from "@/components/icons/TrophyIcon";
-import { Card } from "@/components/ui/Card";
+import { BackLink } from "@/components/shared/BackLink";
 import { Stars } from "@/components/shared/Stars";
+import { Card } from "@/components/ui/Card";
 import { getCourseStructure } from "@/lib/courses/queries";
 import { createClient } from "@/lib/supabase/server";
 import type { CourseLanguage } from "@/types/content";
@@ -38,12 +39,7 @@ export default async function CoursePage({
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-8 px-6 py-12">
       <div className="flex flex-col gap-2">
-        <Link
-          href="/painel"
-          className="text-sm text-fg-secondary hover:text-fg-primary"
-        >
-          ← Voltar ao painel
-        </Link>
+        <BackLink href="/painel" label="Voltar ao painel" />
         <h1 className="text-2xl font-semibold text-fg-primary">
           {course.title}
         </h1>
@@ -75,8 +71,13 @@ export default async function CoursePage({
                 </p>
               ) : (
                 <div className="flex flex-col gap-4">
-                  {module.lessons.map((lesson) => (
-                    <Card key={lesson.id} padded className="flex flex-col gap-3">
+                  {module.lessons.map((lesson, i) => (
+                    <Card
+                      key={lesson.id}
+                      padded
+                      className="flex flex-col gap-3 animate-fade-slide-in"
+                      style={{ animationDelay: `${i * 60}ms` }}
+                    >
                       <h3 className="font-medium text-fg-primary">
                         {lesson.title}
                       </h3>

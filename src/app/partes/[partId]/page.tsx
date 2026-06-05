@@ -1,12 +1,12 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { BlockRenderer } from "@/components/blocks/BlockRenderer";
 import { BookmarkIcon } from "@/components/icons/BookmarkIcon";
 import { TrophyIcon } from "@/components/icons/TrophyIcon";
+import { BackLink } from "@/components/shared/BackLink";
+import { Stars } from "@/components/shared/Stars";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { Stars } from "@/components/shared/Stars";
 import { toggleReviewMark } from "@/lib/review/actions";
 import { getPartView } from "@/lib/courses/queries";
 import {
@@ -49,12 +49,10 @@ export default async function PartPage({
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-8 px-6 py-12">
       <div className="flex flex-col gap-2">
-        <Link
+        <BackLink
           href={course ? `/cursos/${course.slug}` : "/painel"}
-          className="text-sm text-fg-secondary hover:text-fg-primary"
-        >
-          ← {course ? course.title : "Voltar"}
-        </Link>
+          label={course ? course.title : "Voltar"}
+        />
         <div className="flex items-center justify-between gap-3">
           <h1 className="flex items-center gap-2 text-2xl font-semibold text-fg-primary">
             {part.kind === "golden" && (
@@ -107,8 +105,13 @@ export default async function PartPage({
         </Card>
       ) : (
         <div className="flex flex-col gap-6">
-          {blocks.map((block) => (
-            <Card key={block.id} padded>
+          {blocks.map((block, i) => (
+            <Card
+              key={block.id}
+              padded
+              className="animate-fade-slide-in"
+              style={{ animationDelay: `${i * 60}ms` }}
+            >
               <BlockRenderer block={block} tts={tts} />
             </Card>
           ))}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { BookmarkIcon } from "@/components/icons/BookmarkIcon";
+import { BackLink } from "@/components/shared/BackLink";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { toggleReviewMark } from "@/lib/review/actions";
@@ -32,12 +33,7 @@ export default async function RevisarPage() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-8 px-6 py-12">
       <div className="flex flex-col gap-2">
-        <Link
-          href="/painel"
-          className="text-sm text-fg-secondary hover:text-fg-primary"
-        >
-          ← Voltar ao painel
-        </Link>
+        <BackLink href="/painel" label="Voltar ao painel" />
         <h1 className="text-2xl font-semibold text-fg-primary">
           Para revisar
         </h1>
@@ -87,12 +83,16 @@ export default async function RevisarPage() {
         </Card>
       ) : (
         <ul className="flex flex-col gap-3">
-          {items.map((mark) => {
+          {items.map((mark, i) => {
             const part = mark.part!;
             const course = mark.course!;
             const lessonTitle = part.lesson?.title;
             return (
-              <li key={mark.id}>
+              <li
+                key={mark.id}
+                className="animate-fade-slide-in"
+                style={{ animationDelay: `${i * 50}ms` }}
+              >
                 <Card
                   padded
                   className="flex items-center justify-between gap-4"

@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackLink } from "@/components/shared/BackLink";
 import { Stars } from "@/components/shared/Stars";
 import { Card } from "@/components/ui/Card";
 import { requireTeacher } from "@/lib/professor/guard";
@@ -96,12 +96,7 @@ export default async function ProfessorStudentPage({
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-1">
-        <Link
-          href={`/professor/cursos/${course.id}`}
-          className="text-sm text-fg-secondary hover:text-fg-primary"
-        >
-          ← {course.title}
-        </Link>
+        <BackLink href={`/professor/cursos/${course.id}`} label={course.title} />
         <h1 className="text-2xl font-semibold text-fg-primary">
           {student.full_name ?? student.email}
         </h1>

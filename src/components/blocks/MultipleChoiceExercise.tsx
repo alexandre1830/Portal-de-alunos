@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { submitExercise, type ExerciseResult } from "@/lib/exercises/actions";
 import type { MultipleChoiceData } from "@/lib/blocks/schemas";
+import { notifyExerciseResult } from "@/lib/toast/notify-result";
 import { cn } from "@/lib/utils/cn";
 
 export function MultipleChoiceExercise({
@@ -26,6 +27,7 @@ export function MultipleChoiceExercise({
     const res = await submitExercise({ blockId, selectedIndex: selected });
     setPending(false);
     setResult(res);
+    notifyExerciseResult(res);
   }
 
   return (
@@ -42,8 +44,8 @@ export function MultipleChoiceExercise({
               disabled={solved}
               onClick={() => setSelected(i)}
               className={cn(
-                "rounded-md border px-3 py-2 text-left text-sm transition-colors",
-                "disabled:cursor-not-allowed",
+                "rounded-md border px-3 py-2 text-left text-sm transition-all duration-150 active:scale-[0.99]",
+                "disabled:cursor-not-allowed disabled:active:scale-100",
                 isSelected
                   ? "border-fg-primary bg-bg-secondary text-fg-primary"
                   : "border-border-primary text-fg-secondary hover:bg-bg-secondary",
@@ -55,15 +57,6 @@ export function MultipleChoiceExercise({
           );
         })}
       </div>
-
-      {result?.ok && result.state && (
-        <Feedback result={result} />
-      )}
-      {result && !result.ok && result.error && (
-        <p role="alert" className="text-sm text-danger">
-          {result.error}
-        </p>
-      )}
 
       {!solved && (
         <div>
@@ -80,23 +73,4 @@ export function MultipleChoiceExercise({
       )}
     </div>
   );
-}
-
-function Feedback({ result }: { result: ExerciseResult }) {
-  if (result.state === "perfect") {
-    return (
-      <p role="status" className="text-sm text-success">
-        Correto!{result.xpAwarded > 0 ? ` +${result.xpAwarded} XP` : ""}
-      </p>
-    );
-  }
-  if (result.state === "incorrect") {
-    return (
-      <p role="status" className="text-sm text-danger">
-        Não foi dessa vez.
-        {result.correctAnswer ? ` Resposta certa: ${result.correctAnswer}.` : ""}
-      </p>
-    );
-  }
-  return null;
 }

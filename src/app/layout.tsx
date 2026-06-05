@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
+import { ToastViewport } from "@/components/toast/ToastViewport";
 
 export const metadata: Metadata = {
   title: "Portal de idiomas",
@@ -21,6 +22,7 @@ export default function RootLayout({
       <body>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <ThemeProvider>{children}</ThemeProvider>
+        <ToastViewport />
       </body>
     </html>
   );
