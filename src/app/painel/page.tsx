@@ -10,7 +10,7 @@ import { AvatarEditor } from "@/components/painel/AvatarEditor";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ProgressBar } from "@/components/ui/ProgressBar";
+import { SegmentedProgressBar } from "@/components/ui/SegmentedProgressBar";
 import { getStudentDashboard } from "@/lib/dashboard/queries";
 import { countDueItems } from "@/lib/srs/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -285,40 +285,24 @@ export default async function PainelPage() {
                     </div>
 
                     {/* Preview da lição atual + barra + botão Continuar.
-                        Só aparece se o curso tem partes (cont != null e
-                        total > 0). */}
+                        Separada do header por uma borda fina superior —
+                        sem fundo nem caixa extra para evitar a sensação
+                        de "card dentro de card". */}
                     {cont && cont.partsTotalInCourse > 0 ? (
-                      <div className="flex flex-col gap-3 rounded-md border border-border-primary bg-bg-tertiary/40 p-3">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-xs uppercase tracking-wide text-fg-tertiary">
-                            {courseDone
-                              ? "Curso concluído"
-                              : "Continue de onde parou"}
-                          </span>
-                          {cont.nextLessonTitle && (
-                            <span className="text-sm font-medium text-fg-primary">
-                              {cont.nextLessonTitle}
+                      <div className="flex flex-col gap-3 border-t border-border-primary pt-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex min-w-0 flex-col gap-1">
+                            <span className="text-xs uppercase tracking-wide text-fg-tertiary">
+                              {courseDone
+                                ? "Curso concluído"
+                                : "Continue de onde parou"}
                             </span>
-                          )}
-                          <span className="text-xs text-fg-tertiary">
-                            Lição {cont.lessonIndex} de {cont.totalLessons}
-                            {" · "}
-                            {cont.partsDoneInLesson}/{cont.partsTotalInLesson}{" "}
-                            {cont.partsTotalInLesson === 1
-                              ? "parte feita"
-                              : "partes feitas"}
-                          </span>
-                        </div>
-                        <ProgressBar
-                          value={cont.partsDoneInLesson}
-                          max={Math.max(cont.partsTotalInLesson, 1)}
-                          ariaLabel="Progresso na lição"
-                        />
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="text-xs text-fg-tertiary">
-                            {cont.partsDoneInCourse}/{cont.partsTotalInCourse}{" "}
-                            no curso
-                          </span>
+                            {cont.nextLessonTitle && (
+                              <span className="text-sm font-medium text-fg-primary">
+                                {cont.nextLessonTitle}
+                              </span>
+                            )}
+                          </div>
                           {cont.nextPartId && (
                             <Link href={`/partes/${cont.nextPartId}`}>
                               <Button type="button" size="sm">
@@ -327,6 +311,11 @@ export default async function PainelPage() {
                             </Link>
                           )}
                         </div>
+                        <SegmentedProgressBar
+                          value={cont.partsDoneInLesson}
+                          max={cont.partsTotalInLesson}
+                          ariaLabel="Progresso na lição"
+                        />
                       </div>
                     ) : (
                       // Curso sem partes publicadas ainda — só oferece
