@@ -5,7 +5,7 @@ import { TrophyIcon } from "@/components/icons/TrophyIcon";
 import { BackLink } from "@/components/shared/BackLink";
 import { Stars } from "@/components/shared/Stars";
 import { Card } from "@/components/ui/Card";
-import { ProgressBar } from "@/components/ui/ProgressBar";
+import { SegmentedProgressBar } from "@/components/ui/SegmentedProgressBar";
 import { getCourseStructure } from "@/lib/courses/queries";
 import { createClient } from "@/lib/supabase/server";
 import type { CourseLanguage } from "@/types/content";
@@ -97,14 +97,14 @@ export default async function CoursePage({
                           })()}
                         </div>
                         {lesson.parts.length > 0 && (
-                          <ProgressBar
+                          <SegmentedProgressBar
                             value={
                               lesson.parts.filter(
                                 (p) => p.progress?.status === "completed",
                               ).length
                             }
                             max={lesson.parts.length}
-                            ariaLabel={`Progresso na lição ${lesson.title}`}
+                            ariaLabel={`Progresso na lição ${lesson.title}: ${lesson.parts.filter((p) => p.progress?.status === "completed").length} de ${lesson.parts.length} partes concluídas`}
                           />
                         )}
                       </div>
