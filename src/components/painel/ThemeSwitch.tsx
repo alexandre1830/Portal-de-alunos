@@ -14,7 +14,7 @@ export function ThemeSwitch() {
     <div
       role="radiogroup"
       aria-label="Tema da interface"
-      className="inline-flex w-fit gap-1 rounded-md border border-border-primary bg-bg-tertiary p-1"
+      className="flex w-full gap-1 rounded-md border border-border-primary bg-bg-tertiary p-1"
     >
       <Option
         active={theme === "light"}
@@ -50,7 +50,7 @@ function Option({
       aria-checked={active}
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-2 rounded px-3 py-1.5 text-sm font-medium transition-colors",
+        "inline-flex flex-1 items-center justify-center gap-2 rounded px-3 py-1.5 text-sm font-medium transition-colors",
         active
           ? "bg-bg-primary text-fg-primary shadow-sm"
           : "text-fg-secondary hover:text-fg-primary",

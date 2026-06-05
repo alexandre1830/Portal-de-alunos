@@ -66,8 +66,8 @@ export default async function ConfiguracoesPage() {
         <p className="text-sm text-fg-secondary">
           Atualize a senha de acesso à sua conta.
         </p>
-        <Link href="/painel/senha" className="self-start">
-          <Button type="button" variant="secondary">
+        <Link href="/painel/senha" className="block">
+          <Button type="button" variant="secondary" className="w-full">
             <KeyIcon className="h-4 w-4" />
             Trocar senha
           </Button>
