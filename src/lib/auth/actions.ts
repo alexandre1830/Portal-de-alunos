@@ -35,7 +35,9 @@ export async function signIn(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { data: signInData, error } = await supabase.auth.signInWithPassword(
+    parsed.data,
+  );
 
   if (error) {
     // Mensagem genérica de propósito — não revelar se o e-mail existe.
@@ -43,7 +45,20 @@ export async function signIn(
   }
 
   revalidatePath("/", "layout");
-  redirect("/painel");
+  // Por role: admin vai direto pro próprio painel, professor pro dele,
+  // aluno para /painel. Ver-como-X são acessíveis pelas configurações.
+  const userId = signInData.user?.id;
+  let target = "/painel";
+  if (userId) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .maybeSingle();
+    if (profile?.role === "admin") target = "/admin";
+    else if (profile?.role === "teacher") target = "/professor";
+  }
+  redirect(target);
 }
 
 export async function signUp(

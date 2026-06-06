@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { GearIcon } from "@/components/icons/GearIcon";
 import { requireTeacher } from "@/lib/professor/guard";
 
 export default async function ProfessorLayout({
@@ -20,15 +20,14 @@ export default async function ProfessorLayout({
           >
             Professor · Portal
           </Link>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/painel"
-              className="text-sm text-fg-secondary hover:text-fg-primary"
-            >
-              Ver como aluno
-            </Link>
-            <ThemeToggle />
-          </div>
+          <Link
+            href="/professor/configuracoes"
+            aria-label="Configurações"
+            title="Configurações"
+            className="rounded p-1.5 text-fg-secondary transition-colors hover:bg-bg-secondary hover:text-fg-primary"
+          >
+            <GearIcon className="h-5 w-5" />
+          </Link>
         </div>
       </header>
       <div className="mx-auto w-full max-w-3xl px-6 py-8">{children}</div>

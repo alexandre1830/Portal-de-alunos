@@ -1,13 +1,12 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { KeyIcon } from "@/components/icons/KeyIcon";
 import { PreferencesForm } from "@/components/painel/PreferencesForm";
-import { SignOutButton } from "@/components/painel/SignOutButton";
-import { ThemeSwitch } from "@/components/painel/ThemeSwitch";
 import { BackLink } from "@/components/shared/BackLink";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import {
+  PasswordSection,
+  SignOutSection,
+  ThemeSection,
+} from "@/components/shared/SettingsSections";
 import { getUserPreferences } from "@/lib/preferences/queries";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,8 +18,6 @@ export default async function ConfiguracoesPage() {
   if (!user) redirect("/login");
 
   // Idiomas das matrículas ativas → quais seções de voz mostrar.
-  // (A foto de perfil agora é editada clicando direto no avatar do
-  // /painel, então não consultamos profile aqui.)
   const { data: enrollments } = await supabase
     .from("enrollments")
     .select("course:courses(language)")
@@ -46,43 +43,15 @@ export default async function ConfiguracoesPage() {
         </p>
       </div>
 
-      {/* 1. Tema */}
-      <Card padded className="flex flex-col gap-3">
-        <h2 className="text-base font-semibold text-fg-primary">Tema</h2>
-        <ThemeSwitch />
-      </Card>
-
-      {/* 2. Vozes (PreferencesForm já tem seu próprio botão Salvar) */}
+      <ThemeSection />
       <PreferencesForm
         initialVoiceEn={prefs.ttsVoiceEn}
         initialVoiceEs={prefs.ttsVoiceEs}
         initialRate={prefs.ttsRate}
         availableLanguages={enrolledLanguages}
       />
-
-      {/* 3. Senha */}
-      <Card padded className="flex flex-col gap-3">
-        <h2 className="text-base font-semibold text-fg-primary">Senha</h2>
-        <p className="text-sm text-fg-secondary">
-          Atualize a senha de acesso à sua conta.
-        </p>
-        <Link href="/painel/senha" className="block">
-          <Button type="button" variant="secondary" className="w-full">
-            <KeyIcon className="h-4 w-4" />
-            Trocar senha
-          </Button>
-        </Link>
-      </Card>
-
-      {/* 4. Sair */}
-      <Card padded className="flex flex-col gap-2">
-        <h2 className="text-base font-semibold text-fg-primary">Sair</h2>
-        <p className="text-sm text-fg-secondary">
-          Encerre sua sessão neste dispositivo. Você será levado de volta à
-          tela de login.
-        </p>
-        <SignOutButton />
-      </Card>
+      <PasswordSection />
+      <SignOutSection />
     </main>
   );
 }
