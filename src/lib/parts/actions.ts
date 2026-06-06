@@ -14,6 +14,9 @@ export interface MarkPartCompletedResult {
   // True quando a parte transicionou agora para completed (e o cliente
   // deve mostrar a celebração).
   justCompleted?: boolean;
+  // XP creditado nesta conclusão (bônus de "part_completed"). 0 se
+  // a parte já estava concluída antes.
+  xpAwarded?: number;
 }
 
 // Marca a parte como concluída manualmente, para partes SEM exercícios.
@@ -112,6 +115,24 @@ export async function markPartCompleted(
     { onConflict: "user_id,part_id" },
   );
 
+  // Bônus de conclusão de parte — partes só de conteúdo (sem
+  // exercícios) não geravam nenhum xp_event, então o trigger
+  // apply_xp_event() nunca era chamado e o streak não subia naquele
+  // dia. Inserimos um pequeno xp_event aqui para que QUALQUER parte
+  // terminada conte para streak. Só na transição (idempotência).
+  // Partes com exercícios já têm xp_events próprios via submitExercise,
+  // então essa branch não duplica nada.
+  let xpAwarded = 0;
+  if (!wasCompleted) {
+    xpAwarded = 5;
+    await admin.from("xp_events").insert({
+      user_id: user.id,
+      amount: xpAwarded,
+      source: "part_completed",
+      part_id: partId,
+    });
+  }
+
   // Conquistas que dependem de progresso podem ser disparadas.
   await awardAchievements(admin, {
     userId: user.id,
@@ -121,5 +142,10 @@ export async function markPartCompleted(
 
   revalidatePath(`/partes/${partId}`);
 
-  return { ok: true, error: null, justCompleted: !wasCompleted };
+  return {
+    ok: true,
+    error: null,
+    justCompleted: !wasCompleted,
+    xpAwarded,
+  };
 }

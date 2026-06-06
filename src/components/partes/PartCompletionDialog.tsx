@@ -58,6 +58,7 @@ export function PartCompletionDialog({
   xpAwarded,
   confettiSeed,
   courseHref,
+  nextPartHref,
 }: {
   open: boolean;
   onClose: () => void;
@@ -70,8 +71,11 @@ export function PartCompletionDialog({
   // Seed do confetti — gerado pelo pai (que pode usar Math.random em
   // event handler, conforme regra de pureza do React 19).
   confettiSeed: number;
-  // Link para voltar ao curso (opcional — fechar fica como alternativa).
+  // Link para voltar ao curso (opcional — fallback quando não há próxima).
   courseHref?: string;
+  // Próxima parte da mesma lição. Quando presente, vira o CTA primário
+  // do diálogo ("Próxima") — fluxo de continuação sem voltar à lista.
+  nextPartHref?: string;
 }) {
   const confetti = useMemo(
     () => buildConfetti(confettiSeed),
@@ -139,19 +143,29 @@ export function PartCompletionDialog({
         <div className="flex w-full justify-center gap-2 pt-2">
           {courseHref && (
             <Link href={courseHref}>
-              <Button type="button" size="sm">
+              <Button type="button" variant="ghost" size="sm">
                 Voltar ao curso
               </Button>
             </Link>
           )}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-          >
-            Continuar aqui
-          </Button>
+          {nextPartHref ? (
+            <Link href={nextPartHref}>
+              <Button type="button" size="sm">
+                Próxima
+              </Button>
+            </Link>
+          ) : (
+            // Última parte da lição: o "voltar ao curso" assume o papel
+            // primário; fechar fica como ação secundária.
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+            >
+              Fechar
+            </Button>
+          )}
         </div>
       </div>
     </Dialog>

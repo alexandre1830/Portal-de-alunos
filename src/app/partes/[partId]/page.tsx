@@ -61,6 +61,22 @@ export default async function PartPage({
     rate: prefs.ttsRate,
   };
 
+  // Próxima parte da MESMA lição (ordenada por position). Usado pelo
+  // botão "Próxima" do diálogo de celebração. Se for a última parte da
+  // lição, fica null — o diálogo cai pro caminho "Voltar ao curso".
+  let nextPartHref: string | undefined;
+  if (!isAdminPreview && lesson) {
+    const { data: siblings } = await supabase
+      .from("parts")
+      .select("id, position")
+      .eq("lesson_id", lesson.id)
+      .order("position", { ascending: true });
+    const list = siblings ?? [];
+    const idx = list.findIndex((p) => p.id === part.id);
+    const next = idx >= 0 && idx < list.length - 1 ? list[idx + 1] : null;
+    if (next) nextPartHref = `/partes/${next.id}`;
+  }
+
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-8 px-6 py-12">
       {/* Banner de "modo pré-visualização" — só admin vê. Em preview, o
@@ -161,6 +177,7 @@ export default async function PartPage({
               ? `/cursos/${course.slug}`
               : undefined
         }
+        nextPartHref={nextPartHref}
       />
     </main>
   );

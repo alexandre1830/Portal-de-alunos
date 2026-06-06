@@ -32,6 +32,7 @@ export function PartStepper({
   tts,
   initiallyCompleted,
   courseHref,
+  nextPartHref,
   previewMode = false,
 }: {
   partId: string;
@@ -39,6 +40,9 @@ export function PartStepper({
   tts?: TtsOverride;
   initiallyCompleted: boolean;
   courseHref?: string;
+  // Próxima parte da mesma lição (opcional). Quando presente, o diálogo
+  // de celebração mostra um botão "Próxima" no lugar de "Continuar aqui".
+  nextPartHref?: string;
   // Em pré-visualização do admin, propaga para o BlockRenderer (e para
   // markPartCompleted) — o servidor faz dry-run.
   previewMode?: boolean;
@@ -105,7 +109,7 @@ export function PartStepper({
           setCelebration({
             open: true,
             stars: null,
-            xpAwarded: 0,
+            xpAwarded: res.xpAwarded ?? 0,
             seed: newSeed(),
           });
         } else {
@@ -214,6 +218,7 @@ export function PartStepper({
         xpAwarded={celebration.xpAwarded}
         confettiSeed={celebration.seed}
         courseHref={courseHref}
+        nextPartHref={nextPartHref}
       />
     </div>
   );
