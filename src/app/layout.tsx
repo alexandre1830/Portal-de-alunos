@@ -1,7 +1,18 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import { ToastViewport } from "@/components/toast/ToastViewport";
+
+// Inter — mesma fonte do sistema irmão (Sistema de Gestão). A
+// variável CSS injetada por next/font (--font-inter) é consumida
+// pelo --font-family-sans em tokens.css.
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 // Next 16 detecta automaticamente src/app/icon.svg como favicon e
 // publica nos cabeçalhos. Drop um src/app/icon.png 512x512 ao lado
@@ -24,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
+    <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>
       <body>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <ThemeProvider>{children}</ThemeProvider>

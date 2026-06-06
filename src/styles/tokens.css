@@ -144,8 +144,13 @@
   --color-border-primary:   var(--gray-200);
   --color-border-secondary: var(--gray-300);
 
-  /* Tipografia */
-  --font-family-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Tipografia
+     `--font-inter` é injetada pelo next/font no <html> em layout.tsx;
+     stack tem fallback system-ui caso a fonte do Google ainda não
+     tenha baixado. Mesma pilha do sistema irmão. */
+  --font-family-sans:
+    var(--font-inter, "Inter"), system-ui, -apple-system, "Segoe UI",
+    Roboto, sans-serif;
   --font-family-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* Raio de borda */
