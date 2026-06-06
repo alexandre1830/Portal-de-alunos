@@ -9,6 +9,7 @@ const SECTIONS = [
   { label: "Início", href: "/admin", exact: true },
   { label: "Cursos", href: "/admin/cursos" },
   { label: "Alunos", href: "/admin/alunos" },
+  { label: "Professores", href: "/admin/professores" },
 ] as const;
 
 // Nav superior do admin. Marca a seção ativa pelo prefixo da rota,

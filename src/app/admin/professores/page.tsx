@@ -3,34 +3,33 @@ import { UserRowMenu } from "@/components/admin/UserRowMenu";
 import { Card } from "@/components/ui/Card";
 import { requireAdmin } from "@/lib/admin/guard";
 
-export default async function AdminStudentsPage() {
+export default async function AdminTeachersPage() {
   const { supabase } = await requireAdmin();
 
-  // Só alunos: a relação de professores agora vive em /admin/professores.
   const { data: profiles } = await supabase
     .from("profiles")
     .select("id, email, full_name, created_at")
-    .eq("role", "student")
+    .eq("role", "teacher")
     .order("created_at", { ascending: false });
 
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-fg-primary">Alunos</h1>
+          <h1 className="text-2xl font-semibold text-fg-primary">Professores</h1>
           <p className="text-sm text-fg-secondary">
-            Gerencie as contas de alunos. A matrícula em cursos é feita em
-            cada curso, na aba “Matrículas”.
+            Gerencie as contas de professores. Cada curso pode ser atribuído
+            a um responsável no formulário do curso.
           </p>
         </div>
-        <CreateUserDialog role="student" />
+        <CreateUserDialog role="teacher" />
       </div>
 
       <section className="flex flex-col gap-3">
         {(profiles ?? []).length === 0 ? (
           <Card padded>
             <p className="text-sm text-fg-secondary">
-              Nenhum aluno cadastrado ainda.
+              Nenhum professor cadastrado ainda.
             </p>
           </Card>
         ) : (
@@ -50,7 +49,7 @@ export default async function AdminStudentsPage() {
                   id={p.id}
                   fullName={p.full_name ?? ""}
                   email={p.email}
-                  role="student"
+                  role="teacher"
                 />
               </li>
             ))}

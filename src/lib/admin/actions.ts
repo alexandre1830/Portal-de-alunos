@@ -6,7 +6,11 @@ import { redirect } from "next/navigation";
 import { randomBytes } from "node:crypto";
 
 import { requireAdmin } from "@/lib/admin/guard";
-import type { CreateStudentState, EnrollState } from "@/lib/admin/types";
+import type {
+  CreateStudentState,
+  CreateUserState,
+  EnrollState,
+} from "@/lib/admin/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // ====================================================================
@@ -638,18 +642,22 @@ export async function unenrollStudent(formData: FormData) {
 }
 
 // Gera uma senha curta e legível (sem ambiguidades). Mostrada uma única vez.
-function generatePassword(): string {
+function generatePassword(prefix = "user"): string {
   const token = randomBytes(6).toString("base64").replace(/[+/=lI0O]/g, "");
-  return `aluno-${token.slice(0, 8)}`;
+  return `${prefix}-${token.slice(0, 8)}`;
 }
 
-// Cria conta de aluno já confirmada (login imediato). Decoupled de curso: a
-// matrícula acontece em /admin/cursos/[id]/matriculas. As credenciais voltam
-// no estado para o admin entregar ao aluno.
-export async function createStudent(
-  _prev: CreateStudentState,
+// Cria conta (aluno ou professor) já confirmada (login imediato). Quando
+// role='teacher', atualiza o profile depois de criado (o trigger
+// handle_new_user nasce sempre como 'student'; o trigger protect_profile_role
+// foi ajustado para deixar service_role mudar).
+//
+// As credenciais voltam no estado para o admin entregar ao usuário.
+export async function createUser(
+  role: "student" | "teacher",
+  _prev: CreateUserState,
   formData: FormData,
-): Promise<CreateStudentState> {
+): Promise<CreateUserState> {
   await requireAdmin();
   const email = str(formData, "email").toLowerCase();
   const fullName = str(formData, "full_name");
@@ -670,10 +678,11 @@ export async function createStudent(
       credentials: null,
     };
   }
-  const password = typedPassword || generatePassword();
+  const password =
+    typedPassword || generatePassword(role === "teacher" ? "prof" : "aluno");
 
   const admin = createAdminClient();
-  const { error } = await admin.auth.admin.createUser({
+  const { data: created, error } = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
@@ -695,11 +704,73 @@ export async function createStudent(
     };
   }
 
-  // O trigger handle_new_user já criou o profile com role=student e full_name.
+  // O trigger handle_new_user criou o profile com role='student'. Se queremos
+  // professor, promovemos agora (a migration 20260605230000 permite
+  // service_role atualizar role).
+  if (role === "teacher" && created.user?.id) {
+    await admin
+      .from("profiles")
+      .update({ role: "teacher" })
+      .eq("id", created.user.id);
+  }
+
   revalidatePath("/admin/alunos");
+  revalidatePath("/admin/professores");
+  revalidatePath("/admin");
+
   return {
     error: null,
-    notice: "Aluno criado.",
+    notice: role === "teacher" ? "Professor criado." : "Aluno criado.",
     credentials: { email, password },
   };
+}
+
+// Compat: a Server Action `createStudent` continua funcionando para call-sites
+// existentes (useActionState do CreateStudentForm legado).
+export async function createStudent(
+  prev: CreateStudentState,
+  formData: FormData,
+): Promise<CreateStudentState> {
+  return createUser("student", prev, formData);
+}
+
+// Edita nome (e opcionalmente e-mail) de um usuário. role não é mutável
+// por aqui — para mudança de role usamos um setRole separado abaixo.
+export async function updateUser(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(formData, "id");
+  const fullName = str(formData, "full_name");
+  const email = str(formData, "email").toLowerCase();
+  if (!id || !fullName) return;
+
+  const admin = createAdminClient();
+
+  // Profile
+  await admin
+    .from("profiles")
+    .update({ full_name: fullName, ...(email ? { email } : {}) })
+    .eq("id", id);
+
+  // auth.users (para o e-mail ficar coerente com o login)
+  if (email) {
+    await admin.auth.admin.updateUserById(id, { email });
+  }
+
+  revalidatePath("/admin/alunos");
+  revalidatePath("/admin/professores");
+}
+
+// Apaga conta (auth.users CASCADE limpa profile, enrollments, xp_events).
+// A confirmação fica na UI (ConfirmDialog) — aqui só executamos.
+export async function deleteUser(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = str(formData, "id");
+  if (!id) return;
+
+  const admin = createAdminClient();
+  await admin.auth.admin.deleteUser(id);
+
+  revalidatePath("/admin/alunos");
+  revalidatePath("/admin/professores");
+  revalidatePath("/admin");
 }

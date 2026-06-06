@@ -35,7 +35,8 @@ export default async function AdminHome() {
           value={overview.activeStudents}
           hint="Últimos 7 dias"
         />
-        <Stat
+        <StatLink
+          href="/admin/professores"
           label="Professores"
           value={overview.teachers}
           hint={overview.teachers === 1 ? "Cadastrado" : "Cadastrados"}
@@ -77,20 +78,3 @@ function StatLink({
   );
 }
 
-function Stat({
-  label,
-  value,
-  hint,
-}: {
-  label: string;
-  value: number;
-  hint: string;
-}) {
-  return (
-    <Card padded className="flex h-full flex-col gap-1">
-      <span className="text-2xl font-bold text-fg-primary">{value}</span>
-      <span className="text-xs font-medium text-fg-primary">{label}</span>
-      <span className="text-xs text-fg-tertiary">{hint}</span>
-    </Card>
-  );
-}
