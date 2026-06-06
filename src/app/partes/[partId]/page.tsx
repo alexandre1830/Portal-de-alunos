@@ -5,6 +5,7 @@ import { BookmarkIcon } from "@/components/icons/BookmarkIcon";
 import { PencilIcon } from "@/components/icons/PencilIcon";
 import { TrophyIcon } from "@/components/icons/TrophyIcon";
 import { PartStepper } from "@/components/partes/PartStepper";
+import { RetryPartBanner } from "@/components/partes/RetryPartBanner";
 import { BackLink } from "@/components/shared/BackLink";
 import { Stars } from "@/components/shared/Stars";
 import { Button } from "@/components/ui/Button";
@@ -161,6 +162,16 @@ export default async function PartPage({
           <span className="text-sm text-fg-secondary">{lesson.title}</span>
         )}
       </div>
+
+      {/* Banner "Tentar de novo" — só aparece se a parte está concluída
+          com 1 ou 2 estrelas (3 não tem o que melhorar, 0 a parte foi
+          mal mas o aluno também pode usar este caminho). */}
+      {done &&
+        !isAdminPreview &&
+        progress &&
+        progress.stars < 3 && (
+          <RetryPartBanner partId={part.id} stars={progress.stars} />
+        )}
 
       <PartStepper
         partId={part.id}

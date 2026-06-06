@@ -149,3 +149,107 @@ export async function markPartCompleted(
     xpAwarded,
   };
 }
+
+export interface RetryPartResult {
+  ok: boolean;
+  error: string | null;
+}
+
+// "Tentar de novo" para subir estrelas: apaga TODAS as tentativas dos
+// exercícios da parte e volta o progresso para in_progress. O aluno
+// refaz desde o começo — se acertar tudo de primeira agora, vira 3
+// estrelas.
+//
+// Restrições:
+//   - Precisa estar autenticado e matriculado.
+//   - Parte precisa ter exercícios (faz sentido só onde estrelas existem).
+//   - Progresso precisa estar completed com stars < 3 (não há o que
+//     melhorar se já tem 3 estrelas; e se está in_progress, não há
+//     histórico para zerar).
+export async function retryPartExercises(
+  partId: string,
+): Promise<RetryPartResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const admin = createAdminClient();
+
+  const { data: part } = await admin
+    .from("parts")
+    .select("id, course_id")
+    .eq("id", partId)
+    .maybeSingle();
+  if (!part) return { ok: false, error: "Parte não encontrada." };
+
+  // Matrícula ativa
+  const { data: enrollment } = await admin
+    .from("enrollments")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("course_id", part.course_id)
+    .eq("status", "active")
+    .maybeSingle();
+  if (!enrollment) {
+    return { ok: false, error: "Você não está matriculado neste curso." };
+  }
+
+  // Precisa ter exercícios
+  const { data: exerciseBlocks } = await admin
+    .from("blocks")
+    .select("id")
+    .eq("part_id", partId)
+    .in("type", EXERCISE_TYPES)
+    .limit(1);
+  if ((exerciseBlocks ?? []).length === 0) {
+    return {
+      ok: false,
+      error: "Esta parte não tem exercícios para refazer.",
+    };
+  }
+
+  // Só faz sentido se está completed e ainda dá pra melhorar (stars < 3)
+  const { data: progress } = await admin
+    .from("part_progress")
+    .select("status, stars")
+    .eq("user_id", user.id)
+    .eq("part_id", partId)
+    .maybeSingle();
+  if (!progress || progress.status !== "completed") {
+    return {
+      ok: false,
+      error: "Termine a parte antes de tentar de novo.",
+    };
+  }
+  if (progress.stars >= 3) {
+    return {
+      ok: false,
+      error: "Você já tem 3 estrelas nesta parte!",
+    };
+  }
+
+  // Reset total: apaga tentativas e volta a parte para in_progress (0
+  // estrelas, sem completed_at). O aluno refaz cada exercício e o
+  // recomputePartProgress vai reescrever stars conforme avança.
+  await admin
+    .from("exercise_attempts")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("part_id", partId);
+  await admin
+    .from("part_progress")
+    .update({
+      status: "in_progress",
+      stars: 0,
+      score: null,
+      completed_at: null,
+    })
+    .eq("user_id", user.id)
+    .eq("part_id", partId);
+
+  revalidatePath(`/partes/${partId}`);
+
+  return { ok: true, error: null };
+}

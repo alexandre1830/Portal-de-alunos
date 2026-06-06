@@ -3,17 +3,65 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { applySm2, RATING_QUALITY, type ReviewRating } from "@/lib/srs/sm2";
+import { gradeFillBlank, type GradeState } from "@/lib/grading/grade";
+import type { SrsPayload } from "@/lib/srs/payload";
+import { applySm2 } from "@/lib/srs/sm2";
 import { createClient } from "@/lib/supabase/server";
 
-// Recebe a avaliação do aluno para um item de revisão e aplica SM-2.
-// RLS já garante que ele só atualiza os próprios itens; ainda assim
-// reconferimos user_id por defesa em profundidade.
-export async function reviewItem(formData: FormData): Promise<void> {
-  const itemId = String(formData.get("item_id") ?? "");
-  const rating = String(formData.get("rating") ?? "") as ReviewRating;
-  if (!itemId) return;
-  if (!(rating in RATING_QUALITY)) return;
+export interface ReviewItemResult {
+  ok: boolean;
+  state: GradeState; // perfect | close | incorrect
+  expected: string; // resposta canônica, sempre mostrada após submit
+  xpAwarded: number;
+  error: string | null;
+}
+
+// XP de revisão é reduzido (é repetição, não conteúdo novo) e só vai
+// para "perfect". "close" e "incorrect" não pontuam.
+const XP_PERFECT = 2;
+
+// Mapeamento auto-grading → qualidade SM-2:
+//   perfect   → 4 ("good": recordou normalmente)
+//   close     → 3 ("hard": recordou com dificuldade — preserva ciclo)
+//   incorrect → 0 ("again": esqueceu — reinicia)
+function qualityFor(state: GradeState): number {
+  if (state === "perfect") return 4;
+  if (state === "close") return 3;
+  return 0;
+}
+
+function expectedAnswerOf(payload: SrsPayload): string {
+  switch (payload.type) {
+    case "exercise":
+      return payload.answer;
+    case "vocab":
+      return payload.translation;
+    case "speaking":
+      return payload.phrase;
+  }
+}
+
+// Recebe a resposta digitada do aluno e:
+//   1. Carrega o item (com payload) e valida ownership.
+//   2. Compara via Levenshtein (mesma tolerância do fill_blank) contra
+//      a resposta canônica do payload.
+//   3. Aplica SM-2 com a qualidade derivada do estado.
+//   4. Em "perfect", insere xp_event com XP_PERFECT (alimenta streak via
+//      trigger).
+//   5. Incrementa total_srs_reviews e dispara awardAchievements.
+export async function reviewItem(
+  itemId: string,
+  submitted: string,
+): Promise<ReviewItemResult> {
+  if (!itemId) {
+    return {
+      ok: false,
+      state: "incorrect",
+      expected: "",
+      xpAwarded: 0,
+      error: "Item inválido.",
+    };
+  }
 
   const supabase = await createClient();
   const {
@@ -23,11 +71,32 @@ export async function reviewItem(formData: FormData): Promise<void> {
 
   const { data: item } = await supabase
     .from("srs_items")
-    .select("ease_factor, interval_days, repetitions")
+    .select(
+      "ease_factor, interval_days, repetitions, payload, source_type",
+    )
     .eq("id", itemId)
     .eq("user_id", user.id)
     .maybeSingle();
-  if (!item) return;
+  if (!item) {
+    return {
+      ok: false,
+      state: "incorrect",
+      expected: "",
+      xpAwarded: 0,
+      error: "Item não encontrado.",
+    };
+  }
+
+  const payload = item.payload as unknown as SrsPayload;
+  const expected = expectedAnswerOf(payload);
+
+  // Grading: reusa a lógica do fill_blank (Levenshtein + normalização).
+  // Não passamos "alternatives" — só a resposta canônica.
+  const state = gradeFillBlank((submitted ?? "").trim(), {
+    answer: expected,
+    alternatives: [],
+  });
+  const quality = qualityFor(state);
 
   const next = applySm2(
     {
@@ -35,7 +104,7 @@ export async function reviewItem(formData: FormData): Promise<void> {
       intervalDays: item.interval_days,
       repetitions: item.repetitions,
     },
-    RATING_QUALITY[rating],
+    quality,
   );
 
   await supabase
@@ -45,24 +114,36 @@ export async function reviewItem(formData: FormData): Promise<void> {
       interval_days: next.intervalDays,
       repetitions: next.repetitions,
       next_review_at: next.nextReviewAt.toISOString(),
-      last_quality: RATING_QUALITY[rating],
+      last_quality: quality,
       last_reviewed_at: new Date().toISOString(),
     })
     .eq("id", itemId)
     .eq("user_id", user.id);
 
-  // Incrementa o contador de revisões — alimenta o conjunto "Hora de
-  // relembrar" sem precisar de scan agregado em srs_items.repetitions
-  // (que zera em "again" pelo SM-2 e subestimaria a contagem).
-  // RLS permite só read em user_gamification para o aluno; aqui usamos
-  // o cliente normal porque temos uma policy de update server-only?
-  // Não — quem grava agregados é trigger. Vamos via service_role aqui.
+  // XP + streak (via xp_event + trigger) — só para perfect.
+  let xpAwarded = 0;
+  if (state === "perfect") {
+    xpAwarded = XP_PERFECT;
+    try {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const admin = createAdminClient();
+      await admin.from("xp_events").insert({
+        user_id: user.id,
+        amount: xpAwarded,
+        source: "srs_review",
+      });
+    } catch {
+      // Não bloqueia a resposta se a inserção do xp_event falhar.
+      xpAwarded = 0;
+    }
+  }
+
+  // Incrementa contador de revisões + dispara conquistas (independente
+  // do estado — qualquer tentativa conta como "revisão feita" para o
+  // conjunto "Hora de relembrar").
   try {
     const { createAdminClient } = await import("@/lib/supabase/admin");
     const admin = createAdminClient();
-    // increment atomico via SQL: read current, write +1. Como o trigger
-    // de xp_events também escreve em user_gamification, há risco de race;
-    // mas não para essa coluna específica, então tudo bem.
     const { data: cur } = await admin
       .from("user_gamification")
       .select("total_srs_reviews")
@@ -74,14 +155,15 @@ export async function reviewItem(formData: FormData): Promise<void> {
       .update({ total_srs_reviews: prev + 1 })
       .eq("user_id", user.id);
 
-    // Agora pode haver conquistas novas do conjunto "reviewer".
     const { awardAchievements } = await import("@/lib/achievements/award");
     await awardAchievements(admin, { userId: user.id });
   } catch {
-    // Falha em incrementar contador / detectar conquista é não-bloqueante.
+    // Não-bloqueante.
   }
 
   revalidatePath("/painel/revisar");
   revalidatePath("/painel/revisar/sessao");
   revalidatePath("/painel");
+
+  return { ok: true, state, expected, xpAwarded, error: null };
 }

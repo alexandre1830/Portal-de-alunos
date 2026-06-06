@@ -350,7 +350,21 @@ async function recomputePartProgress(
   const firstTry = (attempts ?? []).filter((a) => a.solved_first_try).length;
   const allSolved = solved >= total;
   const ratio = firstTry / total;
-  const stars = allSolved ? (ratio === 1 ? 3 : ratio >= 0.5 ? 2 : 1) : 0;
+  // Thresholds de estrelas (sobre o ratio de acertos de primeira):
+  //   100%  → 3 (perfeito)
+  //   ≥50%  → 2
+  //   ≥25%  → 1
+  //   <25%  → 0 (mesmo terminando, errou demais)
+  // Parte não totalmente resolvida também fica em 0.
+  const stars = !allSolved
+    ? 0
+    : ratio >= 1
+      ? 3
+      : ratio >= 0.5
+        ? 2
+        : ratio >= 0.25
+          ? 1
+          : 0;
   const score = Math.round((solved / total) * 100);
 
   const { data: previous } = await admin

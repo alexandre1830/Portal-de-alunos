@@ -25,8 +25,9 @@ export default async function SessaoRevisaoPage() {
           Sessão de revisão
         </h1>
         <p className="text-sm text-fg-secondary">
-          Tente lembrar antes de revelar a resposta. A cada item, escolha
-          como foi: a próxima revisão é agendada automaticamente.
+          Digite a resposta de cada item. A correção e o próximo agendamento
+          são automáticos. Acertar pontua XP reduzido; quase e errado não
+          pontuam.
         </p>
       </div>
 

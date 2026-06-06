@@ -5,26 +5,34 @@ import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { reviewItem } from "@/lib/srs/actions";
+import { Input } from "@/components/ui/Input";
+import { reviewItem, type ReviewItemResult } from "@/lib/srs/actions";
 import type { SrsDueItem } from "@/lib/srs/queries";
-import type { ReviewRating } from "@/lib/srs/sm2";
+import { cn } from "@/lib/utils/cn";
 
 interface Props {
   items: SrsDueItem[];
 }
 
-// Sessão de revisão estilo flashcard:
-//   1. Mostra "frente" (pergunta / termo).
-//   2. Aluno clica "Mostrar resposta" para revelar o verso.
-//   3. Aluno se autoavalia: Errei / Quase / Acertei -> aplica SM-2 no servidor.
-//   4. Avança para o próximo item, ou mostra resumo final.
+// Sessão de revisão com auto-correção (ADR 0006 aplicado à revisão):
+//   1. Mostra a pergunta (termo, frase ou pergunta original).
+//   2. Aluno digita a resposta.
+//   3. Submit → Server Action grade via Levenshtein → estado
+//      (perfect/close/incorrect).
+//   4. Feedback inline: cor + resposta canônica + XP.
+//   5. "Próximo" avança.
 //
-// Sem fetch da lista no cliente: vem renderizada no SSR. Quando acaba a fila,
-// linkamos de volta para que o próximo carregamento traga itens novos.
+// XP é reduzido (revisão repete conteúdo). "Quase" e "errado" não
+// pontuam — só "perfect".
 export function ReviewSession({ items }: Props) {
   const [index, setIndex] = useState(0);
-  const [revealed, setRevealed] = useState(false);
-  const [counts, setCounts] = useState({ again: 0, hard: 0, good: 0 });
+  const [answer, setAnswer] = useState("");
+  const [result, setResult] = useState<ReviewItemResult | null>(null);
+  const [counts, setCounts] = useState({
+    perfect: 0,
+    close: 0,
+    incorrect: 0,
+  });
   const [pending, startTransition] = useTransition();
 
   const total = items.length;
@@ -40,9 +48,9 @@ export function ReviewSession({ items }: Props) {
           Você revisou {total} {total === 1 ? "item" : "itens"} nesta sessão.
         </p>
         <ul className="flex flex-col gap-1 text-sm text-fg-secondary">
-          <li>Acertei: {counts.good}</li>
-          <li>Quase: {counts.hard}</li>
-          <li>Errei: {counts.again}</li>
+          <li>Acertei: {counts.perfect}</li>
+          <li>Quase: {counts.close}</li>
+          <li>Errei: {counts.incorrect}</li>
         </ul>
         <div className="flex gap-2 pt-2">
           <Link href="/painel/revisar">
@@ -58,46 +66,49 @@ export function ReviewSession({ items }: Props) {
     );
   }
 
-  // Renderização da "frente" e "verso" depende do tipo de item:
-  //  - exercise: pergunta -> resposta
-  //  - vocab:    termo -> tradução (+ exemplo)
-  //  - speaking: "Tente dizer" + frase -> mesma frase (auto-avaliação)
-  let front: string;
-  let back: string;
-  let extra: string | null = null;
+  // Renderização da "pergunta" depende do tipo:
+  //  - exercise: a pergunta original
+  //  - vocab:    "Como se diz X?" — o aluno escreve a tradução
+  //  - speaking: a frase para o aluno digitar de novo (recall textual)
+  let prompt: string;
+  let helper: string | null = null;
   let sourceLabel: string;
   switch (current.payload.type) {
     case "exercise":
-      front = current.payload.question;
-      back = current.payload.answer;
+      prompt = current.payload.question;
       sourceLabel = "Exercício";
       break;
     case "vocab":
-      front = current.payload.term;
-      back = current.payload.translation;
-      extra = current.payload.example ?? null;
+      prompt = `Como se diz "${current.payload.term}"?`;
+      helper = current.payload.example ?? null;
       sourceLabel = "Vocabulário";
       break;
     case "speaking":
-      front = current.payload.phrase;
-      back = current.payload.phrase;
-      extra = "Tente dizer em voz alta — depois revele e avalie como foi.";
+      prompt = "Escreva a frase para revisar:";
+      helper = `"${current.payload.phrase}"`;
       sourceLabel = "Speaking";
       break;
   }
 
-  function handleRate(rating: ReviewRating) {
-    const itemId = current?.id;
-    if (!itemId) return;
-    const fd = new FormData();
-    fd.set("item_id", itemId);
-    fd.set("rating", rating);
+  const submitted = result !== null;
+
+  function handleSubmit(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    if (pending || submitted) return;
+    if (answer.trim().length === 0) return;
     startTransition(async () => {
-      await reviewItem(fd);
-      setCounts((c) => ({ ...c, [rating]: c[rating] + 1 }));
-      setRevealed(false);
-      setIndex((i) => i + 1);
+      const res = await reviewItem(current!.id, answer);
+      setResult(res);
+      if (res.ok) {
+        setCounts((c) => ({ ...c, [res.state]: c[res.state] + 1 }));
+      }
     });
+  }
+
+  function nextItem() {
+    setResult(null);
+    setAnswer("");
+    setIndex((i) => i + 1);
   }
 
   return (
@@ -109,58 +120,84 @@ export function ReviewSession({ items }: Props) {
         <span>{sourceLabel}</span>
       </div>
 
-      <Card padded className="flex min-h-48 flex-col gap-4">
+      <Card padded className="flex flex-col gap-3">
         <div className="flex flex-col gap-1">
           <span className="text-xs uppercase tracking-wide text-fg-tertiary">
             Pergunta
           </span>
-          <p className="text-lg font-medium text-fg-primary">{front}</p>
+          <p className="text-lg font-medium text-fg-primary">{prompt}</p>
+          {helper && (
+            <p className="text-sm italic text-fg-secondary">{helper}</p>
+          )}
         </div>
 
-        {revealed && (
-          <div className="flex flex-col gap-1 border-t border-border-primary pt-3">
-            <span className="text-xs uppercase tracking-wide text-fg-tertiary">
-              Resposta
-            </span>
-            <p className="text-lg text-fg-primary">{back}</p>
-            {extra && (
-              <p className="text-sm italic text-fg-secondary">{extra}</p>
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-2 border-t border-border-primary pt-3"
+        >
+          <label
+            htmlFor="srs-answer"
+            className="text-xs uppercase tracking-wide text-fg-tertiary"
+          >
+            Sua resposta
+          </label>
+          <Input
+            id="srs-answer"
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            placeholder="Digite aqui"
+            autoFocus
+            disabled={pending || submitted}
+            autoComplete="off"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+          />
+        </form>
+
+        {/* Feedback após submit */}
+        {result && (
+          <div
+            className={cn(
+              "flex flex-col gap-1 rounded-md border px-3 py-2 text-sm",
+              result.state === "perfect" &&
+                "border-success/40 bg-success-bg/40 text-success",
+              result.state === "close" &&
+                "border-warning/40 bg-warning-bg/40 text-warning",
+              result.state === "incorrect" &&
+                "border-danger/40 bg-danger-bg/40 text-danger",
             )}
+          >
+            <span className="font-medium">
+              {result.state === "perfect" && `Perfeito! +${result.xpAwarded} XP`}
+              {result.state === "close" && "Quase lá — não pontua hoje"}
+              {result.state === "incorrect" && "Não foi dessa vez"}
+            </span>
+            <span className="text-xs text-fg-secondary">
+              Resposta:{" "}
+              <span className="font-medium text-fg-primary">
+                {result.expected}
+              </span>
+            </span>
           </div>
         )}
       </Card>
 
-      {!revealed ? (
-        <Button onClick={() => setRevealed(true)} className="self-start">
-          Mostrar resposta
-        </Button>
-      ) : (
-        <div className="flex flex-wrap gap-2">
+      <div className="flex justify-end gap-2">
+        {!submitted ? (
           <Button
-            variant="danger"
-            onClick={() => handleRate("again")}
+            onClick={handleSubmit}
             loading={pending}
-            disabled={pending}
+            disabled={pending || answer.trim().length === 0}
           >
-            Errei
+            Enviar
           </Button>
-          <Button
-            variant="secondary"
-            onClick={() => handleRate("hard")}
-            loading={pending}
-            disabled={pending}
-          >
-            Quase
+        ) : (
+          <Button onClick={nextItem}>
+            {index + 1 < total ? "Próximo" : "Concluir"}
           </Button>
-          <Button
-            onClick={() => handleRate("good")}
-            loading={pending}
-            disabled={pending}
-          >
-            Acertei
-          </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

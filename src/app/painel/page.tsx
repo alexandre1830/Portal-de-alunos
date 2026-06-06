@@ -211,7 +211,6 @@ export default async function PainelPage() {
           >
             <div className="flex items-center gap-3">
               <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-fg-primary/10 text-fg-primary">
-                <span className="absolute inset-0 animate-ping rounded-full bg-fg-primary/20" />
                 <span className="relative text-base font-semibold">
                   {srsDue > 99 ? "99+" : srsDue}
                 </span>
