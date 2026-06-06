@@ -80,9 +80,6 @@ export default function LoginPage() {
             priority
           />
           <div className="flex flex-col gap-1">
-            <h1 className="text-[1.875rem] font-bold leading-none tracking-[-0.02em] text-white">
-              Mr. Dave Idiomas
-            </h1>
             <p className="text-sm text-white/60">Portal de Alunos</p>
           </div>
         </header>
