@@ -17,7 +17,7 @@ export default async function AdminLayout({
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-4 px-6 py-4">
           <div className="flex items-center gap-4">
             <Link
-              href="/admin/cursos"
+              href="/admin"
               className="text-sm font-semibold text-fg-primary"
             >
               Admin · Portal

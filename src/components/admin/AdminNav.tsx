@@ -6,17 +6,20 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 
 const SECTIONS = [
+  { label: "Início", href: "/admin", exact: true },
   { label: "Cursos", href: "/admin/cursos" },
   { label: "Alunos", href: "/admin/alunos" },
 ] as const;
 
-// Nav superior do admin. Marca a seção ativa pelo prefixo da rota.
+// Nav superior do admin. Marca a seção ativa pelo prefixo da rota,
+// exceto "Início" que precisa de match exato (senão acende sempre).
 export function AdminNav() {
   const pathname = usePathname() ?? "";
   return (
     <nav className="flex items-center gap-1">
       {SECTIONS.map((s) => {
-        const active = pathname.startsWith(s.href);
+        const exact = "exact" in s && s.exact;
+        const active = exact ? pathname === s.href : pathname.startsWith(s.href);
         return (
           <Link
             key={s.href}
