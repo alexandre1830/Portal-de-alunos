@@ -3,8 +3,14 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import { ToastViewport } from "@/components/toast/ToastViewport";
 
+// Next 16 detecta automaticamente src/app/icon.svg como favicon e
+// publica nos cabeçalhos. Drop um src/app/icon.png 512x512 ao lado
+// para também atender Apple Touch Icon e variantes de alta densidade.
 export const metadata: Metadata = {
-  title: "Portal de idiomas",
+  title: {
+    default: "Portal de Alunos · Mr. Dave Idiomas",
+    template: "%s · Portal de Alunos",
+  },
   description:
     "Portal do aluno para reforço guiado de inglês e espanhol, complementando as aulas com o professor.",
 };

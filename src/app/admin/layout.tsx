@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { AdminNav } from "@/components/admin/AdminNav";
 import { GearIcon } from "@/components/icons/GearIcon";
+import { Logo } from "@/components/shared/Logo";
 import { requireAdmin } from "@/lib/admin/guard";
 
 export default async function AdminLayout({
@@ -18,8 +19,9 @@ export default async function AdminLayout({
           <div className="flex items-center gap-4">
             <Link
               href="/admin"
-              className="text-sm font-semibold text-fg-primary"
+              className="flex items-center gap-2 text-sm font-semibold text-fg-primary"
             >
+              <Logo className="h-7 w-7" />
               Admin · Portal
             </Link>
             <AdminNav />

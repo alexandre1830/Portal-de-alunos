@@ -7,6 +7,7 @@ import { GearIcon } from "@/components/icons/GearIcon";
 import { TrophyIcon } from "@/components/icons/TrophyIcon";
 import { StudyIllustration } from "@/components/illustrations/StudyIllustration";
 import { AvatarEditor } from "@/components/painel/AvatarEditor";
+import { Logo } from "@/components/shared/Logo";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -62,9 +63,13 @@ export default async function PainelPage() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-8 px-6 py-12">
       <header className="flex items-center justify-between">
-        <span className="text-sm font-medium text-fg-secondary">
-          Portal de alunos
-        </span>
+        <Link
+          href="/painel"
+          className="flex items-center gap-2 text-sm font-medium text-fg-secondary"
+        >
+          <Logo className="h-7 w-7" />
+          Portal de Alunos
+        </Link>
         <div className="flex items-center gap-3">
           {(profile?.role === "teacher" || profile?.role === "admin") && (
             <Link
