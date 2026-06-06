@@ -86,8 +86,10 @@ export function PartCompletionDialog({
   return (
     <Dialog open={open} onClose={onClose} title="Parte concluída!">
       <div className="relative -mx-5 -mt-5 overflow-hidden">
-        {/* Bandeira superior celebrativa */}
-        <div className="relative h-32 bg-gradient-to-b from-warning/15 to-transparent">
+        {/* Bandeira superior — fundo neutro (mesma cor do Dialog),
+            sem gradiente. O troféu carrega o destaque com um halo
+            sutil em torno; o confetti faz o resto da celebração. */}
+        <div className="relative h-32">
           {/* Confetti CSS */}
           {open &&
             confetti.map((c) => (
@@ -105,9 +107,9 @@ export function PartCompletionDialog({
                 }}
               />
             ))}
-          {/* Troféu central */}
+          {/* Troféu central com halo concêntrico */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="flex h-20 w-20 items-center justify-center rounded-full bg-bg-secondary shadow-[var(--shadow-2)]">
+            <span className="relative flex h-20 w-20 items-center justify-center rounded-full bg-bg-tertiary ring-4 ring-warning/15">
               <TrophyIcon className="h-12 w-12 text-warning" />
             </span>
           </div>
