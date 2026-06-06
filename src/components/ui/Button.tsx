@@ -9,11 +9,16 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-fg-primary text-fg-inverse hover:opacity-90",
+        // Primary: cor da marca (azul) — destaque previsível em qualquer
+        // tela. Hover usa a variante "-hover" da paleta (tom acima),
+        // active usa "-active" (tom abaixo) ao invés de opacidade.
+        primary:
+          "bg-primary-brand text-white hover:bg-primary-brand-hover active:bg-primary-brand-active",
         secondary:
           "bg-bg-tertiary text-fg-primary border border-border-primary hover:bg-bg-secondary",
         ghost: "bg-transparent text-fg-primary hover:bg-bg-secondary",
-        danger: "bg-danger text-fg-inverse hover:opacity-90",
+        danger:
+          "bg-danger text-white hover:bg-danger-hover",
       },
       size: {
         sm: "h-8 px-3 text-sm",

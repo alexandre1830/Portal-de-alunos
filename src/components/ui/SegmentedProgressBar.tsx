@@ -56,7 +56,7 @@ export function SegmentedProgressBar({
             aria-hidden="true"
             className={cn(
               "h-1.5 flex-1 rounded-full transition-colors duration-300",
-              done ? "bg-fg-primary" : "bg-bg-tertiary",
+              done ? "bg-primary-brand" : "bg-bg-tertiary",
             )}
           />
         );

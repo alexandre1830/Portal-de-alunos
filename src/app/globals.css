@@ -19,13 +19,42 @@
   --color-fg-tertiary: var(--color-text-tertiary);
   --color-fg-inverse: var(--color-text-inverse);
 
+  /* Brand — disponíveis como bg-primary-brand, text-primary-brand, etc.
+     Usamos sufixo "-brand" para não colidir com bg-primary (que já é o
+     fundo principal do app). */
+  --color-primary-brand:         var(--color-primary);
+  --color-primary-brand-hover:   var(--color-primary-hover);
+  --color-primary-brand-active:  var(--color-primary-active);
+  --color-primary-brand-light:   var(--color-primary-light);
+  --color-primary-brand-lighter: var(--color-primary-lighter);
+  --color-primary-brand-surface: var(--color-primary-surface);
+
+  --color-secondary-brand:         var(--color-secondary);
+  --color-secondary-brand-hover:   var(--color-secondary-hover);
+  --color-secondary-brand-active:  var(--color-secondary-active);
+  --color-secondary-brand-light:   var(--color-secondary-light);
+  --color-secondary-brand-lighter: var(--color-secondary-lighter);
+  --color-secondary-brand-surface: var(--color-secondary-surface);
+
+  /* Semânticas */
   --color-success: var(--color-success);
+  --color-success-light: var(--color-success-light);
+  --color-success-surface: var(--color-success-surface);
   --color-success-bg: var(--color-success-bg);
+
   --color-warning: var(--color-warning);
+  --color-warning-light: var(--color-warning-light);
+  --color-warning-surface: var(--color-warning-surface);
   --color-warning-bg: var(--color-warning-bg);
+
   --color-danger: var(--color-danger);
+  --color-danger-hover: var(--color-danger-hover);
+  --color-danger-surface: var(--color-danger-surface);
   --color-danger-bg: var(--color-danger-bg);
+
   --color-info: var(--color-info);
+  --color-info-light: var(--color-info-light);
+  --color-info-surface: var(--color-info-surface);
   --color-info-bg: var(--color-info-bg);
 
   --color-border-primary: var(--color-border-primary);

@@ -30,7 +30,7 @@ export function ProgressBar({
       )}
     >
       <div
-        className="h-full rounded-full bg-fg-primary transition-[width] duration-500 ease-out"
+        className="h-full rounded-full bg-primary-brand transition-[width] duration-500 ease-out"
         style={{ width: `${pct}%` }}
       />
     </div>
