@@ -97,10 +97,10 @@ export default async function AdminLessonPage({
                 <Card padded className="flex items-center gap-2">
                   <Link
                     href={`/admin/partes/${part.id}`}
-                    className="flex flex-1 flex-col hover:underline"
+                    className="group -mx-2 flex flex-1 flex-col rounded-md px-2 py-1 transition-colors hover:bg-bg-tertiary"
                     title="Abrir editor da parte"
                   >
-                    <span className="font-medium text-fg-primary">
+                    <span className="font-medium text-fg-primary transition-colors group-hover:text-primary-brand">
                       {part.title}
                     </span>
                     {part.kind === "golden" && (

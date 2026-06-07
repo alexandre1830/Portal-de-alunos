@@ -254,8 +254,12 @@
   --color-warning-light:   var(--color-warning-300);
   --color-warning-surface: rgba(245, 158, 11, 0.18);
 
-  --color-danger:          #f87171;
-  --color-danger-hover:    #fca5a5;
+  /* Danger no dark: mantemos o vermelho profundo (não clareamos como em
+     success/warning/info), para botões críticos como "Sair" e "Excluir"
+     continuarem reconhecíveis e impactantes — texto branco em vermelho
+     forte. Surface continua translúcido para alertas. */
+  --color-danger:          var(--color-danger-500);
+  --color-danger-hover:    var(--color-danger-700);
   --color-danger-surface:  rgba(220, 38, 38, 0.20);
 
   --color-info:            var(--color-info-300);
