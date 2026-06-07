@@ -1,6 +1,4 @@
-import Link from "next/link";
-
-import { EnrollForm } from "@/components/admin/EnrollForm";
+import { EnrollDialog } from "@/components/admin/EnrollDialog";
 import { TrashIcon } from "@/components/icons/TrashIcon";
 import { ConfirmForm } from "@/components/shared/ConfirmForm";
 import { Button } from "@/components/ui/Button";
@@ -24,10 +22,19 @@ export default async function AdminCourseEnrollmentsPage({
 
   return (
     <section className="flex flex-col gap-4">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-base font-semibold text-fg-primary">
+            Alunos matriculados
+          </h2>
+          <p className="text-sm text-fg-secondary">
+            Adicione e remova o acesso de alunos a este curso.
+          </p>
+        </div>
+        <EnrollDialog courseId={courseId} />
+      </div>
+
       <Card padded className="flex flex-col gap-3">
-        <h2 className="text-base font-semibold text-fg-primary">
-          Alunos matriculados
-        </h2>
         {(enrollments ?? []).length === 0 ? (
           <p className="text-sm text-fg-secondary">
             Nenhum aluno matriculado ainda.
@@ -70,23 +77,6 @@ export default async function AdminCourseEnrollmentsPage({
             ))}
           </ul>
         )}
-      </Card>
-
-      <Card padded className="flex flex-col gap-2">
-        <h2 className="text-base font-semibold text-fg-primary">
-          Matricular aluno
-        </h2>
-        <EnrollForm courseId={courseId} />
-        <p className="text-xs text-fg-tertiary">
-          O aluno precisa já ter conta no portal. Se não tem,{" "}
-          <Link
-            href="/admin/alunos"
-            className="font-medium text-fg-secondary underline hover:text-fg-primary"
-          >
-            crie a conta em Alunos
-          </Link>{" "}
-          e volte aqui para matricular.
-        </p>
       </Card>
     </section>
   );
