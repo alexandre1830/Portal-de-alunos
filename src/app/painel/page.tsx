@@ -231,9 +231,9 @@ export default async function PainelPage() {
                 </span>
               </div>
             </div>
-            <span className="shrink-0 rounded-md bg-fg-primary px-3 py-1.5 text-xs font-medium text-fg-inverse">
+            <Button type="button" size="sm" className="shrink-0">
               Começar
-            </span>
+            </Button>
           </Card>
         </Link>
       )}
