@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { BookmarkIcon } from "@/components/icons/BookmarkIcon";
 import { FlameIcon } from "@/components/icons/FlameIcon";
 import { GearIcon } from "@/components/icons/GearIcon";
+import { SparkleIcon } from "@/components/icons/SparkleIcon";
+import { TrendingUpIcon } from "@/components/icons/TrendingUpIcon";
 import { TrophyIcon } from "@/components/icons/TrophyIcon";
 import { StudyIllustration } from "@/components/illustrations/StudyIllustration";
 import { AvatarEditor } from "@/components/painel/AvatarEditor";
@@ -115,42 +117,65 @@ export default async function PainelPage() {
         </div>
       </div>
 
-      {/* Gamificação */}
+      {/* Gamificação — cada KPI ganha um badge circular com ícone na cor
+          da marca (azul-marinho), padrão do sistema irmão. */}
       <section className="grid grid-cols-3 gap-3">
         <Link href="/painel/xp" className="block">
           <Card
             padded
             interactive
-            className="flex h-full flex-col gap-1"
+            className="flex h-full items-center gap-3"
             title="Ver histórico de XP"
           >
-            <span className="text-2xl font-bold text-fg-primary">{xp}</span>
-            <span className="text-xs text-fg-secondary">XP total</span>
-          </Card>
-        </Link>
-        <Link href="/painel/streak" className="block">
-          <Card
-            padded
-            interactive
-            className="flex h-full flex-col gap-1"
-            title="Ver calendário de streak"
-          >
-            <span className="flex items-center gap-1.5 text-2xl font-bold text-fg-primary">
-              {streak}
-              <FlameIcon className="h-5 w-5 text-warning" />
+            <KpiIcon>
+              <SparkleIcon className="h-5 w-5" />
+            </KpiIcon>
+            <span className="flex flex-col">
+              <span className="text-2xl font-bold leading-none text-fg-primary">
+                {xp}
+              </span>
+              <span className="mt-1 text-xs text-fg-secondary">XP total</span>
             </span>
-            <span className="text-xs text-fg-secondary">Streak atual</span>
           </Card>
         </Link>
         <Link href="/painel/streak" className="block">
           <Card
             padded
             interactive
-            className="flex h-full flex-col gap-1"
+            className="flex h-full items-center gap-3"
             title="Ver calendário de streak"
           >
-            <span className="text-2xl font-bold text-fg-primary">{longest}</span>
-            <span className="text-xs text-fg-secondary">Maior streak</span>
+            <KpiIcon>
+              <FlameIcon className="h-5 w-5" />
+            </KpiIcon>
+            <span className="flex flex-col">
+              <span className="text-2xl font-bold leading-none text-fg-primary">
+                {streak}
+              </span>
+              <span className="mt-1 text-xs text-fg-secondary">
+                Streak atual
+              </span>
+            </span>
+          </Card>
+        </Link>
+        <Link href="/painel/streak" className="block">
+          <Card
+            padded
+            interactive
+            className="flex h-full items-center gap-3"
+            title="Ver calendário de streak"
+          >
+            <KpiIcon>
+              <TrendingUpIcon className="h-5 w-5" />
+            </KpiIcon>
+            <span className="flex flex-col">
+              <span className="text-2xl font-bold leading-none text-fg-primary">
+                {longest}
+              </span>
+              <span className="mt-1 text-xs text-fg-secondary">
+                Maior streak
+              </span>
+            </span>
           </Card>
         </Link>
       </section>
@@ -159,9 +184,9 @@ export default async function PainelPage() {
       <section className="grid grid-cols-2 gap-3">
         <Link href="/painel/revisar" className="block">
           <Card padded interactive className="flex h-full items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bg-tertiary text-fg-primary">
+            <KpiIcon>
               <BookmarkIcon className="h-5 w-5" />
-            </span>
+            </KpiIcon>
             <span className="flex flex-col">
               <span className="text-sm font-medium text-fg-primary">
                 Para revisar
@@ -181,9 +206,9 @@ export default async function PainelPage() {
               (dashboard.claimableCount > 0 ? " border-warning/40" : "")
             }
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bg-tertiary text-warning">
+            <KpiIcon>
               <TrophyIcon className="h-5 w-5" />
-            </span>
+            </KpiIcon>
             <span className="flex flex-col">
               <span className="text-sm font-medium text-fg-primary">
                 Conquistas
@@ -339,5 +364,16 @@ export default async function PainelPage() {
         )}
       </section>
     </main>
+  );
+}
+
+// Badge circular para o ícone de um KPI/card de atalho.
+// bg = primary-brand-surface (azul muito claro), ícone = primary-brand
+// (azul-marinho da marca). Mesmo padrão dos stat-cards do sistema irmão.
+function KpiIcon({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-brand-surface text-primary-brand">
+      {children}
+    </span>
   );
 }
