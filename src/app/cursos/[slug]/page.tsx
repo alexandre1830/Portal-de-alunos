@@ -114,16 +114,16 @@ export default async function CoursePage({
                           Sem partes ainda.
                         </p>
                       ) : (
-                        <ul className="flex flex-col">
+                        <ul className="-mx-2 flex flex-col divide-y divide-border-primary">
                           {lesson.parts.map((part) => {
                             const done = part.progress?.status === "completed";
                             return (
                               <li key={part.id}>
                                 <Link
                                   href={`/partes/${part.id}`}
-                                  className="flex items-center justify-between gap-3 rounded-md px-2 py-2 -mx-2 hover:bg-bg-secondary"
+                                  className="group flex items-center justify-between gap-3 rounded-md px-2 py-2.5 transition-colors hover:bg-bg-tertiary"
                                 >
-                                  <span className="flex items-center gap-2 text-sm text-fg-primary">
+                                  <span className="flex items-center gap-2 text-sm text-fg-primary transition-colors group-hover:text-primary-brand">
                                     {part.kind === "golden" && (
                                       <TrophyIcon
                                         className="h-4 w-4 text-warning"

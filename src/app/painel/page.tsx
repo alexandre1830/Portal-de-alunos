@@ -296,7 +296,7 @@ export default async function PainelPage() {
                       <div className="flex flex-col gap-0.5">
                         <Link
                           href={`/cursos/${course.slug}`}
-                          className="font-medium text-fg-primary transition-colors hover:text-fg-primary/80 hover:underline"
+                          className="self-start font-medium text-fg-primary transition-colors hover:text-primary-brand"
                           title="Ver todas as lições do curso"
                         >
                           {course.title}
@@ -351,7 +351,7 @@ export default async function PainelPage() {
                       // o link para a estrutura do curso.
                       <Link
                         href={`/cursos/${course.slug}`}
-                        className="text-sm text-fg-secondary hover:underline"
+                        className="self-start text-sm text-fg-secondary transition-colors hover:text-primary-brand"
                       >
                         Ver curso →
                       </Link>
