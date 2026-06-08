@@ -33,7 +33,7 @@ export default function LoginPage() {
       className="relative flex min-h-dvh w-full items-center justify-center overflow-hidden p-6 text-white"
       style={{
         background:
-          "linear-gradient(135deg, var(--color-primary) 0%, #051f50 60%, #0a0a1a 100%)",
+          "linear-gradient(135deg, var(--color-primary-700) 0%, #051f50 60%, #0a0a1a 100%)",
       }}
     >
       {/* Formas flutuantes de fundo — três círculos borrados em
@@ -76,7 +76,7 @@ export default function LoginPage() {
         {/* Branding */}
         <header className="flex flex-col items-center gap-3 text-center">
           <Logo
-            className="h-[72px] w-[72px] rounded-2xl shadow-[0_10px_15px_rgba(0,0,0,0.08),0_4px_6px_rgba(0,0,0,0.04)]"
+            className="h-[85px] w-[85px] rounded-2xl shadow-[0_10px_15px_rgba(0,0,0,0.08),0_4px_6px_rgba(0,0,0,0.04)]" border-radius="50%"
             priority
           />
           <div className="flex flex-col gap-1">
