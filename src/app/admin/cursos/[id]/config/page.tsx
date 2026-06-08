@@ -16,15 +16,11 @@ export default async function AdminCourseConfigPage({
   const { id } = await params;
   const { supabase } = await requireAdmin();
 
-  const [{ data: course }, { data: teachers }] = await Promise.all([
-    supabase.from("courses").select("*").eq("id", id).maybeSingle(),
-    supabase
-      .from("profiles")
-      .select("id, email, full_name, role")
-      .in("role", ["teacher", "admin"])
-      .order("role")
-      .order("email"),
-  ]);
+  const { data: course } = await supabase
+    .from("courses")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
   if (!course) notFound();
 
   return (
@@ -71,22 +67,6 @@ export default async function AdminCourseConfigPage({
               ))}
             </select>
           </div>
-          <label className="flex flex-col gap-1 text-sm text-fg-secondary">
-            Professor responsável
-            <select
-              name="teacher_id"
-              defaultValue={course.teacher_id ?? ""}
-              className={inputCls}
-            >
-              <option value="">Sem professor atribuído</option>
-              {(teachers ?? []).map((t) => (
-                <option key={t.id} value={t.id}>
-                  {(t.full_name ?? t.email) +
-                    (t.role === "admin" ? " (admin)" : "")}
-                </option>
-              ))}
-            </select>
-          </label>
           <label className="flex items-center gap-2 text-sm text-fg-secondary">
             <input
               type="checkbox"
@@ -95,6 +75,11 @@ export default async function AdminCourseConfigPage({
             />
             Publicado
           </label>
+          <p className="text-xs text-fg-tertiary">
+            Vínculo professor → alunos é gerenciado em{" "}
+            <strong>Professores</strong> no menu superior. Cursos não têm mais
+            um professor responsável.
+          </p>
           <Button type="submit" className="self-start">
             Salvar curso
           </Button>

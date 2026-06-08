@@ -91,7 +91,6 @@ export async function createCourse(formData: FormData) {
 export async function updateCourse(formData: FormData) {
   const { supabase } = await requireAdmin();
   const id = str(formData, "id");
-  const teacherId = str(formData, "teacher_id");
   await supabase
     .from("courses")
     .update({
@@ -101,11 +100,48 @@ export async function updateCourse(formData: FormData) {
       language: str(formData, "language") === "es" ? "es" : "en",
       level: (str(formData, "level") || "a1") as never,
       is_published: formData.get("is_published") === "on",
-      teacher_id: teacherId || null,
     })
     .eq("id", id);
   revalidatePath(`/admin/cursos/${id}/config`);
   revalidatePath("/admin/cursos");
+}
+
+// ====================================================================
+// Vínculos professor → aluno (substitui o antigo courses.teacher_id).
+// Admin gerencia tudo. RLS já restringe escrita a admin.
+// ====================================================================
+export async function assignStudentToTeacher(
+  formData: FormData,
+): Promise<{ ok: boolean; error: string | null }> {
+  await requireAdmin();
+  const teacherId = str(formData, "teacher_id");
+  const studentId = str(formData, "student_id");
+  if (!teacherId || !studentId) {
+    return { ok: false, error: "Dados incompletos." };
+  }
+  const admin = createAdminClient();
+  // Idempotente: se já existe, ignora.
+  await admin
+    .from("teacher_students")
+    .insert({ teacher_id: teacherId, student_id: studentId });
+  revalidatePath(`/admin/professores/${teacherId}`);
+  return { ok: true, error: null };
+}
+
+export async function unassignStudentFromTeacher(
+  formData: FormData,
+): Promise<void> {
+  await requireAdmin();
+  const teacherId = str(formData, "teacher_id");
+  const studentId = str(formData, "student_id");
+  if (!teacherId || !studentId) return;
+  const admin = createAdminClient();
+  await admin
+    .from("teacher_students")
+    .delete()
+    .eq("teacher_id", teacherId)
+    .eq("student_id", studentId);
+  revalidatePath(`/admin/professores/${teacherId}`);
 }
 
 export async function deleteCourse(formData: FormData) {

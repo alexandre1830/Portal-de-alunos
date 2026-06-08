@@ -31,7 +31,7 @@ export default async function AdminCourseLayout({
           <h1 className="text-2xl font-semibold text-fg-primary">{course.title}</h1>
           <Link href={`/cursos/${course.slug}?from=admin`}>
             <Button type="button" variant="ghost" size="sm">
-              Ver como aluno
+              Pré-visualizar como aluno
             </Button>
           </Link>
         </div>

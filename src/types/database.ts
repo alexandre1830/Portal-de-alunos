@@ -118,7 +118,6 @@ export type Database = {
           language: Database["public"]["Enums"]["course_language"]
           level: Database["public"]["Enums"]["cefr_level"]
           slug: string
-          teacher_id: string | null
           title: string
           updated_at: string
         }
@@ -130,7 +129,6 @@ export type Database = {
           language: Database["public"]["Enums"]["course_language"]
           level: Database["public"]["Enums"]["cefr_level"]
           slug: string
-          teacher_id?: string | null
           title: string
           updated_at?: string
         }
@@ -142,19 +140,10 @@ export type Database = {
           language?: Database["public"]["Enums"]["course_language"]
           level?: Database["public"]["Enums"]["cefr_level"]
           slug?: string
-          teacher_id?: string | null
           title?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "courses_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       enrollments: {
         Row: {
@@ -710,6 +699,39 @@ export type Database = {
           {
             foreignKeyName: "srs_items_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_students: {
+        Row: {
+          created_at: string
+          student_id: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string
+          student_id: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string
+          student_id?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_students_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_students_teacher_id_fkey"
+            columns: ["teacher_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

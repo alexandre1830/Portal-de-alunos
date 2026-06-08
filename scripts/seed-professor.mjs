@@ -1,7 +1,7 @@
 // Bootstrap do professor de demonstração.
 // Cria (ou reaproveita) professor@demo.com já confirmado, define role=teacher
-// e o atribui como teacher_id do curso "ingles-a1-adulto". Idempotente.
-// Rode com: pnpm seed:professor
+// e vincula a ele todos os alunos já cadastrados (via teacher_students).
+// Idempotente. Rode com: pnpm seed:professor
 
 import { readFileSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
@@ -32,7 +32,6 @@ const admin = createClient(url, serviceKey, {
 
 const PROFESSOR_EMAIL = "professor@demo.com";
 const PROFESSOR_PASSWORD = "professor1234";
-const COURSE_SLUG = "ingles-a1-adulto";
 
 const { data: listed, error: listErr } = await admin.auth.admin.listUsers({
   page: 1,
@@ -62,23 +61,25 @@ const { error: roleErr } = await admin
   .eq("id", user.id);
 if (roleErr) throw roleErr;
 
-// Atribui ao curso demo (se existir).
-const { data: course } = await admin
-  .from("courses")
+// Vincula todos os alunos já cadastrados a este professor (idempotente
+// via ON CONFLICT DO NOTHING — a PK é teacher_id + student_id).
+const { data: students } = await admin
+  .from("profiles")
   .select("id")
-  .eq("slug", COURSE_SLUG)
-  .maybeSingle();
-if (course) {
-  const { error: assignErr } = await admin
-    .from("courses")
-    .update({ teacher_id: user.id })
-    .eq("id", course.id);
-  if (assignErr) throw assignErr;
-  console.log(`Atribuído como professor do curso "${COURSE_SLUG}".`);
+  .eq("role", "student");
+
+if (students && students.length > 0) {
+  const rows = students.map((s) => ({
+    teacher_id: user.id,
+    student_id: s.id,
+  }));
+  const { error: linkErr } = await admin
+    .from("teacher_students")
+    .upsert(rows, { onConflict: "teacher_id,student_id" });
+  if (linkErr) throw linkErr;
+  console.log(`Vinculado a ${students.length} aluno(s).`);
 } else {
-  console.log(
-    `Curso "${COURSE_SLUG}" não existe — rode \`pnpm seed\` antes para criá-lo.`,
-  );
+  console.log("Nenhum aluno cadastrado para vincular ainda.");
 }
 
 console.log(`Login professor: ${PROFESSOR_EMAIL} / ${PROFESSOR_PASSWORD}`);
