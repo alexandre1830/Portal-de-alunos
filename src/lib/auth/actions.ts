@@ -47,10 +47,19 @@ export async function signIn(
   revalidatePath("/", "layout");
   // Por role: admin vai direto pro próprio painel, professor pro dele,
   // aluno para /painel. Ver-como-X são acessíveis pelas configurações.
+  //
+  // Usamos o admin client (service_role) para ler o role aqui —
+  // signInWithPassword acabou de setar a sessão, mas o auth.uid() no
+  // mesmo request pode ainda não ter sido propagado para o PostgREST,
+  // e a RLS de profiles (id = auth.uid()) faria a query silenciosamente
+  // retornar null. O user.id já foi validado pelo signInData, então
+  // ler com service_role é seguro.
   const userId = signInData.user?.id;
   let target = "/painel";
   if (userId) {
-    const { data: profile } = await supabase
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const admin = createAdminClient();
+    const { data: profile } = await admin
       .from("profiles")
       .select("role")
       .eq("id", userId)
