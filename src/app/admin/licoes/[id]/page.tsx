@@ -94,25 +94,35 @@ export default async function AdminLessonPage({
             items={(parts ?? []).map((part) => ({
               id: part.id,
               content: (
-                <Card padded className="flex items-center gap-2">
+                <Card
+                  padded
+                  className="group relative flex items-center gap-2 transition-colors hover:bg-bg-tertiary"
+                >
+                  {/* Link "esticado" sobre o card inteiro — o hover muda o
+                      bg do Card e a cor do título. A área clicável vira o
+                      card todo, exceto o RowMenu (que fica acima via z). */}
                   <Link
                     href={`/admin/partes/${part.id}`}
-                    className="group -mx-2 flex flex-1 flex-col rounded-md px-2 py-1 transition-colors hover:bg-bg-tertiary"
+                    className="absolute inset-0 rounded-md focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary-brand"
                     title="Abrir editor da parte"
-                  >
+                    aria-label={`Abrir editor: ${part.title}`}
+                  />
+                  <div className="pointer-events-none flex flex-1 flex-col">
                     <span className="font-medium text-fg-primary transition-colors group-hover:text-primary-brand">
                       {part.title}
                     </span>
                     {part.kind === "golden" && (
                       <span className="text-xs text-warning">dourada</span>
                     )}
-                  </Link>
-                  <PartRowMenu
-                    partId={part.id}
-                    lessonId={lesson.id}
-                    partTitle={part.title}
-                    partKind={part.kind}
-                  />
+                  </div>
+                  <div className="relative">
+                    <PartRowMenu
+                      partId={part.id}
+                      lessonId={lesson.id}
+                      partTitle={part.title}
+                      partKind={part.kind}
+                    />
+                  </div>
                 </Card>
               ),
             }))}

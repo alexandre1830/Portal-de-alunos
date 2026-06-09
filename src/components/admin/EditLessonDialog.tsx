@@ -57,7 +57,6 @@ export function EditLessonDialog({
           name="is_published"
           defaultChecked={isPublished}
           label="Publicada"
-          description="Alunos só veem a lição quando publicada."
         />
         <div className="flex justify-end gap-2">
           <Button
