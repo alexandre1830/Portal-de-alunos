@@ -171,10 +171,7 @@ export default async function AdminPartPage({
           frequência. Módulos/lições/partes seguem com DnD. */}
       <section className="flex flex-col gap-4">
         {(blocks ?? []).map((block) => (
-          <Card key={block.id} padded className="flex flex-col gap-3">
-            <div className="flex items-center justify-end">
-              <BlockRowMenu blockId={block.id} partId={part.id} />
-            </div>
+          <Card key={block.id} className="flex flex-col p-7">
             <BlockForm
               mode="edit"
               partId={part.id}
@@ -186,12 +183,15 @@ export default async function AdminPartPage({
                 block.data,
                 solutions.get(block.id),
               )}
+              headerSlot={
+                <BlockRowMenu blockId={block.id} partId={part.id} />
+              }
             />
           </Card>
         ))}
       </section>
 
-      <Card padded className="flex flex-col gap-3">
+      <Card className="flex flex-col gap-4 p-7">
         <h2 className="text-base font-semibold text-fg-primary">Novo bloco</h2>
         <BlockForm mode="create" partId={part.id} courseId={part.course_id} />
       </Card>

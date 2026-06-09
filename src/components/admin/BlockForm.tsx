@@ -9,7 +9,7 @@ import { toast } from "@/lib/toast/store";
 import { cn } from "@/lib/utils/cn";
 
 const TYPES: [string, string][] = [
-  ["rich_text", "Texto rico"],
+  ["rich_text", "Texto"],
   ["reading_tts", "Leitura (áudio)"],
   ["vocabulary", "Vocabulário"],
   ["dialogue_tts", "Diálogo (áudio)"],
@@ -66,6 +66,7 @@ export function BlockForm({
   blockId,
   type: fixedType,
   initial = {},
+  headerSlot,
 }: {
   mode: "create" | "edit";
   partId: string;
@@ -73,6 +74,9 @@ export function BlockForm({
   blockId?: string;
   type?: string;
   initial?: BlockInitial;
+  // Conteúdo extra à direita do header (ex.: BlockRowMenu) — alinhado
+  // na mesma linha do tipo do bloco, evitando uma faixa morta acima.
+  headerSlot?: React.ReactNode;
 }) {
   const [type, setType] = useState(fixedType ?? "rich_text");
   const formRef = useRef<HTMLFormElement>(null);
@@ -112,7 +116,7 @@ export function BlockForm({
       ref={formRef}
       action={mode === "create" ? createBlock : undefined}
       onChange={handleFormChange}
-      className="flex flex-col gap-3"
+      className="flex flex-col gap-4"
     >
       <input type="hidden" name="part_id" value={partId} />
       <input type="hidden" name="course_id" value={courseId} />
@@ -138,7 +142,10 @@ export function BlockForm({
           </span>
         )}
 
-        {mode === "edit" && <SaveStatus status={status} />}
+        <div className="flex items-center gap-3">
+          {mode === "edit" && <SaveStatus status={status} />}
+          {headerSlot}
+        </div>
       </div>
 
       {(type === "reading_tts" ||
