@@ -16,10 +16,6 @@ export default async function AdminHome() {
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold text-fg-primary">Visão geral</h1>
-        <p className="text-sm text-fg-secondary">
-          Os números do portal num relance. Clique nos cards para ir ao
-          detalhamento.
-        </p>
       </div>
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">

@@ -19,8 +19,7 @@ export default async function AdminStudentsPage() {
         <div>
           <h1 className="text-2xl font-semibold text-fg-primary">Alunos</h1>
           <p className="text-sm text-fg-secondary">
-            Gerencie as contas de alunos. A matrícula em cursos é feita em
-            cada curso, na aba “Matrículas”.
+            Gerencie as contas e login dos alunos.
           </p>
         </div>
         <CreateUserDialog role="student" />
@@ -34,7 +33,7 @@ export default async function AdminStudentsPage() {
             </p>
           </Card>
         ) : (
-          <ul className="flex flex-col divide-y divide-border-primary overflow-hidden rounded-md border border-border-primary">
+          <ul className="flex flex-col divide-y divide-border-primary rounded-md border border-border-primary [&>li:first-child]:rounded-t-md [&>li:last-child]:rounded-b-md">
             {(profiles ?? []).map((p) => (
               <li
                 key={p.id}

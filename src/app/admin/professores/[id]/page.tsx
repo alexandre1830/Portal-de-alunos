@@ -96,7 +96,7 @@ export default async function AdminTeacherDetailPage({
             </p>
           </Card>
         ) : (
-          <ul className="flex flex-col divide-y divide-border-primary overflow-hidden rounded-md border border-border-primary">
+          <ul className="flex flex-col divide-y divide-border-primary rounded-md border border-border-primary [&>li:first-child]:rounded-t-md [&>li:last-child]:rounded-b-md">
             {assigned.map((s) => (
               <li
                 key={s.id}
