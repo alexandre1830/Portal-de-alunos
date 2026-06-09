@@ -44,8 +44,12 @@ export interface BlockInitial {
 
 const inputCls =
   "h-10 w-full rounded-md border border-border-primary bg-bg-primary px-3 text-sm text-fg-primary";
+// field-sizing-content (Tailwind v4) faz o textarea crescer pra acomodar
+// o conteúdo, eliminando o scroll interno. O rows={N} de cada textarea
+// define só a altura inicial enquanto está vazio. A rolagem fica a cargo
+// da página inteira.
 const areaCls =
-  "w-full rounded-md border border-border-primary bg-bg-primary px-3 py-2 text-sm text-fg-primary";
+  "w-full rounded-md border border-border-primary bg-bg-primary px-3 py-2 text-sm text-fg-primary field-sizing-content";
 
 function Hint({ children }: { children: React.ReactNode }) {
   return <p className="text-xs text-fg-tertiary">{children}</p>;
@@ -161,7 +165,8 @@ export function BlockForm({
           name="text"
           defaultValue={initial.text}
           placeholder="Texto"
-          className={`${areaCls} h-28`}
+          rows={4}
+          className={areaCls}
         />
       )}
 
@@ -171,7 +176,8 @@ export function BlockForm({
             name="items"
             defaultValue={initial.items}
             placeholder={"Uma frase por linha"}
-            className={`${areaCls} h-28`}
+            rows={4}
+            className={areaCls}
           />
           <Hint>Uma frase por linha — cada uma terá seu próprio botão de áudio.</Hint>
         </>
@@ -183,7 +189,8 @@ export function BlockForm({
             name="items"
             defaultValue={initial.items}
             placeholder={"Uma frase por linha"}
-            className={`${areaCls} h-28`}
+            rows={4}
+            className={areaCls}
           />
           <Hint>
             Uma frase por linha — o aluno fala cada uma (Web Speech API) e o
@@ -199,7 +206,8 @@ export function BlockForm({
             name="items"
             defaultValue={initial.items}
             placeholder={"termo | tradução | exemplo (opcional)"}
-            className={`${areaCls} h-28`}
+            rows={4}
+            className={areaCls}
           />
           <Hint>Um item por linha: termo | tradução | exemplo (exemplo é opcional).</Hint>
         </>
@@ -211,7 +219,8 @@ export function BlockForm({
             name="lines"
             defaultValue={initial.lines}
             placeholder={"Personagem: fala"}
-            className={`${areaCls} h-28`}
+            rows={4}
+            className={areaCls}
           />
           <Hint>Uma fala por linha no formato “Personagem: texto”.</Hint>
         </>
@@ -229,7 +238,8 @@ export function BlockForm({
             name="options"
             defaultValue={initial.options}
             placeholder={"Uma alternativa por linha"}
-            className={`${areaCls} h-24`}
+            rows={3}
+            className={areaCls}
           />
           <label className="flex items-center gap-2 text-sm text-fg-secondary">
             Índice da resposta correta (0 = primeira):
