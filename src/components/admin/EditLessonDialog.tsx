@@ -4,6 +4,7 @@ import { useTransition } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
+import { Switch } from "@/components/ui/Switch";
 import { updateLesson } from "@/lib/admin/actions";
 
 const inputCls =
@@ -52,14 +53,12 @@ export function EditLessonDialog({
           autoFocus
           className={inputCls}
         />
-        <label className="flex items-center gap-2 text-sm text-fg-secondary">
-          <input
-            type="checkbox"
-            name="is_published"
-            defaultChecked={isPublished}
-          />
-          Publicada
-        </label>
+        <Switch
+          name="is_published"
+          defaultChecked={isPublished}
+          label="Publicada"
+          description="Alunos só veem a lição quando publicada."
+        />
         <div className="flex justify-end gap-2">
           <Button
             type="button"

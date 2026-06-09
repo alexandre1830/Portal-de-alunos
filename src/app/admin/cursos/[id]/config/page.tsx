@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Switch } from "@/components/ui/Switch";
 import { deleteCourse, updateCourse } from "@/lib/admin/actions";
 import { requireAdmin } from "@/lib/admin/guard";
 
@@ -67,14 +68,12 @@ export default async function AdminCourseConfigPage({
               ))}
             </select>
           </div>
-          <label className="flex items-center gap-2 text-sm text-fg-secondary">
-            <input
-              type="checkbox"
-              name="is_published"
-              defaultChecked={course.is_published}
-            />
-            Publicado
-          </label>
+          <Switch
+            name="is_published"
+            defaultChecked={course.is_published}
+            label="Publicado"
+            description="Quando ligado, alunos matriculados conseguem acessar."
+          />
           <p className="text-xs text-fg-tertiary">
             Vínculo professor → alunos é gerenciado em{" "}
             <strong>Professores</strong> no menu superior. Cursos não têm mais
