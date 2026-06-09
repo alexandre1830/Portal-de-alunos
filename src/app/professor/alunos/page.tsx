@@ -29,8 +29,7 @@ export default async function ProfessorStudentsPage() {
       <div>
         <h1 className="text-2xl font-semibold text-fg-primary">Meus alunos</h1>
         <p className="text-sm text-fg-secondary">
-          Acompanhe o progresso dos alunos que você é responsável. O admin
-          vincula alunos a você na aba <strong>Professores</strong>.
+          Acompanhe o progresso dos alunos que você é responsável.
         </p>
       </div>
 

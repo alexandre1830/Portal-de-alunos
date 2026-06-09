@@ -15,6 +15,9 @@ export function ThemeSection() {
   return (
     <Card padded className="flex flex-col gap-3">
       <h2 className="text-base font-semibold text-fg-primary">Tema</h2>
+      <p className="text-sm text-fg-secondary">
+        Ajuste o tema conforme sua preferência.
+      </p>
       <ThemeSwitch />
     </Card>
   );
@@ -51,8 +54,7 @@ export function SignOutSection() {
     <Card padded className="flex flex-col gap-2">
       <h2 className="text-base font-semibold text-fg-primary">Sair</h2>
       <p className="text-sm text-fg-secondary">
-        Encerre sua sessão neste dispositivo. Você será levado de volta à
-        tela de login.
+        Encerre sua sessão neste dispositivo.
       </p>
       <SignOutButton />
     </Card>

@@ -20,8 +20,7 @@ export default async function AdminConfiguracoesPage() {
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold text-fg-primary">Configurações</h1>
         <p className="text-sm text-fg-secondary">
-          Ajuste a aparência, sua senha e gerencie a sessão. Pré-visualize
-          o portal como aluno ou professor abaixo.
+          Ajuste a aparência, sua senha e gerencie a sessão. 
         </p>
       </div>
 
