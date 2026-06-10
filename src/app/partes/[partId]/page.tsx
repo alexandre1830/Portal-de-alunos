@@ -16,6 +16,7 @@ import {
   getUserPreferences,
   voiceForLang,
 } from "@/lib/preferences/queries";
+import { resolveCurrentStreak } from "@/lib/streak/queries";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function PartPage({
@@ -46,13 +47,27 @@ export default async function PartPage({
 
   // Pré-visualização vinda do admin: só faz sentido para quem realmente
   // é admin. Para qualquer outro role, ignoramos o ?from=admin.
+  // O mesmo SELECT traz também full_name + avatar_url para o
+  // LessonCompletionDialog usar no cartão compartilhável.
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, full_name, avatar_url")
     .eq("id", user.id)
     .maybeSingle();
   const isAdminPreview =
     sp.from === "admin" && profile?.role === "admin";
+
+  // Streak atual (para mostrar no cartão de celebração de lição). Cálculo
+  // honra a lógica "se o último dia ativo > ontem (BRT), streak = 0".
+  const { data: gam } = await supabase
+    .from("user_gamification")
+    .select("current_streak, last_activity_date")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const currentStreak = resolveCurrentStreak(
+    gam?.current_streak,
+    gam?.last_activity_date,
+  );
 
   const prefs = await getUserPreferences(supabase, user.id);
   const lang = course?.language === "es" ? "es" : "en";
@@ -189,6 +204,12 @@ export default async function PartPage({
               : undefined
         }
         nextPartHref={nextPartHref}
+        lessonTitle={lesson?.title}
+        student={{
+          fullName: profile?.full_name ?? null,
+          avatarUrl: profile?.avatar_url ?? null,
+        }}
+        currentStreak={currentStreak}
       />
     </main>
   );

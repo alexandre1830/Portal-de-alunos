@@ -63,7 +63,7 @@ export function ReorderWordsExercise({
   blockId: string;
   data: ReorderWordsData;
   onSolved?: () => void;
-  onPartCompleted?: (info: { stars: number | null; xpAwarded: number }) => void;
+  onPartCompleted?: (info: { stars: number | null; xpAwarded: number; lessonJustCompleted?: boolean }) => void;
   previewMode?: boolean;
 }) {
   // Lista de tokens embaralhada UMA VEZ (memo por blockId).
@@ -127,6 +127,7 @@ export function ReorderWordsExercise({
       onPartCompleted?.({
         stars: res.partStars ?? null,
         xpAwarded: res.xpAwarded,
+        lessonJustCompleted: res.lessonJustCompleted ?? false,
       });
     }
   }

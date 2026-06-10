@@ -18,7 +18,7 @@ export function FillBlankExercise({
   blockId: string;
   data: FillBlankData;
   onSolved?: () => void;
-  onPartCompleted?: (info: { stars: number | null; xpAwarded: number }) => void;
+  onPartCompleted?: (info: { stars: number | null; xpAwarded: number; lessonJustCompleted?: boolean }) => void;
   previewMode?: boolean;
 }) {
   const [text, setText] = useState("");
@@ -41,6 +41,7 @@ export function FillBlankExercise({
       onPartCompleted?.({
         stars: res.partStars ?? null,
         xpAwarded: res.xpAwarded,
+        lessonJustCompleted: res.lessonJustCompleted ?? false,
       });
     }
   }

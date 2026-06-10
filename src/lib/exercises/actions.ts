@@ -17,6 +17,7 @@ import {
   translationSolution,
   vocabularyData,
 } from "@/lib/blocks/schemas";
+import { checkLessonJustCompleted } from "@/lib/parts/actions";
 import { upsertExerciseSrsItem, upsertVocabSrsItems } from "@/lib/srs/upsert";
 import {
   gradeErrorCorrection,
@@ -44,6 +45,9 @@ export interface ExerciseResult {
   // celebração. `partJustCompleted` é true APENAS na transição (uma vez).
   partJustCompleted?: boolean;
   partStars?: number;
+  // True quando a parte concluída ERA a última pendente da lição — sinal
+  // para abrir o diálogo polido de conclusão de LIÇÃO com compartilhamento.
+  lessonJustCompleted?: boolean;
 }
 
 const inputSchema = z.object({
@@ -282,6 +286,10 @@ export async function submitExercise(raw: {
     partId: block.part_id,
   });
 
+  const lessonJustCompleted = justCompleted
+    ? await checkLessonJustCompleted(admin, user.id, block.part_id)
+    : false;
+
   return {
     ok: true,
     state,
@@ -290,6 +298,7 @@ export async function submitExercise(raw: {
     error: null,
     partJustCompleted: justCompleted,
     partStars: justCompleted ? partStars : undefined,
+    lessonJustCompleted,
   };
 }
 

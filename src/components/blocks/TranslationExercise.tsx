@@ -21,7 +21,7 @@ export function TranslationExercise({
   blockId: string;
   data: TranslationData;
   onSolved?: () => void;
-  onPartCompleted?: (info: { stars: number | null; xpAwarded: number }) => void;
+  onPartCompleted?: (info: { stars: number | null; xpAwarded: number; lessonJustCompleted?: boolean }) => void;
   previewMode?: boolean;
 }) {
   const [text, setText] = useState("");
@@ -44,6 +44,7 @@ export function TranslationExercise({
       onPartCompleted?.({
         stars: res.partStars ?? null,
         xpAwarded: res.xpAwarded,
+        lessonJustCompleted: res.lessonJustCompleted ?? false,
       });
     }
   }

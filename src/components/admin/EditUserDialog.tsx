@@ -45,7 +45,7 @@ export function EditUserDialog({
         if (!pending) onClose();
       }}
       title={`Editar ${label}`}
-      description="Atualize o nome e o e-mail. A senha é alterada pelo próprio usuário em /painel/senha."
+      description="Atualize o nome e o e-mail do aluno."
     >
       <form action={handleAction} className="flex flex-col gap-3">
         <input type="hidden" name="id" value={id} />

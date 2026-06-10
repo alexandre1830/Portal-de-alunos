@@ -3,6 +3,10 @@
 import { useState, useTransition } from "react";
 
 import { BlockRenderer, type TtsOverride } from "@/components/blocks/BlockRenderer";
+import {
+  LessonCompletionDialog,
+  type LessonCompletionStudent,
+} from "@/components/partes/LessonCompletionDialog";
 import { PartCompletionDialog } from "@/components/partes/PartCompletionDialog";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -34,6 +38,9 @@ export function PartStepper({
   courseHref,
   nextPartHref,
   previewMode = false,
+  lessonTitle,
+  student,
+  currentStreak,
 }: {
   partId: string;
   blocks: Block[];
@@ -46,6 +53,11 @@ export function PartStepper({
   // Em pré-visualização do admin, propaga para o BlockRenderer (e para
   // markPartCompleted) — o servidor faz dry-run.
   previewMode?: boolean;
+  // Metadados usados pelo LessonCompletionDialog (renderizado quando a
+  // parte concluída era a ÚLTIMA pendente da lição).
+  lessonTitle?: string;
+  student?: LessonCompletionStudent;
+  currentStreak?: number;
 }) {
   const total = blocks.length;
   const [index, setIndex] = useState(0);
@@ -62,7 +74,16 @@ export function PartStepper({
     stars: number | null;
     xpAwarded: number;
     seed: number;
-  }>({ open: false, stars: null, xpAwarded: 0, seed: 1 });
+    // Quando true, abrimos o LessonCompletionDialog (polido, com
+    // compartilhamento) em vez do PartCompletionDialog padrão.
+    lessonJustCompleted: boolean;
+  }>({
+    open: false,
+    stars: null,
+    xpAwarded: 0,
+    seed: 1,
+    lessonJustCompleted: false,
+  });
 
   // Gera um seed novo para o confetti SEMPRE em handler — fora de render,
   // conforme regra de pureza do React 19. O dialog usa o mesmo seed por
@@ -111,6 +132,7 @@ export function PartStepper({
             stars: null,
             xpAwarded: res.xpAwarded ?? 0,
             seed: newSeed(),
+            lessonJustCompleted: res.lessonJustCompleted ?? false,
           });
         } else {
           toast.success({ title: "Parte concluída!" });
@@ -165,6 +187,7 @@ export function PartStepper({
                 stars: info.stars,
                 xpAwarded: info.xpAwarded,
                 seed: newSeed(),
+                lessonJustCompleted: info.lessonJustCompleted ?? false,
               });
             }}
           />
@@ -209,17 +232,35 @@ export function PartStepper({
         )}
       </div>
 
-      <PartCompletionDialog
-        open={celebration.open}
-        onClose={() =>
-          setCelebration((c) => ({ ...c, open: false }))
-        }
-        stars={celebration.stars}
-        xpAwarded={celebration.xpAwarded}
-        confettiSeed={celebration.seed}
-        courseHref={courseHref}
-        nextPartHref={nextPartHref}
-      />
+      {/* Diálogo de celebração: rota para o polido de LIÇÃO quando a parte
+          concluída era a última pendente; senão, o de PARTE de sempre. */}
+      {celebration.lessonJustCompleted && student ? (
+        <LessonCompletionDialog
+          open={celebration.open}
+          onClose={() =>
+            setCelebration((c) => ({ ...c, open: false }))
+          }
+          stars={celebration.stars}
+          xpAwarded={celebration.xpAwarded}
+          currentStreak={currentStreak ?? 0}
+          student={student}
+          lessonTitle={lessonTitle ?? ""}
+          confettiSeed={celebration.seed}
+          courseHref={courseHref}
+        />
+      ) : (
+        <PartCompletionDialog
+          open={celebration.open}
+          onClose={() =>
+            setCelebration((c) => ({ ...c, open: false }))
+          }
+          stars={celebration.stars}
+          xpAwarded={celebration.xpAwarded}
+          confettiSeed={celebration.seed}
+          courseHref={courseHref}
+          nextPartHref={nextPartHref}
+        />
+      )}
     </div>
   );
 }

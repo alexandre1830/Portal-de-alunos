@@ -73,8 +73,7 @@ export default async function AdminTeacherDetailPage({
               Alunos acompanhados
             </h2>
             <p className="text-sm text-fg-secondary">
-              Este professor pode ver o progresso de cada aluno listado aqui,
-              em todos os cursos em que cada um estiver matriculado.
+              Este professor pode ver o progresso de cada aluno listado aqui.
             </p>
           </div>
           <AssignStudentDialog

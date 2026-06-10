@@ -18,7 +18,7 @@ export function MultipleChoiceExercise({
   blockId: string;
   data: MultipleChoiceData;
   onSolved?: () => void;
-  onPartCompleted?: (info: { stars: number | null; xpAwarded: number }) => void;
+  onPartCompleted?: (info: { stars: number | null; xpAwarded: number; lessonJustCompleted?: boolean }) => void;
   previewMode?: boolean;
 }) {
   const [selected, setSelected] = useState<number | null>(null);
@@ -43,6 +43,7 @@ export function MultipleChoiceExercise({
       onPartCompleted?.({
         stars: res.partStars ?? null,
         xpAwarded: res.xpAwarded,
+        lessonJustCompleted: res.lessonJustCompleted ?? false,
       });
     }
   }

@@ -253,9 +253,17 @@
     opacity: 1;
   }
   100% {
-    transform: translateY(140px) rotate(360deg);
+    transform: translateY(160px) rotate(360deg);
     opacity: 0;
   }
+}
+
+/* Troféu da tela de conclusão de lição — entra com pop + leve oscilação. */
+@keyframes trophyPop {
+  0%   { transform: scale(0.4) rotate(-8deg); opacity: 0; }
+  55%  { transform: scale(1.15) rotate(6deg); opacity: 1; }
+  75%  { transform: scale(0.95) rotate(-3deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -275,6 +283,9 @@
   }
   .animate-confetti {
     animation: celebrationConfetti 1200ms ease-out forwards;
+  }
+  .animate-trophy-pop {
+    animation: trophyPop 700ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
   }
   .animate-login-float {
     animation: loginFloat 8s ease-in-out infinite;

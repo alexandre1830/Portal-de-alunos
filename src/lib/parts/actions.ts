@@ -14,6 +14,10 @@ export interface MarkPartCompletedResult {
   // True quando a parte transicionou agora para completed (e o cliente
   // deve mostrar a celebração).
   justCompleted?: boolean;
+  // True quando a parte concluída ERA a última parte pendente da lição
+  // — usado para abrir o diálogo de celebração de LIÇÃO (mais polido e
+  // com compartilhamento). Só é true junto de justCompleted.
+  lessonJustCompleted?: boolean;
   // XP creditado nesta conclusão (bônus de "part_completed"). 0 se
   // a parte já estava concluída antes.
   xpAwarded?: number;
@@ -142,12 +146,51 @@ export async function markPartCompleted(
 
   revalidatePath(`/partes/${partId}`);
 
+  const lessonJustCompleted = !wasCompleted
+    ? await checkLessonJustCompleted(admin, user.id, partId)
+    : false;
+
   return {
     ok: true,
     error: null,
     justCompleted: !wasCompleted,
+    lessonJustCompleted,
     xpAwarded,
   };
+}
+
+// Após o upsert que transicionou a parte para "completed", verifica se
+// esta era a ÚLTIMA parte da lição ainda pendente. Como roda DEPOIS do
+// upsert, basta contar quantas partes da lição estão completed para o
+// user vs quantas existem. Reutilizado pelo submitExercise.
+export async function checkLessonJustCompleted(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  partId: string,
+): Promise<boolean> {
+  const { data: part } = await admin
+    .from("parts")
+    .select("lesson_id")
+    .eq("id", partId)
+    .maybeSingle();
+  if (!part?.lesson_id) return false;
+
+  const { data: allParts } = await admin
+    .from("parts")
+    .select("id")
+    .eq("lesson_id", part.lesson_id);
+  const total = allParts?.length ?? 0;
+  if (total === 0) return false;
+
+  const ids = (allParts ?? []).map((p) => p.id);
+  const { count } = await admin
+    .from("part_progress")
+    .select("part_id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .in("part_id", ids)
+    .eq("status", "completed");
+
+  return (count ?? 0) >= total;
 }
 
 export interface RetryPartResult {

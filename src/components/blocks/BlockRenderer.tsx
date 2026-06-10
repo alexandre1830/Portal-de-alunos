@@ -54,7 +54,7 @@ export function BlockRenderer({
   block: Block;
   tts?: TtsOverride;
   onSolved?: () => void;
-  onPartCompleted?: (info: { stars: number | null; xpAwarded: number }) => void;
+  onPartCompleted?: (info: { stars: number | null; xpAwarded: number; lessonJustCompleted?: boolean }) => void;
   // Quando true, propaga para os exercícios — eles incluem na chamada da
   // Server Action para o backend não persistir nada (XP, progresso, SRS).
   previewMode?: boolean;

@@ -20,7 +20,7 @@ export function ErrorCorrectionExercise({
   blockId: string;
   data: ErrorCorrectionData;
   onSolved?: () => void;
-  onPartCompleted?: (info: { stars: number | null; xpAwarded: number }) => void;
+  onPartCompleted?: (info: { stars: number | null; xpAwarded: number; lessonJustCompleted?: boolean }) => void;
   previewMode?: boolean;
 }) {
   const [text, setText] = useState("");
@@ -43,6 +43,7 @@ export function ErrorCorrectionExercise({
       onPartCompleted?.({
         stars: res.partStars ?? null,
         xpAwarded: res.xpAwarded,
+        lessonJustCompleted: res.lessonJustCompleted ?? false,
       });
     }
   }
