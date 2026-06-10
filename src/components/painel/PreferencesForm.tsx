@@ -165,8 +165,6 @@ export function PreferencesForm({
           <span>Mais rápido ({MAX_RATE.toFixed(2)}x)</span>
         </div>
         <p className="text-xs text-fg-tertiary">
-          Vale para textos e exercícios de pronúncia. Diálogos mantêm o ritmo
-          natural (cada personagem tem voz própria).
         </p>
       </section>
     </Card>

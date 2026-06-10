@@ -11,8 +11,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
@@ -699,6 +697,61 @@ export type Database = {
           {
             foreignKeyName: "srs_items_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_live_sessions: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          id: string
+          meet_url: string
+          start_time: string
+          student_id: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          id?: string
+          meet_url: string
+          start_time: string
+          student_id: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          meet_url?: string
+          start_time?: string
+          student_id?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_live_sessions_link_fk"
+            columns: ["teacher_id", "student_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_students"
+            referencedColumns: ["teacher_id", "student_id"]
+          },
+          {
+            foreignKeyName: "student_live_sessions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_live_sessions_teacher_id_fkey"
+            columns: ["teacher_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

@@ -9,12 +9,14 @@ import { TrendingUpIcon } from "@/components/icons/TrendingUpIcon";
 import { TrophyIcon } from "@/components/icons/TrophyIcon";
 import { StudyIllustration } from "@/components/illustrations/StudyIllustration";
 import { AvatarEditor } from "@/components/painel/AvatarEditor";
+import { UpcomingLiveSessionCard } from "@/components/painel/UpcomingLiveSessionCard";
 import { Logo } from "@/components/shared/Logo";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SegmentedProgressBar } from "@/components/ui/SegmentedProgressBar";
 import { getStudentDashboard } from "@/lib/dashboard/queries";
+import { listStudentLiveSessions } from "@/lib/live-sessions/queries";
 import { countDueItems } from "@/lib/srs/queries";
 import { resolveCurrentStreak } from "@/lib/streak/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -49,7 +51,7 @@ export default async function PainelPage() {
     redirect("/login");
   }
 
-  const [{ data: profile }, dashboard, srsDue] = await Promise.all([
+  const [{ data: profile }, dashboard, srsDue, liveSessions] = await Promise.all([
     supabase
       .from("profiles")
       .select("full_name, email, role, avatar_url")
@@ -57,6 +59,7 @@ export default async function PainelPage() {
       .single(),
     getStudentDashboard(supabase, user.id),
     countDueItems(supabase, user.id),
+    listStudentLiveSessions(supabase, user.id),
   ]);
 
   const xp = dashboard.gamification?.total_xp ?? 0;
@@ -120,6 +123,10 @@ export default async function PainelPage() {
           </p>
         </div>
       </div>
+
+      {/* Card de aula síncrona: mostra a próxima aula recorrente cadastrada
+          pelo admin (com link do Meet). Só renderiza se houver aula. */}
+      <UpcomingLiveSessionCard sessions={liveSessions} />
 
       {/* Gamificação — cada KPI ganha um badge circular com ícone na cor
           da marca (azul-marinho), padrão do sistema irmão. */}

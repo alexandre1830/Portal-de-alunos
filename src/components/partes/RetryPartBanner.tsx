@@ -53,8 +53,7 @@ export function RetryPartBanner({
               : "Quase 3 estrelas!"}
         </span>
         <span className="text-xs text-fg-secondary">
-          Refaça os exercícios sem errar para chegar nas 3 estrelas. Suas
-          tentativas anteriores serão zeradas.
+          Refaça os exercícios sem errar para chegar nas 3 estrelas.
         </span>
       </div>
       <Button

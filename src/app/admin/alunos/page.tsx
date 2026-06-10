@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
 import { UserRowMenu } from "@/components/admin/UserRowMenu";
 import { Card } from "@/components/ui/Card";
@@ -37,20 +39,25 @@ export default async function AdminStudentsPage() {
             {(profiles ?? []).map((p) => (
               <li
                 key={p.id}
-                className="flex items-center justify-between gap-3 bg-bg-primary px-4 py-2"
+                className="flex items-stretch bg-bg-primary"
               >
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-fg-primary">
+                <Link
+                  href={`/admin/alunos/${p.id}`}
+                  className="group flex flex-1 flex-col px-4 py-2 transition-colors hover:bg-bg-tertiary"
+                >
+                  <span className="text-sm font-medium text-fg-primary transition-colors group-hover:text-primary-brand">
                     {p.full_name ?? "—"}
                   </span>
                   <span className="text-xs text-fg-tertiary">{p.email}</span>
+                </Link>
+                <div className="flex items-center pr-2">
+                  <UserRowMenu
+                    id={p.id}
+                    fullName={p.full_name ?? ""}
+                    email={p.email}
+                    role="student"
+                  />
                 </div>
-                <UserRowMenu
-                  id={p.id}
-                  fullName={p.full_name ?? ""}
-                  email={p.email}
-                  role="student"
-                />
               </li>
             ))}
           </ul>
