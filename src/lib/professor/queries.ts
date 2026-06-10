@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { resolveCurrentStreak } from "@/lib/streak/queries";
 import type { Database } from "@/types/database";
 
 type Client = SupabaseClient<Database>;
@@ -169,7 +170,7 @@ export async function getStudentDetail(
   const [gamRes, enrRes, progRes] = await Promise.all([
     supabase
       .from("user_gamification")
-      .select("total_xp, current_streak, longest_streak")
+      .select("total_xp, current_streak, longest_streak, last_activity_date")
       .eq("user_id", studentId)
       .maybeSingle(),
     supabase
@@ -249,7 +250,10 @@ export async function getStudentDetail(
     fullName: profile.full_name,
     avatarUrl: profile.avatar_url,
     totalXp: gamRes.data?.total_xp ?? 0,
-    currentStreak: gamRes.data?.current_streak ?? 0,
+    currentStreak: resolveCurrentStreak(
+      gamRes.data?.current_streak,
+      gamRes.data?.last_activity_date,
+    ),
     longestStreak: gamRes.data?.longest_streak ?? 0,
     courses,
   };

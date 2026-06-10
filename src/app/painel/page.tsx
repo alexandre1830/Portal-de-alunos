@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { SegmentedProgressBar } from "@/components/ui/SegmentedProgressBar";
 import { getStudentDashboard } from "@/lib/dashboard/queries";
 import { countDueItems } from "@/lib/srs/queries";
+import { resolveCurrentStreak } from "@/lib/streak/queries";
 import { createClient } from "@/lib/supabase/server";
 import type { CefrLevel, CourseLanguage } from "@/types/content";
 import type { UserRole } from "@/types/user";
@@ -59,7 +60,10 @@ export default async function PainelPage() {
   ]);
 
   const xp = dashboard.gamification?.total_xp ?? 0;
-  const streak = dashboard.gamification?.current_streak ?? 0;
+  const streak = resolveCurrentStreak(
+    dashboard.gamification?.current_streak,
+    dashboard.gamification?.last_activity_date,
+  );
   const longest = dashboard.gamification?.longest_streak ?? 0;
 
   return (
