@@ -170,7 +170,7 @@ export function ReviewSession({ items }: Props) {
           >
             <span className="font-medium">
               {result.state === "perfect" && `Perfeito! +${result.xpAwarded} XP`}
-              {result.state === "close" && "Quase lá — não pontua hoje"}
+              {result.state === "close" && "Quase lá"}
               {result.state === "incorrect" && "Não foi dessa vez"}
             </span>
             <span className="text-xs text-fg-secondary">
