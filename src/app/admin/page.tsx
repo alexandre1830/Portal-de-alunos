@@ -4,10 +4,8 @@ import { Card } from "@/components/ui/Card";
 import { requireAdmin } from "@/lib/admin/guard";
 import { getAdminOverview } from "@/lib/admin/queries";
 
-// Home do admin: 4 cards de visão geral. Cada card é clicável quando
-// faz sentido (alunos → /admin/alunos; cursos → /admin/cursos). Os
-// que ainda não têm página dedicada (professores) ficam como cards
-// informativos sem link.
+// Home do admin: 4 cards de visão geral em grid 2x2. Cada card é
+// clicável e leva para a página correspondente.
 export default async function AdminHome() {
   const { supabase } = await requireAdmin();
   const overview = await getAdminOverview(supabase);
@@ -18,7 +16,7 @@ export default async function AdminHome() {
         <h1 className="text-2xl font-semibold text-fg-primary">Visão geral</h1>
       </div>
 
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <StatLink
           href="/admin/alunos"
           label="Alunos matriculados"
@@ -65,10 +63,10 @@ function StatLink({
 }) {
   return (
     <Link href={href} className="block">
-      <Card padded interactive className="flex h-full flex-col gap-1">
-        <span className="text-2xl font-bold text-fg-primary">{value}</span>
-        <span className="text-xs font-medium text-fg-primary">{label}</span>
-        <span className="text-xs text-fg-tertiary">{hint}</span>
+      <Card padded interactive className="flex h-full flex-col gap-2 p-8">
+        <span className="text-4xl font-bold text-fg-primary">{value}</span>
+        <span className="text-base font-medium text-fg-primary">{label}</span>
+        <span className="text-sm text-fg-tertiary">{hint}</span>
       </Card>
     </Link>
   );
