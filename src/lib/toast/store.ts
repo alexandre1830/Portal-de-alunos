@@ -35,6 +35,12 @@ let nextId = 1;
 let items: ToastItem[] = [];
 const listeners = new Set<() => void>();
 
+// Referência estável para o snapshot do servidor. useSyncExternalStore exige
+// que getServerSnapshot devolva o MESMO objeto entre chamadas — devolver um
+// `[]` novo a cada vez dispara o warning "getServerSnapshot should be cached
+// to avoid an infinite loop" e re-renderiza em loop durante a hidratação.
+const EMPTY_SERVER_SNAPSHOT: ToastItem[] = [];
+
 function emit() {
   for (const l of listeners) l();
 }
@@ -51,7 +57,7 @@ function getSnapshot(): ToastItem[] {
 }
 
 function getServerSnapshot(): ToastItem[] {
-  return [];
+  return EMPTY_SERVER_SNAPSHOT;
 }
 
 function push(input: ToastInput): number {
