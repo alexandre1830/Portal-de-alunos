@@ -34,9 +34,7 @@ export function FillBlankExercise({
     setPending(false);
     setResult(res);
     notifyExerciseResult(res);
-    if (res.ok && (res.state === "perfect" || res.state === "close")) {
-      onSolved?.();
-    }
+    if (res.ok) onSolved?.();
     if (res.ok && res.partJustCompleted) {
       onPartCompleted?.({
         stars: res.partStars ?? null,

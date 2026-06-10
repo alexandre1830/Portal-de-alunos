@@ -122,7 +122,7 @@ export function ReorderWordsExercise({
     setPending(false);
     setResult(res);
     notifyExerciseResult(res, { answerLabel: "Ordem" });
-    if (res.ok && res.state === "perfect") onSolved?.();
+    if (res.ok) onSolved?.();
     if (res.ok && res.partJustCompleted) {
       onPartCompleted?.({
         stars: res.partStars ?? null,
