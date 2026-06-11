@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 
 import { CalendarIcon } from "@/components/icons/CalendarIcon";
-import { Button } from "@/components/ui/Button";
+import { buttonVariants } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import {
   DAY_LABELS,
@@ -55,38 +55,44 @@ export function UpcomingLiveSessionCard({
     .join(" · ");
 
   return (
-    <Card padded className="flex items-center justify-between gap-4">
-      <div className="flex min-w-0 flex-1 items-center gap-3">
-        {/* Mesmo padrão de badge azul dos demais KPIs do painel. */}
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-brand-surface text-primary-brand">
-          <CalendarIcon className="h-5 w-5" />
-        </span>
-        <div className="flex min-w-0 flex-col gap-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold text-fg-primary">
-              Próxima aula
-            </span>
-            {isLive && (
-              <span className="flex items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-success">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success" />
-                Ao vivo
-              </span>
-            )}
-          </div>
-          <span className="truncate text-xs text-fg-tertiary">{meta}</span>
-        </div>
-      </div>
-
-      <a
-        href={session.meetUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="shrink-0"
+    <a
+      href={session.meetUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block"
+    >
+      <Card
+        padded
+        interactive
+        className="flex items-center justify-between gap-4"
       >
-        <Button type="button" size="sm">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          {/* Mesmo padrão de badge azul dos demais KPIs do painel. */}
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-brand-surface text-primary-brand">
+            <CalendarIcon className="h-5 w-5" />
+          </span>
+          <div className="flex min-w-0 flex-col gap-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-semibold text-fg-primary">
+                Próxima aula
+              </span>
+              {isLive && (
+                <span className="flex items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-success">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success" />
+                  Ao vivo
+                </span>
+              )}
+            </div>
+            <span className="truncate text-xs text-fg-tertiary">{meta}</span>
+          </div>
+        </div>
+
+        {/* Span estilizado como botão — não é um <button> porque já está
+            dentro de um <a> (HTML inválido). O card inteiro é o click target. */}
+        <span className={buttonVariants({ size: "sm" }) + " shrink-0"}>
           {isLive ? "Entrar agora" : "Entrar na aula"}
-        </Button>
-      </a>
-    </Card>
+        </span>
+      </Card>
+    </a>
   );
 }

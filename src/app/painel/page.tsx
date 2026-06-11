@@ -299,18 +299,28 @@ export default async function PainelPage() {
                   className="animate-fade-slide-in"
                   style={{ animationDelay: `${i * 60}ms` }}
                 >
-                  <Card padded className="flex flex-col gap-3">
-                    {/* Header: nome do curso (link sutil pra visão geral)
-                        + pill idioma/nível. */}
-                    <div className="flex items-start justify-between gap-3">
+                  <Card
+                    padded
+                    interactive
+                    className="relative flex flex-col gap-3"
+                  >
+                    {/* Stretched link: cobre o card inteiro e leva à visão
+                        geral do curso. Botões internos (ex.: Continuar)
+                        ficam com z-10 pra continuar interagíveis. */}
+                    <Link
+                      href={`/cursos/${course.slug}`}
+                      className="absolute inset-0 rounded-lg"
+                      aria-label={`Abrir curso ${course.title}`}
+                    />
+                    {/* Header: nome do curso + pill idioma/nível. */}
+                    <div className="relative flex items-start justify-between gap-3">
                       <div className="flex flex-col gap-0.5">
-                        <Link
-                          href={`/cursos/${course.slug}`}
-                          className="self-start font-medium text-fg-primary transition-colors hover:text-primary-brand"
+                        <span
+                          className="self-start font-medium text-fg-primary"
                           title="Ver todas as lições do curso"
                         >
                           {course.title}
-                        </Link>
+                        </span>
                         {course.description && (
                           <span className="text-sm text-fg-secondary">
                             {course.description}
@@ -328,7 +338,7 @@ export default async function PainelPage() {
                         sem fundo nem caixa extra para evitar a sensação
                         de "card dentro de card". */}
                     {cont && cont.partsTotalInCourse > 0 ? (
-                      <div className="flex flex-col gap-3 border-t border-border-primary pt-3">
+                      <div className="relative flex flex-col gap-3 border-t border-border-primary pt-3">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex min-w-0 flex-col gap-1">
                             <span className="text-xs uppercase tracking-wide text-fg-tertiary">
@@ -343,7 +353,10 @@ export default async function PainelPage() {
                             )}
                           </div>
                           {cont.nextPartId && (
-                            <Link href={`/partes/${cont.nextPartId}`}>
+                            <Link
+                              href={`/partes/${cont.nextPartId}`}
+                              className="relative z-10"
+                            >
                               <Button type="button" size="sm">
                                 {courseDone ? "Revisar" : "Continuar"}
                               </Button>
@@ -357,14 +370,11 @@ export default async function PainelPage() {
                         />
                       </div>
                     ) : (
-                      // Curso sem partes publicadas ainda — só oferece
-                      // o link para a estrutura do curso.
-                      <Link
-                        href={`/cursos/${course.slug}`}
-                        className="self-start text-sm text-fg-secondary transition-colors hover:text-primary-brand"
-                      >
-                        Ver curso →
-                      </Link>
+                      // Curso sem partes publicadas ainda — o stretched
+                      // link do próprio card já leva à visão geral.
+                      <span className="relative self-start text-sm text-fg-tertiary">
+                        Sem aulas publicadas ainda.
+                      </span>
                     )}
                   </Card>
                 </li>

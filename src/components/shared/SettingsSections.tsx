@@ -41,7 +41,6 @@ export function PasswordSection({
       </p>
       <Link href={href} className="block">
         <Button type="button" variant="secondary" className="w-full">
-          <KeyIcon className="h-4 w-4" />
           Trocar senha
         </Button>
       </Link>
