@@ -346,7 +346,7 @@ export default async function PainelPage() {
                           {cont.nextPartId && (
                             <Link href={`/partes/${cont.nextPartId}`}>
                               <Button type="button" size="sm">
-                                {courseDone ? "Revisar parte" : "Continuar"}
+                                {courseDone ? "Revisar" : "Continuar"}
                               </Button>
                             </Link>
                           )}

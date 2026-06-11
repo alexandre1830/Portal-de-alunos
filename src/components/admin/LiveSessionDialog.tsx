@@ -14,6 +14,13 @@ import { toast } from "@/lib/toast/store";
 const inputCls =
   "h-10 w-full rounded-md border border-border-primary bg-bg-primary px-3 text-sm text-fg-primary";
 
+// Select com chevron customizado: a seta nativa fica colada na borda
+// e o espaçamento varia por navegador. Aqui usamos appearance-none + um
+// SVG via background-image, posicionado com `right 12px`. O `pr-10`
+// reserva espaço pra seta não invadir o texto. Cor da seta vem de
+// currentColor convertida pra URL-encoded.
+const selectCls = `${inputCls} appearance-none pr-10 bg-no-repeat bg-[position:right_0.75rem_center] bg-[length:1rem_1rem] bg-[image:url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'%23737373'%20stroke-width%3D'2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpolyline%20points%3D'6%209%2012%2015%2018%209'%2F%3E%3C%2Fsvg%3E")]`;
+
 export interface TeacherOption {
   id: string;
   fullName: string | null;
@@ -84,7 +91,7 @@ export function LiveSessionDialog({
               name="teacher_id"
               defaultValue={initial?.teacherId ?? teachers[0]?.id ?? ""}
               required
-              className={inputCls}
+              className={selectCls}
             >
               {teachers.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -102,7 +109,7 @@ export function LiveSessionDialog({
               name="day_of_week"
               defaultValue={initial?.dayOfWeek ?? 1}
               required
-              className={inputCls}
+              className={selectCls}
             >
               {[1, 2, 3, 4, 5, 6, 0].map((d) => (
                 <option key={d} value={d}>
@@ -134,8 +141,7 @@ export function LiveSessionDialog({
             className={inputCls}
           />
           <span className="text-xs text-fg-tertiary">
-            Cole o link do Google Meet (ou Zoom/Teams). O aluno verá no card de
-            próxima aula.
+            Cole o link da aula que o aluno verá em seu painel.
           </span>
         </label>
 

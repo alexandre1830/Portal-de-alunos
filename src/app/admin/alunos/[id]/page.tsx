@@ -68,8 +68,7 @@ export default async function AdminStudentDetailPage({
               Aulas síncronas
             </h2>
             <p className="text-xs text-fg-tertiary">
-              Horários recorrentes com link de acesso. O aluno vê no próprio
-              painel.
+              Horários recorrentes com link de acesso.
             </p>
           </div>
           <AddLiveSessionButton studentId={id} teachers={teachers} />

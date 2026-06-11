@@ -87,7 +87,7 @@ export function UpcomingLiveSessionCard({
         className="self-start"
       >
         <Button type="button" size="sm">
-          {isLive ? "Entrar agora" : "Abrir link da aula"}
+          {isLive ? "Entrar agora" : "Entrar na aula"}
         </Button>
       </a>
 
