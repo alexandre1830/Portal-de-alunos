@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 
-import { Avatar } from "@/components/shared/Avatar";
+import { CalendarIcon } from "@/components/icons/CalendarIcon";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import {
@@ -14,8 +14,8 @@ import {
 
 // Card "Próxima aula" no painel do aluno. Recebe TODAS as aulas
 // cadastradas e escolhe a próxima ocorrência (recorrência semanal em BRT).
-// Mostra: professor (avatar + nome), dia+hora da próxima e botão para
-// entrar na aula.
+// Layout horizontal, igual aos demais cards: KpiIcon azul + título +
+// linha-meta com professor/dia/hora + botão "Entrar na aula" à direita.
 export function UpcomingLiveSessionCard({
   sessions,
 }: {
@@ -46,34 +46,34 @@ export function UpcomingLiveSessionCard({
   );
   const isLive = minutesAway > -60 && minutesAway <= 60;
 
-  return (
-    <Card padded className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-fg-primary">
-          Próxima aula
-        </h2>
-        {isLive && (
-          <span className="flex items-center gap-1.5 rounded-full bg-success-bg px-2.5 py-1 text-xs font-semibold text-success">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success" />
-            Acontecendo agora
-          </span>
-        )}
-      </div>
+  const meta = [
+    session.teacherName ?? "Professor",
+    DAY_LABELS[session.dayOfWeek],
+    formatStartTime(session.startTime),
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
-      <div className="flex items-center gap-3">
-        <Avatar
-          src={session.teacherAvatarUrl}
-          fullName={session.teacherName}
-          email={session.teacherName ?? "professor"}
-          size="md"
-        />
-        <div className="flex flex-col">
-          <span className="text-sm font-medium text-fg-primary">
-            {session.teacherName ?? "Professor"}
-          </span>
-          <span className="text-xs text-fg-tertiary">
-            {DAY_LABELS[session.dayOfWeek]} · {formatStartTime(session.startTime)}
-          </span>
+  return (
+    <Card padded className="flex items-center justify-between gap-4">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        {/* Mesmo padrão de badge azul dos demais KPIs do painel. */}
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-brand-surface text-primary-brand">
+          <CalendarIcon className="h-5 w-5" />
+        </span>
+        <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-semibold text-fg-primary">
+              Próxima aula
+            </span>
+            {isLive && (
+              <span className="flex items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-success">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success" />
+                Ao vivo
+              </span>
+            )}
+          </div>
+          <span className="truncate text-xs text-fg-tertiary">{meta}</span>
         </div>
       </div>
 
@@ -81,21 +81,12 @@ export function UpcomingLiveSessionCard({
         href={session.meetUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="self-start"
+        className="shrink-0"
       >
         <Button type="button" size="sm">
           {isLive ? "Entrar agora" : "Entrar na aula"}
         </Button>
       </a>
-
-      {sessions.length > 1 && (
-        <p className="text-xs text-fg-tertiary">
-          Você tem mais {sessions.length - 1}{" "}
-          {sessions.length - 1 === 1
-            ? "aula cadastrada nesta semana."
-            : "aulas cadastradas nesta semana."}
-        </p>
-      )}
     </Card>
   );
 }
