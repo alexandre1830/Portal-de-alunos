@@ -168,6 +168,43 @@
   --color-accent-progress:              #1f8a3a;
   --color-accent-progress-surface:      rgba(31, 138, 58, 0.14);
 
+  /* ===================================================================
+   * 5) ELEVAÇÃO DE SUPERFÍCIE — DASHBOARD DO ALUNO
+   * ===================================================================
+   * Escala de PROFUNDIDADE (eixo Z) específica do dashboard do aluno.
+   * Convive com as superfícies UI tradicionais (--color-background-*) —
+   * não substitui. Aplicar APENAS via className local no /painel.
+   *
+   *   surface-page     — fundo da página (degrau abaixo do card)
+   *   surface-card     — card padrão
+   *   surface-elevated — card herói (ação primária)
+   *
+   *   shadow-card      — sombra de pouso do card padrão (light: 2 camadas
+   *                       reais; dark: filete interno de luz pra simular
+   *                       a borda iluminada superior. NUNCA sombra escura
+   *                       no dark — fica invisível ou suja.)
+   *   shadow-elevated  — versão "mais alta" do shadow-card.
+   *
+   * Glow opcional do header — ver tokens.css §6. */
+  --surface-page:     #edf0f6;
+  --surface-card:     #ffffff;
+  --surface-elevated: #ffffff;
+  --shadow-card:      0 1px 3px rgba(16, 24, 40, 0.06),
+                      0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-elevated:  0 4px 16px rgba(16, 24, 40, 0.08);
+
+  /* ===================================================================
+   * 6) GLOW DO HERO — OPCIONAL
+   * ===================================================================
+   * Acento radial atrás do header do dashboard. Default OFF para deixar
+   * o user comparar com/sem antes de promover. Para ligar, troque a
+   * opacity-0 do gradiente no painel/page.tsx por opacity-100. */
+  --hero-glow: radial-gradient(
+    ellipse 80% 60% at 50% 0%,
+    rgba(3, 45, 111, 0.10),
+    transparent 60%
+  );
+
   /* Bordas */
   --color-border-primary:   var(--gray-200);
   --color-border-secondary: var(--gray-300);
@@ -312,6 +349,26 @@
   --color-accent-achievement-surface:   rgba(232, 106, 147, 0.16);
   --color-accent-progress:              #46b958;
   --color-accent-progress-surface:      rgba(70, 185, 88, 0.18);
+
+  /* Elevação de superfície — DARK (ver §5).
+     No dark NÃO usamos sombra externa (fica invisível ou suja). O efeito
+     vem do degrau de valor (page → card → elevated, cada um mais claro
+     que o anterior) + um filete inset de luz no topo simulando borda
+     iluminada. As variáveis shadow-card / shadow-elevated viram inset
+     box-shadows aqui no escuro. */
+  --surface-page:     #0b0f1a;
+  --surface-card:     #141a28;
+  --surface-elevated: #1b2333;
+  --shadow-card:      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-elevated:  inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  /* Glow do hero — dark usa o tom mais claro da marca para destacar
+     levemente. Ver §6. */
+  --hero-glow: radial-gradient(
+    ellipse 80% 60% at 50% 0%,
+    rgba(26, 94, 184, 0.18),
+    transparent 60%
+  );
 
   /* Sombras mais densas no dark para ter elevação perceptível. */
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.5);

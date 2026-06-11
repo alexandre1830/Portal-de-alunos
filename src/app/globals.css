@@ -75,6 +75,15 @@
   --color-accent-progress:              var(--color-accent-progress);
   --color-accent-progress-surface:      var(--color-accent-progress-surface);
 
+  /* Elevação de superfície do dashboard do aluno — ver tokens.css §5.
+     Disponíveis como bg-surface-page, bg-surface-card, bg-surface-elevated,
+     shadow-card, shadow-elevated. */
+  --color-surface-page:     var(--surface-page);
+  --color-surface-card:     var(--surface-card);
+  --color-surface-elevated: var(--surface-elevated);
+  --shadow-card:            var(--shadow-card);
+  --shadow-elevated:        var(--shadow-elevated);
+
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);

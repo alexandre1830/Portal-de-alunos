@@ -70,8 +70,27 @@ export default async function PainelPage() {
   );
   const longest = dashboard.gamification?.longest_streak ?? 0;
 
+  // Classes de elevação aplicadas localmente — não tocam no default do
+  // Card compartilhado (que continua usando bg-bg-secondary nas outras
+  // telas). Border-transparent zera a borda 1px herdada — com degrau
+  // de valor + sombra, a separação fica nessa camada física.
+  const cardSurface = "bg-surface-card shadow-card border-transparent";
+  const cardElevated = "bg-surface-elevated shadow-elevated border-transparent";
+
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-8 px-6 py-12">
+    // Wrapper full-width com fundo de PÁGINA (degrau abaixo dos cards). Os
+    // cards usam surface-card/elevated por cima — a separação não vem mais
+    // de borda 1px, vem de degrau de valor + sombra (light) / filete de
+    // luz (dark). Ver tokens.css §5.
+    <div className="relative min-h-dvh bg-surface-page">
+      {/* Glow do hero — OPCIONAL. Para ligar, troque opacity-0 por
+          opacity-100. Default off para o user avaliar com calma. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-80 opacity-0"
+        style={{ background: "var(--hero-glow)" }}
+      />
+      <main className="relative mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-8 px-6 py-12">
       <header className="flex items-center justify-between">
         <Link
           href="/painel"
@@ -132,7 +151,7 @@ export default async function PainelPage() {
           <Card
             padded
             interactive
-            className="flex h-full items-center gap-3"
+            className={"flex h-full items-center gap-3 " + cardSurface}
             title="Ver histórico de XP"
           >
             <KpiIcon tone="xp">
@@ -150,7 +169,7 @@ export default async function PainelPage() {
           <Card
             padded
             interactive
-            className="flex h-full items-center gap-3"
+            className={"flex h-full items-center gap-3 " + cardSurface}
             title="Ver calendário de streak"
           >
             <KpiIcon tone="streak">
@@ -170,7 +189,7 @@ export default async function PainelPage() {
           <Card
             padded
             interactive
-            className="flex h-full items-center gap-3"
+            className={"flex h-full items-center gap-3 " + cardSurface}
             title="Ver calendário de streak"
           >
             <KpiIcon tone="streak-record">
@@ -191,7 +210,7 @@ export default async function PainelPage() {
       {/* Atalhos: revisar manualmente + conquistas */}
       <section className="grid grid-cols-2 gap-3">
         <Link href="/painel/revisar" className="block">
-          <Card padded interactive className="flex h-full items-center gap-3">
+          <Card padded interactive className={"flex h-full items-center gap-3 " + cardSurface}>
             <KpiIcon tone="review">
               <BookmarkIcon className="h-5 w-5" />
             </KpiIcon>
@@ -210,7 +229,8 @@ export default async function PainelPage() {
             padded
             interactive
             className={
-              "relative flex h-full items-center gap-3" +
+              "relative flex h-full items-center gap-3 " +
+              cardSurface +
               (dashboard.claimableCount > 0 ? " border-warning/40" : "")
             }
           >
@@ -245,7 +265,10 @@ export default async function PainelPage() {
           <Card
             padded
             interactive
-            className="flex items-center justify-between gap-4 bg-bg-tertiary border-primary-brand/40 ring-2 ring-primary-brand/15"
+            className={
+              cardElevated +
+              " flex items-center justify-between gap-4 ring-2 ring-primary-brand/15 !border-primary-brand/40"
+            }
           >
             <div className="flex items-center gap-3">
               <KpiIcon>
@@ -278,7 +301,7 @@ export default async function PainelPage() {
         <h2 className="text-base font-semibold text-fg-primary">Meus cursos</h2>
 
         {dashboard.courses.length === 0 ? (
-          <Card padded>
+          <Card padded className={cardSurface}>
             <EmptyState
               illustration={<StudyIllustration className="h-20 w-20" />}
               title="Sem matrículas ainda"
@@ -302,7 +325,7 @@ export default async function PainelPage() {
                   <Card
                     padded
                     interactive
-                    className="relative flex flex-col gap-3"
+                    className={"relative flex flex-col gap-3 " + cardSurface}
                   >
                     {/* Stretched link: cobre o card inteiro e leva à visão
                         geral do curso. Botões internos (ex.: Continuar)
@@ -388,7 +411,8 @@ export default async function PainelPage() {
           </ul>
         )}
       </section>
-    </main>
+      </main>
+    </div>
   );
 }
 
