@@ -60,6 +60,21 @@
   --color-border-primary: var(--color-border-primary);
   --color-border-secondary: var(--color-border-secondary);
 
+  /* Acentos do dashboard do aluno — ver tokens.css §4.
+     Disponíveis como text-accent-xp, bg-accent-xp-surface, etc. */
+  --color-accent-xp:                    var(--color-accent-xp);
+  --color-accent-xp-surface:            var(--color-accent-xp-surface);
+  --color-accent-streak:                var(--color-accent-streak);
+  --color-accent-streak-surface:        var(--color-accent-streak-surface);
+  --color-accent-streak-record:         var(--color-accent-streak-record);
+  --color-accent-streak-record-surface: var(--color-accent-streak-record-surface);
+  --color-accent-review:                var(--color-accent-review);
+  --color-accent-review-surface:        var(--color-accent-review-surface);
+  --color-accent-achievement:           var(--color-accent-achievement);
+  --color-accent-achievement-surface:   var(--color-accent-achievement-surface);
+  --color-accent-progress:              var(--color-accent-progress);
+  --color-accent-progress-surface:      var(--color-accent-progress-surface);
+
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);

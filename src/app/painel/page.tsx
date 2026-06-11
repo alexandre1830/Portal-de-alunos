@@ -135,7 +135,7 @@ export default async function PainelPage() {
             className="flex h-full items-center gap-3"
             title="Ver histórico de XP"
           >
-            <KpiIcon>
+            <KpiIcon tone="xp">
               <SparkleIcon className="h-5 w-5" />
             </KpiIcon>
             <span className="flex flex-col">
@@ -153,7 +153,7 @@ export default async function PainelPage() {
             className="flex h-full items-center gap-3"
             title="Ver calendário de streak"
           >
-            <KpiIcon>
+            <KpiIcon tone="streak">
               <FlameIcon className="h-5 w-5" />
             </KpiIcon>
             <span className="flex flex-col">
@@ -173,7 +173,7 @@ export default async function PainelPage() {
             className="flex h-full items-center gap-3"
             title="Ver calendário de streak"
           >
-            <KpiIcon>
+            <KpiIcon tone="streak-record">
               <TrendingUpIcon className="h-5 w-5" />
             </KpiIcon>
             <span className="flex flex-col">
@@ -192,7 +192,7 @@ export default async function PainelPage() {
       <section className="grid grid-cols-2 gap-3">
         <Link href="/painel/revisar" className="block">
           <Card padded interactive className="flex h-full items-center gap-3">
-            <KpiIcon>
+            <KpiIcon tone="review">
               <BookmarkIcon className="h-5 w-5" />
             </KpiIcon>
             <span className="flex flex-col">
@@ -214,7 +214,7 @@ export default async function PainelPage() {
               (dashboard.claimableCount > 0 ? " border-warning/40" : "")
             }
           >
-            <KpiIcon>
+            <KpiIcon tone="achievement">
               <TrophyIcon className="h-5 w-5" />
             </KpiIcon>
             <span className="flex flex-col">
@@ -237,15 +237,15 @@ export default async function PainelPage() {
         </Link>
       </section>
 
-      {/* Revisão espaçada — só aparece quando há itens prontos.
-          Recebe accent visual + pulse no contador para chamar atenção. */}
+      {/* Revisão espaçada — ação primária da tela. Eleva: superfície
+          tertiary (mais clara que o card padrão) + borda/ring em azul
+          da marca. O botão "Começar" continua sólido azul. */}
       {srsDue > 0 && (
         <Link href="/painel/revisar/sessao" className="block">
           <Card
             padded
             interactive
-            accent
-            className="flex items-center justify-between gap-4"
+            className="flex items-center justify-between gap-4 bg-bg-tertiary border-primary-brand/40 ring-2 ring-primary-brand/15"
           >
             <div className="flex items-center gap-3">
               <KpiIcon>
@@ -341,11 +341,15 @@ export default async function PainelPage() {
                       <div className="relative flex flex-col gap-3 border-t border-border-primary pt-3">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex min-w-0 flex-col gap-1">
-                            <span className="text-xs uppercase tracking-wide text-fg-tertiary">
-                              {courseDone
-                                ? "Curso concluído"
-                                : "Continue de onde parou"}
-                            </span>
+                            {courseDone ? (
+                              <span className="self-start rounded-full bg-accent-progress-surface px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-progress">
+                                Curso concluído
+                              </span>
+                            ) : (
+                              <span className="text-xs uppercase tracking-wide text-fg-tertiary">
+                                Continue de onde parou
+                              </span>
+                            )}
                             {cont.nextLessonTitle && (
                               <span className="text-sm font-medium text-fg-primary">
                                 {cont.nextLessonTitle}
@@ -367,6 +371,7 @@ export default async function PainelPage() {
                           value={cont.partsDoneInLesson}
                           max={cont.partsTotalInLesson}
                           ariaLabel="Progresso na lição"
+                          filledClassName="bg-accent-progress"
                         />
                       </div>
                     ) : (
@@ -388,11 +393,42 @@ export default async function PainelPage() {
 }
 
 // Badge circular para o ícone de um KPI/card de atalho.
-// bg = primary-brand-surface (azul muito claro), ícone = primary-brand
-// (azul-marinho da marca). Mesmo padrão dos stat-cards do sistema irmão.
-function KpiIcon({ children }: { children: React.ReactNode }) {
+// Aceita um `tone` semântico (xp, streak, ...). Default = "brand" (azul),
+// usado em cards-âncora que ainda referenciam a primária (ex.: SRS).
+// Os demais cards do dashboard passam seu próprio tom — cada card ganha
+// uma cor de função (xp âmbar, streak laranja, revisão teal, etc.).
+type KpiTone =
+  | "brand"
+  | "xp"
+  | "streak"
+  | "streak-record"
+  | "review"
+  | "achievement";
+
+const KPI_TONE_CLS: Record<KpiTone, string> = {
+  brand: "bg-primary-brand-surface text-primary-brand",
+  xp: "bg-accent-xp-surface text-accent-xp",
+  streak: "bg-accent-streak-surface text-accent-streak",
+  "streak-record":
+    "bg-accent-streak-record-surface text-accent-streak-record",
+  review: "bg-accent-review-surface text-accent-review",
+  achievement: "bg-accent-achievement-surface text-accent-achievement",
+};
+
+function KpiIcon({
+  children,
+  tone = "brand",
+}: {
+  children: React.ReactNode;
+  tone?: KpiTone;
+}) {
   return (
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-brand-surface text-primary-brand">
+    <span
+      className={
+        "flex h-10 w-10 shrink-0 items-center justify-center rounded-full " +
+        KPI_TONE_CLS[tone]
+      }
+    >
       {children}
     </span>
   );

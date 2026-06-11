@@ -67,8 +67,9 @@ export function UpcomingLiveSessionCard({
         className="flex items-center justify-between gap-4"
       >
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          {/* Mesmo padrão de badge azul dos demais KPIs do painel. */}
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-brand-surface text-primary-brand">
+          {/* Próxima aula é ação SECUNDÁRIA — recua: chip neutro
+              (bg-tertiary + texto secundário) em vez do azul da marca. */}
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bg-tertiary text-fg-secondary">
             <CalendarIcon className="h-5 w-5" />
           </span>
           <div className="flex min-w-0 flex-col gap-1">
@@ -89,9 +90,12 @@ export function UpcomingLiveSessionCard({
 
         {/* Span estilizado como botão — não é um <button> porque já está
             dentro de um <a> (HTML inválido). O card inteiro é o click target. */}
+        {/* Variant ghost — fica em segundo plano vs a ação primária
+            (SRS) que usa o azul sólido. */}
         <span
           className={
-            buttonVariants({ size: "sm" }) + " w-24 shrink-0 text-center"
+            buttonVariants({ variant: "ghost", size: "sm" }) +
+            " w-24 shrink-0 text-center"
           }
         >
           {isLive ? "Entrar agora" : "Entrar"}

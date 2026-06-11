@@ -143,6 +143,31 @@
   --color-danger-bg:  var(--color-danger-surface);
   --color-info-bg:    var(--color-info-surface);
 
+  /* ===================================================================
+   * 4) ACENTOS DO DASHBOARD DO ALUNO
+   * ===================================================================
+   * Camada semântica POR FUNÇÃO usada SOMENTE como acento (ícone + chip
+   * translúcido). NÃO substitui a primária; convive com ela. Não usar
+   * fora do dashboard — pra qualquer outra tela siga primary/success.
+   *
+   * Cada acento tem `--color-accent-<funcao>` (ícone) e
+   * `--color-accent-<funcao>-surface` (chip ~12-18% opacidade).
+   * Valores aqui (light) são calibrados pra contraste >=3:1 em fundo
+   * branco/cinza-claro; valores dark vivem no bloco [data-theme="dark"].
+   */
+  --color-accent-xp:                    #b47b00;
+  --color-accent-xp-surface:            rgba(180, 123, 0, 0.12);
+  --color-accent-streak:                #c24a1a;
+  --color-accent-streak-surface:        rgba(194, 74, 26, 0.12);
+  --color-accent-streak-record:         #4f45c9;
+  --color-accent-streak-record-surface: rgba(79, 69, 201, 0.12);
+  --color-accent-review:                #0e8a8e;
+  --color-accent-review-surface:        rgba(14, 138, 142, 0.12);
+  --color-accent-achievement:           #b0376a;
+  --color-accent-achievement-surface:   rgba(176, 55, 106, 0.12);
+  --color-accent-progress:              #1f8a3a;
+  --color-accent-progress-surface:      rgba(31, 138, 58, 0.14);
+
   /* Bordas */
   --color-border-primary:   var(--gray-200);
   --color-border-secondary: var(--gray-300);
@@ -206,7 +231,7 @@
   --gray-100: #19202f;
   --gray-200: #232d44;
   --gray-300: #2f3d5a;
-  --gray-400: #586a90;
+  --gray-400: #9AA3B2;
   --gray-500: #7d93b8;
   --gray-600: #9db3d3;
   --gray-700: #c0d0e8;
@@ -271,6 +296,22 @@
   --color-warning-bg: var(--color-warning-surface);
   --color-danger-bg:  var(--color-danger-surface);
   --color-info-bg:    var(--color-info-surface);
+
+  /* Acentos do dashboard do aluno — versões DARK calibradas
+     conforme spec (passam contraste >=3:1 em fundo escuro ~#0f1520).
+     Chip surface a ~16-18% de opacidade pra realçar sem encher. */
+  --color-accent-xp:                    #f5b544;
+  --color-accent-xp-surface:            rgba(245, 181, 68, 0.16);
+  --color-accent-streak:                #f97347;
+  --color-accent-streak-surface:        rgba(249, 115, 71, 0.16);
+  --color-accent-streak-record:         #8b85f0;
+  --color-accent-streak-record-surface: rgba(139, 133, 240, 0.16);
+  --color-accent-review:                #34c3c9;
+  --color-accent-review-surface:        rgba(52, 195, 201, 0.16);
+  --color-accent-achievement:           #e86a93;
+  --color-accent-achievement-surface:   rgba(232, 106, 147, 0.16);
+  --color-accent-progress:              #46b958;
+  --color-accent-progress-surface:      rgba(70, 185, 88, 0.18);
 
   /* Sombras mais densas no dark para ter elevação perceptível. */
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.5);

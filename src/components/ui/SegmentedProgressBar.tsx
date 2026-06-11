@@ -13,11 +13,16 @@ export function SegmentedProgressBar({
   max,
   className,
   ariaLabel,
+  filledClassName = "bg-primary-brand",
 }: {
   value: number;
   max: number;
   className?: string;
   ariaLabel?: string;
+  // Classe usada nos segmentos preenchidos. Default mantém o azul da
+  // marca (preserva todos os callers existentes); o dashboard do aluno
+  // sobrescreve com bg-accent-progress.
+  filledClassName?: string;
 }) {
   const safeMax = Math.max(0, Math.floor(max));
   const safeValue = Math.max(0, Math.min(Math.floor(value), safeMax));
@@ -56,7 +61,7 @@ export function SegmentedProgressBar({
             aria-hidden="true"
             className={cn(
               "h-1.5 flex-1 rounded-full transition-colors duration-300",
-              done ? "bg-primary-brand" : "bg-bg-tertiary",
+              done ? filledClassName : "bg-bg-tertiary",
             )}
           />
         );
