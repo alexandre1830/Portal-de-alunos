@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { BookmarkIcon } from "@/components/icons/BookmarkIcon";
 import { FlameIcon } from "@/components/icons/FlameIcon";
 import { GearIcon } from "@/components/icons/GearIcon";
+import { RepeatIcon } from "@/components/icons/RepeatIcon";
 import { SparkleIcon } from "@/components/icons/SparkleIcon";
 import { TrendingUpIcon } from "@/components/icons/TrendingUpIcon";
 import { TrophyIcon } from "@/components/icons/TrophyIcon";
@@ -247,11 +248,9 @@ export default async function PainelPage() {
             className="flex items-center justify-between gap-4"
           >
             <div className="flex items-center gap-3">
-              <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-fg-primary/10 text-fg-primary">
-                <span className="relative text-base font-semibold">
-                  {srsDue > 99 ? "99+" : srsDue}
-                </span>
-              </span>
+              <KpiIcon>
+                <RepeatIcon className="h-5 w-5" />
+              </KpiIcon>
               <div className="flex flex-col gap-1">
                 <span className="font-medium text-fg-primary">
                   {srsDue === 1
