@@ -262,7 +262,7 @@ export default async function PainelPage() {
                 </span>
               </div>
             </div>
-            <Button type="button" size="sm" className="shrink-0">
+            <Button type="button" size="sm" className="w-24 shrink-0">
               Começar
             </Button>
           </Card>
@@ -357,7 +357,7 @@ export default async function PainelPage() {
                               href={`/partes/${cont.nextPartId}`}
                               className="relative z-10"
                             >
-                              <Button type="button" size="sm">
+                              <Button type="button" size="sm" className="w-24">
                                 {courseDone ? "Revisar" : "Continuar"}
                               </Button>
                             </Link>

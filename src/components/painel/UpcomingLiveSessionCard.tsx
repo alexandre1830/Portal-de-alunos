@@ -89,8 +89,12 @@ export function UpcomingLiveSessionCard({
 
         {/* Span estilizado como botão — não é um <button> porque já está
             dentro de um <a> (HTML inválido). O card inteiro é o click target. */}
-        <span className={buttonVariants({ size: "sm" }) + " shrink-0"}>
-          {isLive ? "Entrar agora" : "Entrar na aula"}
+        <span
+          className={
+            buttonVariants({ size: "sm" }) + " w-24 shrink-0 text-center"
+          }
+        >
+          {isLive ? "Entrar agora" : "Entrar"}
         </span>
       </Card>
     </a>
