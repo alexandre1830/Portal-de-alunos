@@ -90,12 +90,11 @@ export function UpcomingLiveSessionCard({
 
         {/* Span estilizado como botão — não é um <button> porque já está
             dentro de um <a> (HTML inválido). O card inteiro é o click target. */}
-        {/* Variant ghost — fica em segundo plano vs a ação primária
-            (SRS) que usa o azul sólido. */}
+        {/* Mantém o mesmo azul primário dos outros botões do painel
+            (Começar, Continuar/Revisar) para parecer realmente um botão. */}
         <span
           className={
-            buttonVariants({ variant: "ghost", size: "sm" }) +
-            " w-24 shrink-0 text-center"
+            buttonVariants({ size: "sm" }) + " w-24 shrink-0 text-center"
           }
         >
           {isLive ? "Entrar agora" : "Entrar"}
