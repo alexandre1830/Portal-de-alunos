@@ -124,10 +124,6 @@ export default async function PainelPage() {
         </div>
       </div>
 
-      {/* Card de aula síncrona: mostra a próxima aula recorrente cadastrada
-          pelo admin (com link do Meet). Só renderiza se houver aula. */}
-      <UpcomingLiveSessionCard sessions={liveSessions} />
-
       {/* Gamificação — cada KPI ganha um badge circular com ícone na cor
           da marca (azul-marinho), padrão do sistema irmão. */}
       <section className="grid grid-cols-3 gap-3">
@@ -273,6 +269,10 @@ export default async function PainelPage() {
           </Card>
         </Link>
       )}
+
+      {/* Card de aula síncrona: mostra a próxima aula recorrente cadastrada
+          pelo admin (com link do Meet). Só renderiza se houver aula. */}
+      <UpcomingLiveSessionCard sessions={liveSessions} />
 
       {/* Cursos matriculados */}
       <section className="flex flex-col gap-3">
