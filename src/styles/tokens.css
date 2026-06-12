@@ -186,7 +186,7 @@
    *   shadow-elevated  — versão "mais alta" do shadow-card.
    *
    * Glow opcional do header — ver tokens.css §6. */
-  --surface-page:     #edf0f6;
+  --surface-page:     #ededed;
   --surface-card:     #ffffff;
   --surface-elevated: #ffffff;
   --shadow-card:      0 1px 3px rgba(16, 24, 40, 0.06),
@@ -344,9 +344,9 @@
      que o anterior) + um filete inset de luz no topo simulando borda
      iluminada. As variáveis shadow-card / shadow-elevated viram inset
      box-shadows aqui no escuro. */
-  --surface-page:     #0b0f1a;
-  --surface-card:     #141a28;
-  --surface-elevated: #1b2333;
+  --surface-page:     #0e0e10;
+  --surface-card:     #1a1a1c;
+  --surface-elevated: #232326;
   --shadow-card:      inset 0 1px 0 rgba(255, 255, 255, 0.04);
   --shadow-elevated:  inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
