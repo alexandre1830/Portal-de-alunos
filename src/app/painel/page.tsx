@@ -82,15 +82,8 @@ export default async function PainelPage() {
     // cards usam surface-card/elevated por cima — a separação não vem mais
     // de borda 1px, vem de degrau de valor + sombra (light) / filete de
     // luz (dark). Ver tokens.css §5.
-    <div className="relative min-h-dvh bg-surface-page">
-      {/* Glow do hero — OPCIONAL. Para ligar, troque opacity-0 por
-          opacity-100. Default off para o user avaliar com calma. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-80 opacity-0"
-        style={{ background: "var(--hero-glow)" }}
-      />
-      <main className="relative mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-8 px-6 py-12">
+    <div className="min-h-dvh bg-surface-page">
+      <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-8 px-6 py-12">
       <header className="flex items-center justify-between">
         <Link
           href="/painel"

@@ -193,18 +193,6 @@
                       0 1px 2px rgba(16, 24, 40, 0.04);
   --shadow-elevated:  0 4px 16px rgba(16, 24, 40, 0.08);
 
-  /* ===================================================================
-   * 6) GLOW DO HERO — OPCIONAL
-   * ===================================================================
-   * Acento radial atrás do header do dashboard. Default OFF para deixar
-   * o user comparar com/sem antes de promover. Para ligar, troque a
-   * opacity-0 do gradiente no painel/page.tsx por opacity-100. */
-  --hero-glow: radial-gradient(
-    ellipse 80% 60% at 50% 0%,
-    rgba(3, 45, 111, 0.10),
-    transparent 60%
-  );
-
   /* Bordas */
   --color-border-primary:   var(--gray-200);
   --color-border-secondary: var(--gray-300);
@@ -361,14 +349,6 @@
   --surface-elevated: #1b2333;
   --shadow-card:      inset 0 1px 0 rgba(255, 255, 255, 0.04);
   --shadow-elevated:  inset 0 1px 0 rgba(255, 255, 255, 0.06);
-
-  /* Glow do hero — dark usa o tom mais claro da marca para destacar
-     levemente. Ver §6. */
-  --hero-glow: radial-gradient(
-    ellipse 80% 60% at 50% 0%,
-    rgba(26, 94, 184, 0.18),
-    transparent 60%
-  );
 
   /* Sombras mais densas no dark para ter elevação perceptível. */
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.5);
