@@ -100,7 +100,11 @@
 
 @layer base {
   body {
-    background-color: var(--color-background-primary);
+    /* Chrome de PÁGINA (degrau abaixo dos cards). Em conjunto com o
+       default do Card (bg-surface-card + shadow-card), garante a
+       escala de profundidade page < card < elevated em todo o app.
+       Auth pages (login, etc.) pintam seu próprio fundo full-bleed. */
+    background-color: var(--surface-page);
     color: var(--color-text-primary);
     font-family: var(--font-family-sans);
     /* Tipografia base: rendering mais nítido em telas modernas. */

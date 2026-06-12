@@ -169,14 +169,15 @@
   --color-accent-progress-surface:      rgba(31, 138, 58, 0.14);
 
   /* ===================================================================
-   * 5) ELEVAÇÃO DE SUPERFÍCIE — DASHBOARD DO ALUNO
+   * 5) ELEVAÇÃO DE SUPERFÍCIE — GLOBAL
    * ===================================================================
-   * Escala de PROFUNDIDADE (eixo Z) específica do dashboard do aluno.
-   * Convive com as superfícies UI tradicionais (--color-background-*) —
-   * não substitui. Aplicar APENAS via className local no /painel.
+   * Escala de PROFUNDIDADE (eixo Z) aplicada em TODO o app (aluno,
+   * professor, admin). Convive com as superfícies UI tradicionais
+   * (--color-background-*), que continuam servindo para campos, chips
+   * internos, etc. — não substitui.
    *
-   *   surface-page     — fundo da página (degrau abaixo do card)
-   *   surface-card     — card padrão
+   *   surface-page     — fundo da página (chrome do body)
+   *   surface-card     — card padrão (default do componente <Card />)
    *   surface-elevated — card herói (ação primária)
    *
    *   shadow-card      — sombra de pouso do card padrão (light: 2 camadas
@@ -184,8 +185,7 @@
    *                       a borda iluminada superior. NUNCA sombra escura
    *                       no dark — fica invisível ou suja.)
    *   shadow-elevated  — versão "mais alta" do shadow-card.
-   *
-   * Glow opcional do header — ver tokens.css §6. */
+   */
   --surface-page:     #ededed;
   --surface-card:     #ffffff;
   --surface-elevated: #ffffff;

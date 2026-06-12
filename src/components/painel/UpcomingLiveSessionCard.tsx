@@ -64,10 +64,7 @@ export function UpcomingLiveSessionCard({
       <Card
         padded
         interactive
-        // Mesmas classes locais de elevação do painel — bg-surface-card +
-        // shadow-card + border-transparent. Não toca no default do Card
-        // compartilhado.
-        className="flex items-center justify-between gap-4 bg-surface-card shadow-card border-transparent"
+        className="flex items-center justify-between gap-4"
       >
         <div className="flex min-w-0 flex-1 items-center gap-3">
           {/* Próxima aula é ação SECUNDÁRIA — recua: chip neutro

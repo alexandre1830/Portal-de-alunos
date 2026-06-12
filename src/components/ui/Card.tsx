@@ -3,8 +3,12 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils/cn";
 
 const cardVariants = cva(
-  // transition-all sempre presente para reagir suavemente a qualquer hover.
-  "rounded-lg border border-border-primary bg-bg-secondary text-fg-primary transition-all duration-200",
+  // Default: superfície de CARTÃO (degrau acima da página) + sombra de
+  // pouso. Em dark, o token `shadow-card` é um filete inset de luz
+  // (sem sombra escura visível) — ver tokens.css §5.
+  // Border transparente preserva o slot de borda para variants que
+  // queiram pintar (accent, ring de destaque etc.).
+  "rounded-lg border border-transparent bg-surface-card text-fg-primary shadow-card transition-all duration-200",
   {
     variants: {
       padded: {
@@ -12,10 +16,16 @@ const cardVariants = cva(
         false: "p-4",
       },
       interactive: {
-        // Hover: levanta um pixel, sombra suave (elevation 1), borda + bg respondem.
-        // Active: volta para o lugar e dá um leve scale para sensação de clique.
-        true: "cursor-pointer hover:-translate-y-0.5 hover:shadow-[var(--shadow-1)] hover:border-border-secondary hover:bg-bg-tertiary active:translate-y-0 active:scale-[0.99]",
+        // Hover: levanta 1px e sobe a elevação (shadow-card -> shadow-elevated).
+        // No light isso aumenta a sombra; no dark o filete inset fica um
+        // pouco mais brilhante. Active: volta + leve scale.
+        true: "cursor-pointer hover:-translate-y-0.5 hover:shadow-elevated active:translate-y-0 active:scale-[0.99]",
         false: "",
+      },
+      surface: {
+        card: "",
+        // Card-herói (ação primária). Mais claro/elevado que o default.
+        elevated: "bg-surface-elevated shadow-elevated",
       },
       accent: {
         // Acento de cor para chamar atenção (ex.: SRS com itens prontos).
@@ -26,6 +36,7 @@ const cardVariants = cva(
     defaultVariants: {
       padded: false,
       interactive: false,
+      surface: "card",
       accent: false,
     },
   },
@@ -36,12 +47,15 @@ export interface CardProps
     VariantProps<typeof cardVariants> {}
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, padded, interactive, accent, children, ...props }, ref) => {
+  (
+    { className, padded, interactive, surface, accent, children, ...props },
+    ref,
+  ) => {
     return (
       <div
         ref={ref}
         className={cn(
-          cardVariants({ padded, interactive, accent }),
+          cardVariants({ padded, interactive, surface, accent }),
           className,
         )}
         {...props}
