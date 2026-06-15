@@ -27,9 +27,13 @@ export function AdminNav() {
             href={s.href}
             className={cn(
               "rounded-md px-3 py-1.5 text-sm transition-colors",
+              // Wayfinder: ativo recebe TINT da marca + texto navy (sai
+              // claramente do bg #ededed da página, no light). Hover usa
+              // bg-tertiary cinza-clarinho — distinto do ativo e do
+              // resting (texto secundário em transparente).
               active
-                ? "bg-bg-secondary text-fg-primary"
-                : "text-fg-secondary hover:bg-bg-secondary hover:text-fg-primary",
+                ? "bg-primary-brand-surface font-semibold text-primary-brand"
+                : "text-fg-secondary hover:bg-bg-tertiary hover:text-fg-primary",
             )}
           >
             {s.label}

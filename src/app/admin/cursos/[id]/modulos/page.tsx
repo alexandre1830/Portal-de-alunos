@@ -68,10 +68,10 @@ export default async function AdminCourseModulesPage({
                 items={moduleLessons.map((lesson) => ({
                   id: lesson.id,
                   content: (
-                    <div className="flex items-center gap-2 px-3 py-2">
+                    <div className="group flex items-center gap-2 rounded-md px-3 py-2 transition-colors hover:bg-primary-brand-surface">
                       <Link
                         href={`/admin/licoes/${lesson.id}`}
-                        className="flex-1 truncate text-sm text-fg-primary transition-colors hover:text-fg-secondary"
+                        className="flex-1 truncate text-sm text-fg-primary transition-colors group-hover:text-primary-brand"
                         title="Abrir editor da lição"
                       >
                         {lesson.title}

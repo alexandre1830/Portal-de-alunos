@@ -96,7 +96,7 @@ export default async function AdminLessonPage({
               content: (
                 <Card
                   padded
-                  className="group relative flex items-center gap-2 transition-colors hover:bg-bg-tertiary"
+                  className="group relative flex items-center gap-2 transition-colors hover:bg-primary-brand-surface"
                 >
                   {/* Link "esticado" sobre o card inteiro — o hover muda o
                       bg do Card e a cor do título. A área clicável vira o

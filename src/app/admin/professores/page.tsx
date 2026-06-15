@@ -57,7 +57,7 @@ export default async function AdminTeachersPage() {
                 >
                   <Link
                     href={`/admin/professores/${p.id}`}
-                    className="group flex flex-1 items-center justify-between gap-3 px-4 py-2 transition-colors hover:bg-bg-tertiary"
+                    className="group flex flex-1 items-center justify-between gap-3 px-4 py-2 transition-colors hover:bg-primary-brand-surface"
                   >
                     <div className="flex flex-col">
                       <span className="text-sm font-medium text-fg-primary transition-colors group-hover:text-primary-brand">

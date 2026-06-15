@@ -39,11 +39,11 @@ export default async function AdminStudentsPage() {
             {(profiles ?? []).map((p) => (
               <li
                 key={p.id}
-                className="flex items-stretch bg-bg-primary"
+                className="flex items-stretch bg-bg-secondary"
               >
                 <Link
                   href={`/admin/alunos/${p.id}`}
-                  className="group flex flex-1 flex-col px-4 py-2 transition-colors hover:bg-bg-tertiary"
+                  className="group flex flex-1 flex-col px-4 py-2 transition-colors hover:bg-primary-brand-surface"
                 >
                   <span className="text-sm font-medium text-fg-primary transition-colors group-hover:text-primary-brand">
                     {p.full_name ?? "—"}
