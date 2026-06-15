@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { AddLiveSessionButton } from "@/components/admin/AddLiveSessionButton";
+import { EditableUserNameHeader } from "@/components/admin/EditableUserNameHeader";
 import { LiveSessionRowMenu } from "@/components/admin/LiveSessionRowMenu";
 import { Avatar } from "@/components/shared/Avatar";
 import { BackLink } from "@/components/shared/BackLink";
@@ -54,9 +55,12 @@ export default async function AdminStudentDetailPage({
           size="lg"
         />
         <div className="flex flex-col">
-          <h1 className="text-2xl font-semibold text-fg-primary">
-            {student.full_name ?? "—"}
-          </h1>
+          <EditableUserNameHeader
+            id={student.id}
+            fullName={student.full_name ?? ""}
+            email={student.email}
+            role="student"
+          />
           <span className="text-sm text-fg-tertiary">{student.email}</span>
         </div>
       </Card>

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { AssignStudentDialog } from "@/components/admin/AssignStudentDialog";
+import { EditableUserNameHeader } from "@/components/admin/EditableUserNameHeader";
 import { TrashIcon } from "@/components/icons/TrashIcon";
 import { Avatar } from "@/components/shared/Avatar";
 import { BackLink } from "@/components/shared/BackLink";
@@ -46,25 +47,26 @@ export default async function AdminTeacherDetailPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-3">
-        <BackLink href="/admin/professores" label="Professores" />
-        <div className="flex items-center gap-4">
-          <Avatar
-            src={teacher.avatar_url}
-            fullName={teacher.full_name}
+      <BackLink href="/admin/professores" label="Professores" />
+
+      <Card padded className="flex items-center gap-4">
+        <Avatar
+          src={teacher.avatar_url}
+          fullName={teacher.full_name}
+          email={teacher.email}
+          size="lg"
+        />
+        <div className="flex flex-col">
+          <EditableUserNameHeader
+            id={teacher.id}
+            fullName={teacher.full_name ?? ""}
             email={teacher.email}
-            size="lg"
+            role="teacher"
+            fallback={teacher.email}
           />
-          <div className="flex flex-col">
-            <h1 className="text-2xl font-semibold text-fg-primary">
-              {teacher.full_name ?? teacher.email}
-            </h1>
-            {teacher.full_name && (
-              <span className="text-sm text-fg-secondary">{teacher.email}</span>
-            )}
-          </div>
+          <span className="text-sm text-fg-tertiary">{teacher.email}</span>
         </div>
-      </div>
+      </Card>
 
       <section className="flex flex-col gap-3">
         <div className="flex items-start justify-between gap-4">
