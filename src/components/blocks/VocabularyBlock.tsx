@@ -19,30 +19,33 @@ export function VocabularyBlock({
   return (
     <ul className="flex flex-col divide-y divide-border-primary">
       {data.items.map((item, i) => (
-        <li key={i} className="flex flex-col gap-0.5 py-2">
-          <div className="flex items-baseline justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-fg-primary">{item.term}</span>
-              <SpeakButton
-                iconOnly
-                label={`Ouvir "${item.term}"`}
-                body={{
-                  text: item.term,
-                  lang: tts?.lang ?? "en",
-                  ...(tts?.voice ? { voice: tts.voice } : {}),
-                  ...(tts?.rate ? { rate: tts.rate } : {}),
-                }}
-              />
-            </div>
+        <li key={i} className="flex items-start justify-between gap-3 py-2">
+          {/* Coluna esquerda: termo + exemplo */}
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="font-medium text-fg-primary">{item.term}</span>
+            {item.example && (
+              <span className="text-sm italic text-fg-tertiary">
+                {item.example}
+              </span>
+            )}
+          </div>
+          {/* Coluna direita: tradução em cima, ícone de áudio embaixo
+              alinhados à direita — ocupa o espaço livre que existia. */}
+          <div className="flex shrink-0 flex-col items-end gap-0.5">
             <span className="text-sm text-fg-secondary">
               {item.translation}
             </span>
+            <SpeakButton
+              iconOnly
+              label={`Ouvir "${item.term}"`}
+              body={{
+                text: item.term,
+                lang: tts?.lang ?? "en",
+                ...(tts?.voice ? { voice: tts.voice } : {}),
+                ...(tts?.rate ? { rate: tts.rate } : {}),
+              }}
+            />
           </div>
-          {item.example && (
-            <span className="text-sm italic text-fg-tertiary">
-              {item.example}
-            </span>
-          )}
         </li>
       ))}
     </ul>
