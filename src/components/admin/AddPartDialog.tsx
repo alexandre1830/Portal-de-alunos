@@ -51,6 +51,11 @@ export function AddPartDialog({
             autoFocus
             className={inputCls}
           />
+          <input
+            name="description"
+            placeholder="Descrição curta (opcional)"
+            className={inputCls}
+          />
           <select name="kind" defaultValue="regular" className={inputCls}>
             <option value="regular">Regular</option>
             <option value="golden">Dourada</option>

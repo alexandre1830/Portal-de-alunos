@@ -75,12 +75,17 @@ export default async function AdminCourseModulesPage({
                         title="Abrir editor da lição"
                       >
                         {lesson.title}
-                        {!lesson.is_published && (
-                          <span className="ml-2 text-xs text-fg-tertiary">
-                            (rascunho)
-                          </span>
-                        )}
                       </Link>
+                      {!lesson.is_published && (
+                        // Badge "Rascunho" — chip arredondado com tinte
+                        // warning. No light: surface âmbar com texto warning
+                        // forte. No dark: warning-surface ja e rgba
+                        // translucido + light variant clarinha — contrasta
+                        // com surface-card sem virar amarelo gritante.
+                        <span className="shrink-0 rounded-full bg-warning-surface px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-warning">
+                          Rascunho
+                        </span>
+                      )}
                       <LessonRowMenu
                         lessonId={lesson.id}
                         moduleId={module.id}

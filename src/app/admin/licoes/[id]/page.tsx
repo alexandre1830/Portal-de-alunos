@@ -111,6 +111,11 @@ export default async function AdminLessonPage({
                     <span className="font-medium text-fg-primary transition-colors group-hover:text-primary-brand">
                       {part.title}
                     </span>
+                    {part.description && (
+                      <span className="text-xs text-fg-secondary">
+                        {part.description}
+                      </span>
+                    )}
                     {part.kind === "golden" && (
                       <span className="text-xs text-warning">dourada</span>
                     )}
@@ -120,6 +125,7 @@ export default async function AdminLessonPage({
                       partId={part.id}
                       lessonId={lesson.id}
                       partTitle={part.title}
+                      partDescription={part.description}
                       partKind={part.kind}
                     />
                   </div>

@@ -71,7 +71,7 @@ export function BlockRenderer({
     case "vocabulary": {
       const parsed = vocabularyData.safeParse(block.data);
       return parsed.success ? (
-        <VocabularyBlock data={parsed.data} />
+        <VocabularyBlock data={parsed.data} tts={tts} />
       ) : (
         <Notice>Bloco de vocabulário inválido.</Notice>
       );

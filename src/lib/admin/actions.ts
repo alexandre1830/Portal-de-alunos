@@ -352,11 +352,12 @@ export async function createPart(formData: FormData) {
   const courseId = str(formData, "course_id");
   const title = str(formData, "title");
   if (!title) return;
+  const description = str(formData, "description").trim() || null;
   const kind = str(formData, "kind") === "golden" ? "golden" : "regular";
   const position = await nextPosition(supabase, "parts", "lesson_id", lessonId);
   await supabase
     .from("parts")
-    .insert({ lesson_id: lessonId, course_id: courseId, title, kind, position });
+    .insert({ lesson_id: lessonId, course_id: courseId, title, description, kind, position });
   revalidatePath(`/admin/licoes/${lessonId}`);
 }
 
@@ -366,6 +367,7 @@ export async function updatePart(formData: FormData) {
     .from("parts")
     .update({
       title: str(formData, "title"),
+      description: str(formData, "description").trim() || null,
       kind: str(formData, "kind") === "golden" ? "golden" : "regular",
     })
     .eq("id", str(formData, "id"));

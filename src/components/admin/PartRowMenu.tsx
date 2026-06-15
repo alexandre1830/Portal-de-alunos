@@ -21,11 +21,13 @@ export function PartRowMenu({
   partId,
   lessonId,
   partTitle,
+  partDescription,
   partKind,
 }: {
   partId: string;
   lessonId: string;
   partTitle: string;
+  partDescription: string | null;
   partKind: "regular" | "golden";
 }) {
   const [editOpen, setEditOpen] = useState(false);
@@ -96,6 +98,7 @@ export function PartRowMenu({
         partId={partId}
         lessonId={lessonId}
         currentTitle={partTitle}
+        currentDescription={partDescription}
         currentKind={partKind}
       />
 

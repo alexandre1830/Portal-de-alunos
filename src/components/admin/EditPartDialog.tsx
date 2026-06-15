@@ -16,6 +16,7 @@ export function EditPartDialog({
   partId,
   lessonId,
   currentTitle,
+  currentDescription,
   currentKind,
 }: {
   open: boolean;
@@ -23,6 +24,7 @@ export function EditPartDialog({
   partId: string;
   lessonId: string;
   currentTitle: string;
+  currentDescription: string | null;
   currentKind: "regular" | "golden";
 }) {
   const [pending, startTransition] = useTransition();
@@ -50,6 +52,12 @@ export function EditPartDialog({
           defaultValue={currentTitle}
           required
           autoFocus
+          className={inputCls}
+        />
+        <input
+          name="description"
+          defaultValue={currentDescription ?? ""}
+          placeholder="Descrição curta (opcional)"
           className={inputCls}
         />
         <select name="kind" defaultValue={currentKind} className={inputCls}>
