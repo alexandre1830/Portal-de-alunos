@@ -7,17 +7,27 @@ import { Logo } from "@/components/shared/Logo";
 import { signIn } from "@/lib/auth/actions";
 import { initialAuthState } from "@/lib/auth/types";
 
-// Login no padrão do sistema irmão (Sistema de Gestão): fundo navy com
-// gradiente diagonal, 3 círculos coloridos flutuando, card branco
-// centralizado com inputs cinza-clarinho. Não consome bg/fg do tema —
-// queremos a aparência azul/branca independente de claro/escuro.
+// Login redesenhado para perder a "cara de sistema".
+//
+// Layout:
+//   Desktop (md+): split 50/50.
+//     - Esquerda: hero visual. Tenta carregar /login/hero.jpg; se não
+//       existir (ou falhar), cai em um fallback com as cores da marca
+//       + logo + tagline (gracioso, nunca quebrado).
+//     - Direita: form de login, campos maiores, copy acolhedora.
+//   Mobile: só o form (esquerda escondida), com logo da escola no topo.
+//
+// Tipografia/cores do form respeitam o tema (claro/escuro). A hero
+// esquerda é sempre na cor da marca pra ter personalidade independente.
 
-const labelCls = "text-[0.8125rem] font-semibold text-gray-700";
+const labelCls = "text-sm font-semibold text-fg-primary";
 const inputWrapperCls = "relative flex items-center";
+// Campos maiores e mais arredondados que o resto do app — mais
+// "acolhedor", menos "formulário corporativo".
 const inputCls =
-  "h-10 w-full rounded-md border-[1.5px] border-gray-300 bg-white pl-[38px] pr-3 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-primary-brand focus:shadow-[0_0_0_3px_rgba(3,45,111,0.12)] disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500";
+  "h-12 w-full rounded-lg border border-border-primary bg-bg-secondary pl-11 pr-4 text-sm text-fg-primary outline-none transition-all placeholder:text-fg-tertiary focus:border-primary-brand focus:shadow-[0_0_0_3px_rgba(3,45,111,0.12)] disabled:cursor-not-allowed disabled:bg-bg-tertiary disabled:text-fg-tertiary";
 const inputIconCls =
-  "pointer-events-none absolute left-[13px] text-gray-400";
+  "pointer-events-none absolute left-4 text-fg-tertiary";
 
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(
@@ -25,77 +35,124 @@ export default function LoginPage() {
     initialAuthState,
   );
   const [showPassword, setShowPassword] = useState(false);
+  // Hero image: se /login/hero.jpg não existir ou falhar, escondemos o
+  // <img> e o fallback (gradiente + logo + tagline) fica visível.
+  const [heroFailed, setHeroFailed] = useState(false);
 
   const year = new Date().getFullYear();
 
   return (
-    <main
-      className="relative flex min-h-dvh w-full items-center justify-center overflow-hidden p-6 text-white"
-      style={{
-        background:
-          "linear-gradient(135deg, var(--color-primary-700) 0%, #051f50 60%, #0a0a1a 100%)",
-      }}
-    >
-      {/* Formas flutuantes de fundo — três círculos borrados em
-          contrapasso, dão "respiração" à tela. */}
-      <div
+    <main className="flex min-h-dvh w-full bg-bg-primary">
+      {/* ============= ESQUERDA (desktop) — hero ============= */}
+      <aside
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 overflow-hidden"
+        className="relative hidden overflow-hidden md:flex md:w-1/2 lg:w-3/5"
+        style={{
+          background:
+            "linear-gradient(135deg, var(--color-primary-700) 0%, #051f50 55%, #0a0a1a 100%)",
+        }}
       >
-        <span
-          className="animate-login-float absolute -right-20 -top-30 h-[480px] w-[480px] rounded-full opacity-[0.12]"
-          style={{
-            background:
-              "radial-gradient(circle, var(--color-primary-light), transparent 70%)",
-            top: "-120px",
-            right: "-80px",
-          }}
-        />
-        <span
-          className="animate-login-float-reverse absolute h-[360px] w-[360px] rounded-full opacity-[0.12]"
-          style={{
-            background:
-              "radial-gradient(circle, var(--color-secondary), transparent 70%)",
-            bottom: "-100px",
-            left: "-60px",
-          }}
-        />
-        <span
-          className="animate-login-float-slow absolute h-[240px] w-[240px] rounded-full opacity-[0.12]"
-          style={{
-            background:
-              "radial-gradient(circle, #4a90e2, transparent 70%)",
-            top: "50%",
-            left: "10%",
-          }}
-        />
-      </div>
+        {/* Hero image (opcional). Se /login/hero.jpg estiver presente,
+            cobre o gradient. Em qualquer falha, escondemos e o fallback
+            estiloso fica visível. */}
+        {!heroFailed && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src="/login/hero.jpg"
+            alt=""
+            onError={() => setHeroFailed(true)}
+            className="absolute inset-0 h-full w-full object-cover"
+            draggable={false}
+          />
+        )}
 
-      {/* Container animado */}
-      <div className="animate-login-slide-up relative z-10 flex w-full max-w-[420px] flex-col gap-8">
-        {/* Branding */}
-        <header className="flex flex-col items-center gap-3 text-center">
+        {/* Scrim de legibilidade — só quando há imagem real. */}
+        {!heroFailed && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/30 to-black/10" />
+        )}
+
+        {/* Formas flutuantes — só no fallback (sem imagem). Dão
+            respiração à tela e remetem ao sistema irmão. */}
+        {heroFailed && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 overflow-hidden"
+          >
+            <span
+              className="animate-login-float absolute h-[520px] w-[520px] rounded-full opacity-[0.14]"
+              style={{
+                background:
+                  "radial-gradient(circle, var(--color-primary-light), transparent 70%)",
+                top: "-160px",
+                right: "-120px",
+              }}
+            />
+            <span
+              className="animate-login-float-reverse absolute h-[400px] w-[400px] rounded-full opacity-[0.14]"
+              style={{
+                background:
+                  "radial-gradient(circle, var(--color-secondary), transparent 70%)",
+                bottom: "-120px",
+                left: "-80px",
+              }}
+            />
+            <span
+              className="animate-login-float-slow absolute h-[280px] w-[280px] rounded-full opacity-[0.12]"
+              style={{
+                background:
+                  "radial-gradient(circle, #4a90e2, transparent 70%)",
+                top: "45%",
+                left: "15%",
+              }}
+            />
+          </div>
+        )}
+
+        {/* Conteúdo overlay — logo + tagline. Sempre visível, sobre a
+            imagem (com scrim) ou sobre o gradient/formas. */}
+        <div className="relative z-10 m-auto flex max-w-md flex-col items-center gap-6 px-10 text-center text-white">
           <Logo
-            className="h-[85px] w-[85px] rounded-2xl shadow-[0_10px_15px_rgba(0,0,0,0.08),0_4px_6px_rgba(0,0,0,0.04)]" border-radius="50%"
+            className="h-24 w-24 rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.30)]"
             priority
           />
-          <div className="flex flex-col gap-1">
-            <p className="text-sm text-white/60">Portal de Alunos</p>
+          <div className="flex flex-col gap-3">
+            <h1 className="text-4xl font-bold leading-tight">
+              Mr. Dave Idiomas
+            </h1>
+            <p className="text-lg leading-snug text-white/85">
+              Sua plataforma integrada de estudo de idiomas.
+            </p>
           </div>
-        </header>
+        </div>
+      </aside>
 
-        {/* Card branco com o form */}
-        <section
-          aria-label="Formulário de login"
-          className="rounded-xl border border-white/50 bg-white/[0.97] p-9 shadow-[0_25px_50px_rgba(0,0,0,0.18)] backdrop-blur"
-        >
+      {/* ============= DIREITA — form ============= */}
+      <section
+        aria-label="Formulário de login"
+        className="flex min-h-dvh w-full flex-col md:w-1/2 lg:w-2/5"
+      >
+        <div className="animate-login-slide-up m-auto flex w-full max-w-md flex-col gap-8 px-6 py-12">
+          {/* Header: no mobile mostra a logo grande; no desktop só o
+              título (a logo já está no painel esquerdo). */}
+          <header className="flex flex-col items-center gap-4 md:items-start">
+            <Logo className="h-16 w-16 rounded-2xl md:hidden" priority />
+            <div className="flex flex-col gap-1 text-center md:text-left">
+              <h2 className="text-3xl font-bold text-fg-primary">
+                Bem-vindo de volta
+              </h2>
+              <p className="text-sm text-fg-secondary">
+                Entre para continuar sua jornada.
+              </p>
+            </div>
+          </header>
+
           <form action={formAction} className="flex flex-col gap-5">
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
               <label htmlFor="login-email" className={labelCls}>
                 E-mail
               </label>
               <div className={inputWrapperCls}>
-                <EnvelopeIcon className={`${inputIconCls} h-4 w-4`} />
+                <EnvelopeIcon className={`${inputIconCls} h-5 w-5`} />
                 <input
                   id="login-email"
                   name="email"
@@ -108,12 +165,12 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
               <label htmlFor="login-password" className={labelCls}>
                 Senha
               </label>
               <div className={inputWrapperCls}>
-                <LockIcon className={`${inputIconCls} h-4 w-4`} />
+                <LockIcon className={`${inputIconCls} h-5 w-5`} />
                 <input
                   id="login-password"
                   name="password"
@@ -121,7 +178,7 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   required
                   placeholder="••••••••"
-                  className={`${inputCls} pr-10`}
+                  className={`${inputCls} pr-11`}
                 />
                 <button
                   type="button"
@@ -129,23 +186,23 @@ export default function LoginPage() {
                   aria-label={
                     showPassword ? "Ocultar senha" : "Mostrar senha"
                   }
-                  className="absolute right-2 rounded p-1 text-gray-400 transition-colors hover:text-gray-700"
+                  className="absolute right-3 rounded p-1 text-fg-tertiary transition-colors hover:text-fg-primary"
                 >
                   {showPassword ? (
-                    <EyeOffIcon className="h-4 w-4" />
+                    <EyeOffIcon className="h-5 w-5" />
                   ) : (
-                    <EyeIcon className="h-4 w-4" />
+                    <EyeIcon className="h-5 w-5" />
                   )}
                 </button>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-              <label className="inline-flex cursor-pointer select-none items-center gap-2 text-gray-700">
+              <label className="inline-flex cursor-pointer select-none items-center gap-2 text-fg-secondary">
                 <input
                   type="checkbox"
                   name="remember"
-                  className="h-[18px] w-[18px] cursor-pointer rounded border-[1.5px] border-gray-300 accent-primary-brand"
+                  className="h-[18px] w-[18px] cursor-pointer rounded border border-border-primary accent-primary-brand"
                 />
                 Lembrar de mim
               </label>
@@ -160,7 +217,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isPending}
-              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border-[1.5px] border-primary-brand bg-primary-brand px-5 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(3,45,111,0.30)] transition-all hover:-translate-y-px hover:border-primary-brand-hover hover:bg-primary-brand-hover hover:shadow-[0_6px_20px_rgba(3,45,111,0.35)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-80"
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary-brand px-5 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(3,45,111,0.30)] transition-all hover:-translate-y-px hover:bg-primary-brand-hover hover:shadow-[0_6px_20px_rgba(3,45,111,0.35)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-80"
             >
               {isPending ? (
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -175,18 +232,18 @@ export default function LoginPage() {
             {state.error && (
               <p
                 role="alert"
-                className="rounded-md border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700"
+                className="rounded-md border border-danger/30 bg-danger-surface px-3.5 py-2.5 text-sm text-danger"
               >
                 {state.error}
               </p>
             )}
           </form>
-        </section>
 
-        <footer className="text-center text-xs text-white/40">
-          © {year} Mr. Dave Idiomas — Todos os direitos reservados
-        </footer>
-      </div>
+          <footer className="text-center text-xs text-fg-tertiary md:text-left">
+            © {year} Mr. Dave Idiomas — Todos os direitos reservados
+          </footer>
+        </div>
+      </section>
     </main>
   );
 }
