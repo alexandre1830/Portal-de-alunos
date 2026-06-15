@@ -32,7 +32,7 @@ export function EditableUserNameHeader({
         title={`Editar nome e e-mail do ${label}`}
         // Botão "invisível" — herda o estilo do h1, mas ganha hover para
         // a cor da marca pra deixar claro que é clicável.
-        className="group self-start rounded-md text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary-brand/40"
+        className="group cursor-pointer self-start rounded-md text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary-brand/40"
       >
         <h1 className="text-2xl font-semibold text-fg-primary transition-colors group-hover:text-primary-brand">
           {fullName || fallback}
