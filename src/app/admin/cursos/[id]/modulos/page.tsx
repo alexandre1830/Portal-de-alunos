@@ -26,7 +26,7 @@ export default async function AdminCourseModulesPage({
       .order("position"),
     supabase
       .from("lessons")
-      .select("id, module_id, title, position, is_published")
+      .select("id, module_id, title, description, position, is_published")
       .eq("course_id", courseId)
       .order("position"),
   ]);
@@ -71,10 +71,17 @@ export default async function AdminCourseModulesPage({
                     <div className="group flex items-center gap-2 rounded-md px-3 py-2 transition-colors hover:bg-primary-brand-surface">
                       <Link
                         href={`/admin/licoes/${lesson.id}`}
-                        className="flex-1 truncate text-sm text-fg-primary transition-colors group-hover:text-primary-brand"
+                        className="flex min-w-0 flex-1 flex-col transition-colors"
                         title="Abrir editor da lição"
                       >
-                        {lesson.title}
+                        <span className="truncate text-sm text-fg-primary group-hover:text-primary-brand">
+                          {lesson.title}
+                        </span>
+                        {lesson.description && (
+                          <span className="truncate text-xs text-fg-secondary">
+                            {lesson.description}
+                          </span>
+                        )}
                       </Link>
                       {!lesson.is_published && (
                         // Badge "Rascunho" — chip arredondado com tinte

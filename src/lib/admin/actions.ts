@@ -207,10 +207,11 @@ export async function createLesson(formData: FormData) {
   const courseId = str(formData, "course_id");
   const title = str(formData, "title");
   if (!title) return;
+  const description = str(formData, "description").trim() || null;
   const position = await nextPosition(supabase, "lessons", "module_id", moduleId);
   const { data: lesson } = await supabase
     .from("lessons")
-    .insert({ module_id: moduleId, course_id: courseId, title, position })
+    .insert({ module_id: moduleId, course_id: courseId, title, description, position })
     .select("id")
     .single();
 
@@ -239,7 +240,7 @@ export async function duplicateLesson(formData: FormData) {
 
   const { data: source } = await supabase
     .from("lessons")
-    .select("module_id, title")
+    .select("module_id, title, description")
     .eq("id", sourceId)
     .single();
   if (!source) return;
@@ -251,6 +252,7 @@ export async function duplicateLesson(formData: FormData) {
       module_id: source.module_id,
       course_id: courseId,
       title: `${source.title} (cópia)`,
+      description: source.description,
       position,
       is_published: false,
     })
@@ -324,6 +326,7 @@ export async function updateLesson(formData: FormData) {
     .from("lessons")
     .update({
       title: str(formData, "title"),
+      description: str(formData, "description").trim() || null,
       is_published: formData.get("is_published") === "on",
     })
     .eq("id", id);

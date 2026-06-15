@@ -15,11 +15,13 @@ export function LessonHeaderMenu({
   lessonId,
   courseId,
   currentTitle,
+  currentDescription,
   isPublished,
 }: {
   lessonId: string;
   courseId: string;
   currentTitle: string;
+  currentDescription: string | null;
   isPublished: boolean;
 }) {
   const [editOpen, setEditOpen] = useState(false);
@@ -41,6 +43,7 @@ export function LessonHeaderMenu({
         lessonId={lessonId}
         courseId={courseId}
         currentTitle={currentTitle}
+        currentDescription={currentDescription}
         isPublished={isPublished}
       />
     </>

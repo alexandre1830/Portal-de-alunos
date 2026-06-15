@@ -17,6 +17,7 @@ export function EditLessonDialog({
   lessonId,
   courseId,
   currentTitle,
+  currentDescription,
   isPublished,
 }: {
   open: boolean;
@@ -24,6 +25,7 @@ export function EditLessonDialog({
   lessonId: string;
   courseId: string;
   currentTitle: string;
+  currentDescription: string | null;
   isPublished: boolean;
 }) {
   const [pending, startTransition] = useTransition();
@@ -51,6 +53,12 @@ export function EditLessonDialog({
           defaultValue={currentTitle}
           required
           autoFocus
+          className={inputCls}
+        />
+        <input
+          name="description"
+          defaultValue={currentDescription ?? ""}
+          placeholder="Descrição curta (opcional)"
           className={inputCls}
         />
         <Switch

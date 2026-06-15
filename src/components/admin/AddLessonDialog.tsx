@@ -57,6 +57,11 @@ export function AddLessonDialog({
             autoFocus
             className="h-10 w-full rounded-md border border-border-primary bg-bg-primary px-3 text-sm text-fg-primary focus:outline-none focus:ring-2 focus:ring-fg-tertiary"
           />
+          <input
+            name="description"
+            placeholder="Descrição curta (opcional)"
+            className="h-10 w-full rounded-md border border-border-primary bg-bg-primary px-3 text-sm text-fg-primary focus:outline-none focus:ring-2 focus:ring-fg-tertiary"
+          />
           <div className="flex justify-end gap-2">
             <Button
               type="button"

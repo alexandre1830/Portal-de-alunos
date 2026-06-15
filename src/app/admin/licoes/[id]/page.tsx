@@ -55,6 +55,7 @@ export default async function AdminLessonPage({
           lessonId={lesson.id}
           courseId={lesson.course_id}
           currentTitle={lesson.title}
+          currentDescription={lesson.description}
           isPublished={lesson.is_published}
         />
       </Card>
