@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { Stars } from "@/components/shared/Stars";
 import { Card } from "@/components/ui/Card";
 import { SegmentedProgressBar } from "@/components/ui/SegmentedProgressBar";
 import { getMyStudents } from "@/lib/professor/queries";
@@ -64,23 +63,18 @@ export default async function ProfessorStudentsPage() {
                     </span>
                   </div>
                   <div className="flex flex-col gap-2 sm:items-end">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm text-fg-secondary">
-                        <span className="text-fg-primary">
-                          {s.partsCompleted}
-                        </span>{" "}
-                        / {s.totalParts || "—"}
-                      </span>
-                      {s.partsCompleted > 0 && (
-                        <Stars value={Math.round(s.averageStars)} />
-                      )}
-                    </div>
-                    {s.totalParts > 0 && (
+                    <span className="text-sm text-fg-secondary">
+                      <span className="text-fg-primary">
+                        {s.lessonsCompleted}
+                      </span>{" "}
+                      / {s.totalLessons || "—"} lições
+                    </span>
+                    {s.totalLessons > 0 && (
                       <div className="w-40">
                         <SegmentedProgressBar
-                          value={s.partsCompleted}
-                          max={s.totalParts}
-                          ariaLabel="Progresso geral"
+                          value={s.lessonsCompleted}
+                          max={s.totalLessons}
+                          ariaLabel="Progresso geral em lições"
                         />
                       </div>
                     )}

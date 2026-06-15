@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { FlameIcon } from "@/components/icons/FlameIcon";
 import { Avatar } from "@/components/shared/Avatar";
 import { BackLink } from "@/components/shared/BackLink";
-import { Stars } from "@/components/shared/Stars";
 import { Card } from "@/components/ui/Card";
 import { SegmentedProgressBar } from "@/components/ui/SegmentedProgressBar";
 import { getStudentDetail } from "@/lib/professor/queries";
@@ -111,21 +110,18 @@ export default async function ProfessorStudentDetailPage({
                       </span>
                     </div>
                     <SegmentedProgressBar
-                      value={c.partsCompleted}
-                      max={Math.max(c.totalParts, 1)}
+                      value={c.lessonsCompleted}
+                      max={Math.max(c.totalLessons, 1)}
                       ariaLabel={`Progresso em ${c.courseTitle}`}
                     />
                     <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-fg-tertiary">
                       <span>
                         <span className="text-fg-primary">
-                          {c.partsCompleted}
+                          {c.lessonsCompleted}
                         </span>
                         {" / "}
-                        {c.totalParts} partes
+                        {c.totalLessons} lições
                       </span>
-                      {c.partsCompleted > 0 && (
-                        <Stars value={Math.round(c.averageStars)} />
-                      )}
                       <span>
                         Última atividade {formatRelative(c.lastActivity)}
                       </span>

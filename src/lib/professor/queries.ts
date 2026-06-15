@@ -7,6 +7,11 @@ type Client = SupabaseClient<Database>;
 
 // Resumo de um aluno acompanhado pelo professor — agregado em todos os
 // cursos em que ele está matriculado.
+//
+// Progresso medido em LIÇÕES, não em partes. Uma lição é considerada
+// concluída quando TODAS as suas partes regulares (kind != "golden") têm
+// progresso `completed`. Partes douradas são bônus e não gateiam a
+// conclusão da lição.
 export interface MyStudentRow {
   userId: string;
   email: string;
@@ -14,10 +19,8 @@ export interface MyStudentRow {
   avatarUrl: string | null;
   // Matrículas ativas — usado para listar "está em N curso(s)".
   enrolledCourses: number;
-  partsCompleted: number;
-  totalParts: number;
-  // Média de estrelas considerando apenas partes concluídas.
-  averageStars: number;
+  lessonsCompleted: number;
+  totalLessons: number;
   // Última atividade em part_progress (qualquer curso).
   lastActivity: string | null;
 }
@@ -25,8 +28,8 @@ export interface MyStudentRow {
 // Lista os alunos acompanhados pelo professor + métricas agregadas em
 // todos os cursos em que cada aluno está matriculado. O conjunto de
 // alunos vem de teacher_students; a partir daí cruzamos com enrollments
-// (cursos ativos) e part_progress (progresso) para o totalParts e
-// completed.
+// (cursos ativos) e parts/part_progress (progresso) para o total/done
+// de lições.
 export async function getMyStudents(
   supabase: Client,
   teacherId: string,
@@ -45,8 +48,7 @@ export async function getMyStudents(
     .select("id, email, full_name, avatar_url")
     .in("id", studentIds);
 
-  // 3. Enrollments ativos dos alunos — pega course_ids para o total de
-  //    partes e para contar cursos por aluno.
+  // 3. Enrollments ativos dos alunos.
   const { data: enrollments } = await supabase
     .from("enrollments")
     .select("user_id, course_id")
@@ -57,28 +59,49 @@ export async function getMyStudents(
     new Set((enrollments ?? []).map((e) => e.course_id)),
   );
 
-  // 4. Total de partes por curso (universo do progresso).
-  const totalPartsByCourse = new Map<string, number>();
+  // 4. Universo de partes nesses cursos. Para cada lição,
+  //    listamos o conjunto de partes REGULARES (golden é bônus
+  //    e não gateia conclusão). E mapeamos course_id -> lessons.
+  const regularPartsByLesson = new Map<string, string[]>();
+  const lessonsByCourse = new Map<string, Set<string>>();
   if (courseIds.length > 0) {
     const { data: parts } = await supabase
       .from("parts")
-      .select("course_id")
+      .select("id, course_id, lesson_id, kind")
       .in("course_id", courseIds);
     for (const p of parts ?? []) {
-      totalPartsByCourse.set(
-        p.course_id,
-        (totalPartsByCourse.get(p.course_id) ?? 0) + 1,
-      );
+      if (p.kind === "golden") continue;
+      const arr = regularPartsByLesson.get(p.lesson_id) ?? [];
+      arr.push(p.id);
+      regularPartsByLesson.set(p.lesson_id, arr);
+      const set = lessonsByCourse.get(p.course_id) ?? new Set<string>();
+      set.add(p.lesson_id);
+      lessonsByCourse.set(p.course_id, set);
     }
   }
 
-  // 5. Progress agregado por aluno (em todos os cursos juntos).
+  // 5. Progress por aluno (concluídos + última atividade).
   const { data: progress } = await supabase
     .from("part_progress")
-    .select("user_id, course_id, status, stars, updated_at")
+    .select("user_id, part_id, status, updated_at")
     .in("user_id", studentIds);
 
-  // 6. Agrega.
+  // Conjunto de partes concluídas POR aluno + última atividade.
+  const completedPartsByStudent = new Map<string, Set<string>>();
+  const lastActivityByStudent = new Map<string, string>();
+  for (const row of progress ?? []) {
+    if (row.status === "completed") {
+      const set = completedPartsByStudent.get(row.user_id) ?? new Set<string>();
+      set.add(row.part_id);
+      completedPartsByStudent.set(row.user_id, set);
+    }
+    const prev = lastActivityByStudent.get(row.user_id);
+    if (!prev || row.updated_at > prev) {
+      lastActivityByStudent.set(row.user_id, row.updated_at);
+    }
+  }
+
+  // Cursos por aluno.
   const coursesByStudent = new Map<string, Set<string>>();
   for (const e of enrollments ?? []) {
     const set = coursesByStudent.get(e.user_id) ?? new Set<string>();
@@ -86,60 +109,49 @@ export async function getMyStudents(
     coursesByStudent.set(e.user_id, set);
   }
 
-  type Acc = {
-    completed: number;
-    starsSum: number;
-    lastActivity: string | null;
-  };
-  const accByStudent = new Map<string, Acc>();
-  for (const row of progress ?? []) {
-    const acc = accByStudent.get(row.user_id) ?? {
-      completed: 0,
-      starsSum: 0,
-      lastActivity: null,
-    };
-    if (row.status === "completed") {
-      acc.completed += 1;
-      acc.starsSum += row.stars ?? 0;
-    }
-    if (!acc.lastActivity || row.updated_at > acc.lastActivity) {
-      acc.lastActivity = row.updated_at;
-    }
-    accByStudent.set(row.user_id, acc);
-  }
-
   return (profiles ?? []).map((p) => {
     const courses = coursesByStudent.get(p.id) ?? new Set();
-    let totalParts = 0;
+    const completed = completedPartsByStudent.get(p.id) ?? new Set<string>();
+
+    let totalLessons = 0;
+    let lessonsCompleted = 0;
     for (const cid of courses) {
-      totalParts += totalPartsByCourse.get(cid) ?? 0;
+      const lessons = lessonsByCourse.get(cid);
+      if (!lessons) continue;
+      for (const lessonId of lessons) {
+        const regularParts = regularPartsByLesson.get(lessonId) ?? [];
+        if (regularParts.length === 0) continue;
+        totalLessons += 1;
+        if (regularParts.every((pid) => completed.has(pid))) {
+          lessonsCompleted += 1;
+        }
+      }
     }
-    const acc = accByStudent.get(p.id);
+
     return {
       userId: p.id,
       email: p.email,
       fullName: p.full_name,
       avatarUrl: p.avatar_url,
       enrolledCourses: courses.size,
-      partsCompleted: acc?.completed ?? 0,
-      totalParts,
-      averageStars:
-        acc && acc.completed > 0 ? acc.starsSum / acc.completed : 0,
-      lastActivity: acc?.lastActivity ?? null,
+      lessonsCompleted,
+      totalLessons,
+      lastActivity: lastActivityByStudent.get(p.id) ?? null,
     };
   });
 }
 
 // Detalhe de UM aluno: cursos onde está matriculado + progresso em cada.
+// Mesma régua do resumo: progresso em LIÇÕES, partes douradas fora do
+// denominador.
 export interface StudentCourseProgress {
   courseId: string;
   courseTitle: string;
   courseSlug: string;
   language: string;
   level: string;
-  partsCompleted: number;
-  totalParts: number;
-  averageStars: number;
+  lessonsCompleted: number;
+  totalLessons: number;
   lastActivity: string | null;
 }
 
@@ -180,67 +192,67 @@ export async function getStudentDetail(
       .eq("status", "active"),
     supabase
       .from("part_progress")
-      .select("course_id, status, stars, updated_at")
+      .select("part_id, course_id, status, updated_at")
       .eq("user_id", studentId),
   ]);
 
-  // Total de partes por curso.
+  // Universo de partes/lições por curso.
   const courseIds = (enrRes.data ?? [])
     .map((row) => row.course?.id)
     .filter((id): id is string => !!id);
-  const totalPartsByCourse = new Map<string, number>();
+  const regularPartsByLesson = new Map<string, string[]>();
+  const lessonsByCourse = new Map<string, Set<string>>();
   if (courseIds.length > 0) {
     const { data: parts } = await supabase
       .from("parts")
-      .select("course_id")
+      .select("id, course_id, lesson_id, kind")
       .in("course_id", courseIds);
     for (const p of parts ?? []) {
-      totalPartsByCourse.set(
-        p.course_id,
-        (totalPartsByCourse.get(p.course_id) ?? 0) + 1,
-      );
+      if (p.kind === "golden") continue;
+      const arr = regularPartsByLesson.get(p.lesson_id) ?? [];
+      arr.push(p.id);
+      regularPartsByLesson.set(p.lesson_id, arr);
+      const set = lessonsByCourse.get(p.course_id) ?? new Set<string>();
+      set.add(p.lesson_id);
+      lessonsByCourse.set(p.course_id, set);
     }
   }
 
-  // Progresso por curso.
-  type Acc = {
-    completed: number;
-    starsSum: number;
-    lastActivity: string | null;
-  };
-  const accByCourse = new Map<string, Acc>();
+  // Conjunto de partes concluídas + última atividade por curso.
+  const completedParts = new Set<string>();
+  const lastActivityByCourse = new Map<string, string>();
   for (const row of progRes.data ?? []) {
-    const acc = accByCourse.get(row.course_id) ?? {
-      completed: 0,
-      starsSum: 0,
-      lastActivity: null,
-    };
-    if (row.status === "completed") {
-      acc.completed += 1;
-      acc.starsSum += row.stars ?? 0;
+    if (row.status === "completed") completedParts.add(row.part_id);
+    const prev = lastActivityByCourse.get(row.course_id);
+    if (!prev || row.updated_at > prev) {
+      lastActivityByCourse.set(row.course_id, row.updated_at);
     }
-    if (!acc.lastActivity || row.updated_at > acc.lastActivity) {
-      acc.lastActivity = row.updated_at;
-    }
-    accByCourse.set(row.course_id, acc);
   }
 
   const courses: StudentCourseProgress[] = (enrRes.data ?? [])
     .map((row) => row.course)
     .filter((c): c is NonNullable<typeof c> => c !== null)
     .map((c) => {
-      const acc = accByCourse.get(c.id);
+      const lessons = lessonsByCourse.get(c.id) ?? new Set<string>();
+      let totalLessons = 0;
+      let lessonsCompleted = 0;
+      for (const lessonId of lessons) {
+        const regularParts = regularPartsByLesson.get(lessonId) ?? [];
+        if (regularParts.length === 0) continue;
+        totalLessons += 1;
+        if (regularParts.every((pid) => completedParts.has(pid))) {
+          lessonsCompleted += 1;
+        }
+      }
       return {
         courseId: c.id,
         courseTitle: c.title,
         courseSlug: c.slug,
         language: c.language,
         level: c.level,
-        partsCompleted: acc?.completed ?? 0,
-        totalParts: totalPartsByCourse.get(c.id) ?? 0,
-        averageStars:
-          acc && acc.completed > 0 ? acc.starsSum / acc.completed : 0,
-        lastActivity: acc?.lastActivity ?? null,
+        lessonsCompleted,
+        totalLessons,
+        lastActivity: lastActivityByCourse.get(c.id) ?? null,
       };
     });
 
