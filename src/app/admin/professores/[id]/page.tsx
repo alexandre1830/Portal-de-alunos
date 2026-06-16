@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { AssignStudentDialog } from "@/components/admin/AssignStudentDialog";
+import { DeleteUserButton } from "@/components/admin/DeleteUserButton";
 import { EditableUserNameHeader } from "@/components/admin/EditableUserNameHeader";
 import { TrashIcon } from "@/components/icons/TrashIcon";
 import { Avatar } from "@/components/shared/Avatar";
@@ -145,6 +146,16 @@ export default async function AdminTeacherDetailPage({
           </ul>
         )}
       </section>
+
+      {/* Zona de perigo no rodapé — botão de excluir o professor. */}
+      <div className="flex justify-end border-t border-border-primary pt-6">
+        <DeleteUserButton
+          id={teacher.id}
+          fullName={teacher.full_name ?? ""}
+          email={teacher.email}
+          role="teacher"
+        />
+      </div>
     </div>
   );
 }

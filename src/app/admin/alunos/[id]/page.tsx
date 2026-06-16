@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { AddLiveSessionButton } from "@/components/admin/AddLiveSessionButton";
+import { DeleteUserButton } from "@/components/admin/DeleteUserButton";
 import { EditableUserNameHeader } from "@/components/admin/EditableUserNameHeader";
 import { LiveSessionRowMenu } from "@/components/admin/LiveSessionRowMenu";
 import { FlameIcon } from "@/components/icons/FlameIcon";
@@ -225,6 +226,16 @@ export default async function AdminStudentDetailPage({
           </ul>
         )}
       </section>
+
+      {/* Zona de perigo no rodapé — botão de excluir o aluno. */}
+      <div className="flex justify-end border-t border-border-primary pt-6">
+        <DeleteUserButton
+          id={student.id}
+          fullName={student.full_name ?? ""}
+          email={student.email}
+          role="student"
+        />
+      </div>
     </div>
   );
 }
