@@ -1,11 +1,9 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import { PencilIcon } from "@/components/icons/PencilIcon";
 import { TrophyIcon } from "@/components/icons/TrophyIcon";
 import { BackLink } from "@/components/shared/BackLink";
 import { Stars } from "@/components/shared/Stars";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { SegmentedProgressBar } from "@/components/ui/SegmentedProgressBar";
 import { getCourseStructure } from "@/lib/courses/queries";
@@ -19,13 +17,10 @@ const LANGUAGE_LABELS: Record<CourseLanguage, string> = {
 
 export default async function CoursePage({
   params,
-  searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ from?: string }>;
 }) {
   const { slug } = await params;
-  const sp = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -42,51 +37,10 @@ export default async function CoursePage({
 
   const { course, modules } = structure;
 
-  // Pré-visualização do admin (?from=admin): só faz sentido para quem
-  // realmente é admin — para qualquer outro role ignoramos a flag.
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-  const isAdminPreview =
-    sp.from === "admin" && profile?.role === "admin";
-
-  // Propaga ?from=admin nos links de partes para que o banner de
-  // preview persista durante a navegação.
-  const partHrefSuffix = isAdminPreview ? "?from=admin" : "";
-
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-8 px-6 py-12">
-      {/* Banner de "preview do admin" — único caminho de volta para a
-          edição. O BackLink para /painel some neste modo. Espelha
-          o mesmo padrão usado em /partes/[partId]. */}
-      {isAdminPreview && (
-        <Card
-          padded
-          className="flex flex-wrap items-center justify-between gap-3 border-warning/40 bg-warning-bg"
-        >
-          <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-medium text-fg-primary">
-              Você está vendo como aluno
-            </span>
-            <span className="text-xs text-fg-secondary">
-              Nada que você fizer aqui afeta o progresso real do aluno.
-            </span>
-          </div>
-          <Link href={`/admin/cursos/${course.id}/modulos`}>
-            <Button type="button" variant="secondary" size="sm">
-              <PencilIcon className="h-4 w-4" />
-              Voltar para edição
-            </Button>
-          </Link>
-        </Card>
-      )}
-
       <div className="flex flex-col gap-2">
-        {!isAdminPreview && (
-          <BackLink href="/painel" label="Voltar ao painel" />
-        )}
+        <BackLink href="/painel" label="Voltar ao painel" />
         <h1 className="text-2xl font-semibold text-fg-primary">
           {course.title}
         </h1>
@@ -166,7 +120,7 @@ export default async function CoursePage({
                             return (
                               <li key={part.id}>
                                 <Link
-                                  href={`/partes/${part.id}${partHrefSuffix}`}
+                                  href={`/partes/${part.id}`}
                                   className="group flex items-center justify-between gap-3 rounded-md px-2 py-2.5 transition-colors hover:bg-bg-tertiary"
                                 >
                                   <span className="flex items-center gap-2 text-sm text-fg-primary transition-colors group-hover:text-primary-brand">

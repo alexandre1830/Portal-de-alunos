@@ -1,6 +1,3 @@
-import Link from "next/link";
-
-import { Card } from "@/components/ui/Card";
 import {
   PasswordSection,
   SignOutSection,
@@ -8,8 +5,7 @@ import {
 } from "@/components/shared/SettingsSections";
 import { requireTeacher } from "@/lib/professor/guard";
 
-// Configurações do professor. Mesma estrutura do admin, mas só com
-// "Ver como aluno" (o professor não tem painel separado de admin).
+// Configurações do professor: mesmas seções comuns (Tema · Senha · Sair).
 export default async function ProfessorConfiguracoesPage() {
   await requireTeacher();
 
@@ -21,22 +17,6 @@ export default async function ProfessorConfiguracoesPage() {
           Ajuste a aparência, sua senha e gerencie a sessão.
         </p>
       </div>
-
-      <section className="flex flex-col gap-3">
-        <h2 className="text-base font-semibold text-fg-primary">
-          Pré-visualizar
-        </h2>
-        <Link href="/painel" className="block">
-          <Card padded interactive className="flex h-full flex-col gap-1">
-            <span className="text-sm font-medium text-fg-primary">
-              Ver como aluno
-            </span>
-            <span className="text-xs text-fg-tertiary">
-              Abrir o portal do aluno
-            </span>
-          </Card>
-        </Link>
-      </section>
 
       <ThemeSection />
       <PasswordSection passwordFromKey="professor" />

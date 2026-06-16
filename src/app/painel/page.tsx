@@ -81,22 +81,6 @@ export default async function PainelPage() {
           Portal de Alunos
         </Link>
         <div className="flex items-center gap-3">
-          {(profile?.role === "teacher" || profile?.role === "admin") && (
-            <Link
-              href="/professor"
-              className="text-sm font-medium text-fg-secondary hover:text-fg-primary"
-            >
-              Professor
-            </Link>
-          )}
-          {profile?.role === "admin" && (
-            <Link
-              href="/admin"
-              className="text-sm font-medium text-fg-secondary hover:text-fg-primary"
-            >
-              Admin
-            </Link>
-          )}
           <Link
             href="/painel/configuracoes"
             aria-label="Configurações"

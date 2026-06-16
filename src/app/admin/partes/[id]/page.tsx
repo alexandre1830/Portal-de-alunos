@@ -1,10 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { BlockForm, type BlockInitial } from "@/components/admin/BlockForm";
 import { BlockRowMenu } from "@/components/admin/BlockRowMenu";
 import { BackLink } from "@/components/shared/BackLink";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { requireAdmin } from "@/lib/admin/guard";
 import {
@@ -176,14 +174,7 @@ export default async function AdminPartPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex items-center justify-between">
-        <BackLink href={`/admin/licoes/${part.lesson_id}`} label="Lição" />
-        <Link href={`/partes/${part.id}?from=admin`}>
-          <Button type="button" variant="ghost" size="sm">
-            Pré-visualizar como aluno
-          </Button>
-        </Link>
-      </div>
+      <BackLink href={`/admin/licoes/${part.lesson_id}`} label="Lição" />
 
       <h1 className="text-2xl font-semibold text-fg-primary">{part.title}</h1>
 

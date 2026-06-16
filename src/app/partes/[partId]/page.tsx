@@ -1,15 +1,12 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { BookmarkIcon } from "@/components/icons/BookmarkIcon";
-import { PencilIcon } from "@/components/icons/PencilIcon";
 import { TrophyIcon } from "@/components/icons/TrophyIcon";
 import { PartStepper } from "@/components/partes/PartStepper";
 import { RetryPartBanner } from "@/components/partes/RetryPartBanner";
 import { BackLink } from "@/components/shared/BackLink";
 import { Stars } from "@/components/shared/Stars";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { toggleReviewMark } from "@/lib/review/actions";
 import { getPartView } from "@/lib/courses/queries";
 import {
@@ -21,13 +18,10 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function PartPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ partId: string }>;
-  searchParams: Promise<{ from?: string }>;
 }) {
   const { partId } = await params;
-  const sp = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -45,17 +39,13 @@ export default async function PartPage({
   const { part, lesson, course, blocks, progress, marked } = view;
   const done = progress?.status === "completed";
 
-  // Pré-visualização vinda do admin: só faz sentido para quem realmente
-  // é admin. Para qualquer outro role, ignoramos o ?from=admin.
-  // O mesmo SELECT traz também full_name + avatar_url para o
-  // LessonCompletionDialog usar no cartão compartilhável.
+  // Trazemos full_name + avatar_url para o LessonCompletionDialog usar no
+  // cartão compartilhável.
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, full_name, avatar_url")
+    .select("full_name, avatar_url")
     .eq("id", user.id)
     .maybeSingle();
-  const isAdminPreview =
-    sp.from === "admin" && profile?.role === "admin";
 
   // Streak atual (para mostrar no cartão de celebração de lição). Cálculo
   // honra a lógica "se o último dia ativo > ontem (BRT), streak = 0".
@@ -81,7 +71,7 @@ export default async function PartPage({
   // botão "Próxima" do diálogo de celebração. Se for a última parte da
   // lição, fica null — o diálogo cai pro caminho "Voltar ao curso".
   let nextPartHref: string | undefined;
-  if (!isAdminPreview && lesson) {
+  if (lesson) {
     const { data: siblings } = await supabase
       .from("parts")
       .select("id, position")
@@ -95,41 +85,11 @@ export default async function PartPage({
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-8 px-6 py-12">
-      {/* Banner de "modo pré-visualização" — só admin vê. Em preview, o
-          único caminho de volta é por aqui, e nada do que o admin fizer
-          afeta XP/progresso/SRS (o servidor faz dry-run). */}
-      {isAdminPreview && (
-        <Card
-          padded
-          className="flex flex-wrap items-center justify-between gap-3 border-warning/40 bg-warning-bg"
-        >
-          <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-medium text-fg-primary">
-              Você está vendo como aluno
-            </span>
-            <span className="text-xs text-fg-secondary">
-              Suas ações aqui não contam — nada de XP, progresso, conquistas
-              ou itens de revisão são gravados.
-            </span>
-          </div>
-          <Link href={`/admin/partes/${part.id}`}>
-            <Button type="button" variant="secondary" size="sm">
-              <PencilIcon className="h-4 w-4" />
-              Voltar para edição
-            </Button>
-          </Link>
-        </Card>
-      )}
-
       <div className="flex flex-col gap-2">
-        {/* BackLink só aparece no modo aluno — em preview, o admin volta
-            pelo banner amarelo (caminho único de saída). */}
-        {!isAdminPreview && (
-          <BackLink
-            href={course ? `/cursos/${course.slug}` : "/painel"}
-            label={course ? course.title : "Voltar"}
-          />
-        )}
+        <BackLink
+          href={course ? `/cursos/${course.slug}` : "/painel"}
+          label={course ? course.title : "Voltar"}
+        />
         <div className="flex items-center justify-between gap-3">
           <h1 className="flex items-center gap-2 text-2xl font-semibold text-fg-primary">
             {part.kind === "golden" && (
@@ -138,12 +98,8 @@ export default async function PartPage({
             {part.title}
           </h1>
           <div className="flex items-center gap-3">
-            {done && !isAdminPreview && (
-              <Stars value={progress?.stars ?? 0} />
-            )}
-            {/* Bookmark "para revisar" também é exclusivo do aluno — o admin
-                em preview não precisa marcar para revisar. */}
-            {course && !isAdminPreview && (
+            {done && <Stars value={progress?.stars ?? 0} />}
+            {course && (
               <form action={toggleReviewMark}>
                 <input type="hidden" name="part_id" value={part.id} />
                 <input type="hidden" name="course_id" value={course.id} />
@@ -181,28 +137,16 @@ export default async function PartPage({
       {/* Banner "Tentar de novo" — só aparece se a parte está concluída
           com 1 ou 2 estrelas (3 não tem o que melhorar, 0 a parte foi
           mal mas o aluno também pode usar este caminho). */}
-      {done &&
-        !isAdminPreview &&
-        progress &&
-        progress.stars < 3 && (
-          <RetryPartBanner partId={part.id} stars={progress.stars} />
-        )}
+      {done && progress && progress.stars < 3 && (
+        <RetryPartBanner partId={part.id} stars={progress.stars} />
+      )}
 
       <PartStepper
         partId={part.id}
         blocks={blocks}
         tts={tts}
-        initiallyCompleted={done && !isAdminPreview}
-        previewMode={isAdminPreview}
-        // courseHref só faz sentido para o aluno; em preview o caminho de
-        // volta é o botão "Voltar para edição" do banner.
-        courseHref={
-          isAdminPreview
-            ? undefined
-            : course
-              ? `/cursos/${course.slug}`
-              : undefined
-        }
+        initiallyCompleted={done}
+        courseHref={course ? `/cursos/${course.slug}` : undefined}
         nextPartHref={nextPartHref}
         lessonTitle={lesson?.title}
         student={{

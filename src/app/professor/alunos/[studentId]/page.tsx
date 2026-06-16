@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { FlameIcon } from "@/components/icons/FlameIcon";
@@ -91,15 +90,7 @@ export default async function ProfessorStudentDetailPage({
           <ul className="flex flex-col gap-3">
             {detail.courses.map((c) => (
               <li key={c.courseId}>
-                <Link
-                  href={`/cursos/${c.courseSlug}?from=admin`}
-                  className="block"
-                >
-                  <Card
-                    padded
-                    interactive
-                    className="flex flex-col gap-3"
-                  >
+                <Card padded className="flex flex-col gap-3">
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="font-medium text-fg-primary">
                         {c.courseTitle}
@@ -125,9 +116,8 @@ export default async function ProfessorStudentDetailPage({
                       <span>
                         Última atividade {formatRelative(c.lastActivity)}
                       </span>
-                    </div>
-                  </Card>
-                </Link>
+                  </div>
+                </Card>
               </li>
             ))}
           </ul>

@@ -9,7 +9,9 @@ export default async function ProfessorLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAdmin } = await requireTeacher();
+  // Mantém o guard, mas não usamos mais `isAdmin` aqui — os atalhos
+  // cross-portal foram retirados (atrapalhavam mais do que ajudavam).
+  await requireTeacher();
 
   return (
     <div className="min-h-dvh">
@@ -22,32 +24,14 @@ export default async function ProfessorLayout({
             <Logo className="h-7 w-7" />
             Professor · Portal
           </Link>
-          <div className="flex items-center gap-3">
-            {isAdmin && (
-              <>
-                <Link
-                  href="/admin"
-                  className="text-sm font-medium text-fg-secondary hover:text-fg-primary"
-                >
-                  Admin
-                </Link>
-                <Link
-                  href="/painel"
-                  className="text-sm font-medium text-fg-secondary hover:text-fg-primary"
-                >
-                  Aluno
-                </Link>
-              </>
-            )}
-            <Link
-              href="/professor/configuracoes"
-              aria-label="Configurações"
-              title="Configurações"
-              className="rounded p-1.5 text-fg-secondary transition-colors hover:bg-bg-secondary hover:text-fg-primary"
-            >
-              <GearIcon className="h-5 w-5" />
-            </Link>
-          </div>
+          <Link
+            href="/professor/configuracoes"
+            aria-label="Configurações"
+            title="Configurações"
+            className="rounded p-1.5 text-fg-secondary transition-colors hover:bg-bg-secondary hover:text-fg-primary"
+          >
+            <GearIcon className="h-5 w-5" />
+          </Link>
         </div>
       </header>
       <div className="mx-auto w-full max-w-3xl px-6 py-8">{children}</div>
