@@ -19,13 +19,13 @@ type BlockTypeEntry = {
 };
 
 const CONTENT_TYPES: BlockTypeEntry[] = [
-  { value: "rich_text", label: "Texto", description: "Explicação rica em texto.", icon: <IconText /> },
+  { value: "rich_text", label: "Texto", description: "Explicação detalhada ou texto.", icon: <IconText /> },
   { value: "reading_tts", label: "Leitura (áudio)", description: "Texto com botão de áudio.", icon: <IconReading /> },
   { value: "vocabulary", label: "Vocabulário", description: "Lista termo + tradução + áudio.", icon: <IconVocab /> },
   { value: "dialogue_tts", label: "Diálogo (áudio)", description: "Falas entre personagens.", icon: <IconDialogue /> },
   { value: "pronunciation", label: "Pronúncia", description: "Frases para ouvir e treinar.", icon: <IconPronunciation /> },
-  { value: "examples", label: "Exemplos", description: "Frases-exemplo com tradução e áudio.", icon: <IconExamples /> },
-  { value: "speaking", label: "Speaking (falar)", description: "Aluno fala; sistema compara.", icon: <IconSpeaking /> },
+  { value: "examples", label: "Exemplos", description: "Frases com tradução e áudio.", icon: <IconExamples /> },
+  { value: "speaking", label: "Speaking (falar)", description: "Aluno fala e o sistema corrige.", icon: <IconSpeaking /> },
 ];
 
 const EXERCISE_TYPES_PICKER: BlockTypeEntry[] = [
@@ -170,29 +170,22 @@ export function BlockForm({
       {blockId && <input type="hidden" name="id" value={blockId} />}
 
       <div className="flex items-center justify-between gap-3">
-        {mode === "create" ? (
-          // Em create, depois de escolher o tipo, mostramos o label
-          // do tipo + um link "Trocar tipo" pra voltar ao picker.
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-medium uppercase text-fg-tertiary">
-              {type ? TYPE_LABEL[type] ?? type : ""}
-            </span>
-            <button
+        <span className="text-xs font-medium uppercase text-fg-tertiary">
+          {type ? TYPE_LABEL[type] ?? type : ""}
+        </span>
+
+        <div className="flex items-center gap-2">
+          {mode === "edit" && <SaveStatus status={status} />}
+          {mode === "create" && (
+            <Button
               type="button"
+              variant="secondary"
+              size="sm"
               onClick={() => setType(null)}
-              className="text-xs text-primary-brand hover:underline"
             >
               ← Trocar tipo
-            </button>
-          </div>
-        ) : (
-          <span className="text-xs font-medium uppercase text-fg-tertiary">
-            {type ? TYPE_LABEL[type] ?? type : ""}
-          </span>
-        )}
-
-        <div className="flex items-center gap-3">
-          {mode === "edit" && <SaveStatus status={status} />}
+            </Button>
+          )}
           {headerSlot}
         </div>
       </div>
