@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
 import { UserRowMenu } from "@/components/admin/UserRowMenu";
+import { Avatar } from "@/components/shared/Avatar";
 import { Card } from "@/components/ui/Card";
 import { requireAdmin } from "@/lib/admin/guard";
 
@@ -11,7 +12,7 @@ export default async function AdminTeachersPage() {
   const [{ data: profiles }, { data: links }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, email, full_name, created_at")
+      .select("id, email, full_name, avatar_url, created_at")
       .eq("role", "teacher")
       .order("created_at", { ascending: false }),
     supabase.from("teacher_students").select("teacher_id"),
@@ -59,15 +60,23 @@ export default async function AdminTeachersPage() {
                     href={`/admin/professores/${p.id}`}
                     className="group flex flex-1 items-center justify-between gap-3 px-4 py-2 transition-colors hover:bg-primary-brand-surface"
                   >
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-fg-primary transition-colors group-hover:text-primary-brand">
-                        {p.full_name ?? "—"}
-                      </span>
-                      <span className="text-xs text-fg-tertiary">
-                        {p.email}
-                      </span>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <Avatar
+                        src={p.avatar_url}
+                        fullName={p.full_name}
+                        email={p.email}
+                        size="sm"
+                      />
+                      <div className="flex min-w-0 flex-col">
+                        <span className="text-sm font-medium text-fg-primary transition-colors group-hover:text-primary-brand">
+                          {p.full_name ?? "—"}
+                        </span>
+                        <span className="text-xs text-fg-tertiary">
+                          {p.email}
+                        </span>
+                      </div>
                     </div>
-                    <span className="text-xs text-fg-tertiary">
+                    <span className="shrink-0 text-xs text-fg-tertiary">
                       {count}{" "}
                       {count === 1 ? "aluno vinculado" : "alunos vinculados"}
                     </span>

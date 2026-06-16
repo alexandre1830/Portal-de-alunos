@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { CreateUserDialog } from "@/components/admin/CreateUserDialog";
 import { UserRowMenu } from "@/components/admin/UserRowMenu";
+import { Avatar } from "@/components/shared/Avatar";
 import { Card } from "@/components/ui/Card";
 import { requireAdmin } from "@/lib/admin/guard";
 
@@ -11,7 +12,7 @@ export default async function AdminStudentsPage() {
   // Só alunos: a relação de professores agora vive em /admin/professores.
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, email, full_name, created_at")
+    .select("id, email, full_name, avatar_url, created_at")
     .eq("role", "student")
     .order("created_at", { ascending: false });
 
@@ -43,12 +44,20 @@ export default async function AdminStudentsPage() {
               >
                 <Link
                   href={`/admin/alunos/${p.id}`}
-                  className="group flex flex-1 flex-col px-4 py-2 transition-colors hover:bg-primary-brand-surface"
+                  className="group flex flex-1 items-center gap-3 px-4 py-2 transition-colors hover:bg-primary-brand-surface"
                 >
-                  <span className="text-sm font-medium text-fg-primary transition-colors group-hover:text-primary-brand">
-                    {p.full_name ?? "—"}
-                  </span>
-                  <span className="text-xs text-fg-tertiary">{p.email}</span>
+                  <Avatar
+                    src={p.avatar_url}
+                    fullName={p.full_name}
+                    email={p.email}
+                    size="sm"
+                  />
+                  <div className="flex min-w-0 flex-col">
+                    <span className="text-sm font-medium text-fg-primary transition-colors group-hover:text-primary-brand">
+                      {p.full_name ?? "—"}
+                    </span>
+                    <span className="text-xs text-fg-tertiary">{p.email}</span>
+                  </div>
                 </Link>
                 <div className="flex items-center pr-2">
                   <UserRowMenu

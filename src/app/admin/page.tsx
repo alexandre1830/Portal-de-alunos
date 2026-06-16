@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { Avatar } from "@/components/shared/Avatar";
 import { Card } from "@/components/ui/Card";
 import { SegmentedProgressBar } from "@/components/ui/SegmentedProgressBar";
 import { requireAdmin } from "@/lib/admin/guard";
@@ -203,18 +204,26 @@ function StudentRowCard({ student: s }: { student: AdminStudentRow }) {
         interactive
         className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
       >
-        <div className="flex flex-col">
-          <span className="font-medium text-fg-primary">
-            {s.fullName ?? s.email}
-          </span>
-          {s.fullName && (
-            <span className="text-xs text-fg-tertiary">{s.email}</span>
-          )}
-          <span className="mt-1 text-xs text-fg-tertiary">
-            {s.enrolledCourses}{" "}
-            {s.enrolledCourses === 1 ? "curso" : "cursos"} ·
-            última atividade {formatRelative(s.lastActivity)}
-          </span>
+        <div className="flex items-center gap-3">
+          <Avatar
+            src={s.avatarUrl}
+            fullName={s.fullName}
+            email={s.email}
+            size="md"
+          />
+          <div className="flex flex-col">
+            <span className="font-medium text-fg-primary">
+              {s.fullName ?? s.email}
+            </span>
+            {s.fullName && (
+              <span className="text-xs text-fg-tertiary">{s.email}</span>
+            )}
+            <span className="mt-1 text-xs text-fg-tertiary">
+              {s.enrolledCourses}{" "}
+              {s.enrolledCourses === 1 ? "curso" : "cursos"} ·
+              última atividade {formatRelative(s.lastActivity)}
+            </span>
+          </div>
         </div>
         <div className="flex flex-col gap-2 sm:items-end">
           <span className="text-sm text-fg-secondary">
