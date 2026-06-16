@@ -120,10 +120,11 @@ function StatLink({
       <Card padded interactive className="flex h-full flex-col gap-2 p-8">
         <div className="flex items-start justify-between gap-3">
           <span className="text-4xl font-bold text-fg-primary">{value}</span>
-          {/* Badge circular com o ícone — mesmo padrão visual do KpiIcon
-              no painel do aluno: surface translúcida da marca + ícone
-              em primary-brand. Funciona em ambos os temas via tokens. */}
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-brand-surface text-primary-brand">
+          {/* Badge circular com o ícone — surface da marca um passo mais
+              saturada (brand-lighter = #c5d8f8 no light) pra ter contraste
+              visível contra o card branco. No dark cai em rgba translúcida
+              da marca — mesma régua do empty da barra de progresso. */}
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-brand-lighter text-primary-brand">
             {icon}
           </span>
         </div>
