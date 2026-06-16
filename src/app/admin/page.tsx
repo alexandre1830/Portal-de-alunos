@@ -36,9 +36,9 @@ export default async function AdminHome() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-2">
+      {/* <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold text-fg-primary">Visão geral</h1>
-      </div>
+      </div> */}
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <StatLink
@@ -76,9 +76,6 @@ export default async function AdminHome() {
           <h2 className="text-lg font-semibold text-fg-primary">
             Atividade recente
           </h2>
-          <p className="text-sm text-fg-secondary">
-            Top 5 alunos da escola por última atividade.
-          </p>
         </div>
 
         {recentStudents.length === 0 ? (

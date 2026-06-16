@@ -46,7 +46,7 @@ export function CreateCourseDialog() {
           />
           <input
             name="slug"
-            placeholder="slug (opcional)"
+            placeholder="URL (opcional)"
             className={inputCls}
           />
           <div className="flex gap-3">

@@ -72,13 +72,8 @@ export default async function AdminCourseConfigPage({
             name="is_published"
             defaultChecked={course.is_published}
             label="Publicado"
-            description="Quando ligado, alunos matriculados conseguem acessar."
+            description=""
           />
-          <p className="text-xs text-fg-tertiary">
-            Vínculo professor → alunos é gerenciado em{" "}
-            <strong>Professores</strong> no menu superior. Cursos não têm mais
-            um professor responsável.
-          </p>
           <Button type="submit" className="self-start">
             Salvar curso
           </Button>

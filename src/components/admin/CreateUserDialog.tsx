@@ -47,7 +47,7 @@ export function CreateUserDialog({
         open={open}
         onClose={close}
         title={`Novo ${label}`}
-        description="A senha pode ficar em branco — geramos uma curta para você entregar."
+        description="Crie uma senha temporária ou use uma senha aleatória do sistema."
       >
         <form action={formAction} className="flex flex-col gap-3">
           <input
