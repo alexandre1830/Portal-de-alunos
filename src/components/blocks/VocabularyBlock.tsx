@@ -23,22 +23,37 @@ export function VocabularyBlock({
       )}
       <ul className="flex flex-col divide-y divide-border-primary">
         {data.items.map((item, i) => (
-        <li key={i} className="flex items-start justify-between gap-3 py-2">
-          {/* Coluna esquerda: termo + exemplo */}
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="font-medium text-fg-primary">{item.term}</span>
-            {item.example && (
-              <span className="text-sm italic text-fg-tertiary">
-                {item.example}
-              </span>
-            )}
-          </div>
-          {/* Coluna direita: tradução em cima, ícone de áudio embaixo
-              alinhados à direita — ocupa o espaço livre que existia. */}
-          <div className="flex shrink-0 flex-col items-end gap-0.5">
-            <span className="text-sm text-fg-secondary">
-              {item.translation}
-            </span>
+          <li
+            key={i}
+            className="flex items-center justify-between gap-3 py-2"
+          >
+            {/* Layout muda conforme há exemplo:
+                  Sem exemplo  → termo (bold) em cima / tradução embaixo.
+                  Com exemplo  → "termo: tradução" na 1ª linha / exemplo
+                                  itálico embaixo.
+                Em ambos os casos o botão de áudio fica sozinho à direita. */}
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              {item.example ? (
+                <>
+                  <span className="text-fg-primary">
+                    <span className="font-medium">{item.term}</span>:{" "}
+                    {item.translation}
+                  </span>
+                  <span className="text-sm italic text-fg-tertiary">
+                    {item.example}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="font-medium text-fg-primary">
+                    {item.term}
+                  </span>
+                  <span className="text-sm text-fg-secondary">
+                    {item.translation}
+                  </span>
+                </>
+              )}
+            </div>
             <SpeakButton
               iconOnly
               label={`Ouvir "${item.term}"`}
@@ -49,7 +64,6 @@ export function VocabularyBlock({
                 ...(tts?.rate ? { rate: tts.rate } : {}),
               }}
             />
-          </div>
           </li>
         ))}
       </ul>
