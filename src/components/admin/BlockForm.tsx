@@ -8,22 +8,38 @@ import { createBlock, updateBlock } from "@/lib/admin/actions";
 import { toast } from "@/lib/toast/store";
 import { cn } from "@/lib/utils/cn";
 
-const TYPES: [string, string][] = [
-  ["rich_text", "Texto"],
-  ["reading_tts", "Leitura (áudio)"],
-  ["vocabulary", "Vocabulário"],
-  ["dialogue_tts", "Diálogo (áudio)"],
-  ["pronunciation", "Pronúncia"],
-  ["examples", "Exemplos"],
-  ["speaking", "Speaking (falar)"],
-  ["multiple_choice", "Múltipla escolha"],
-  ["fill_blank", "Lacuna"],
-  ["translation", "Tradução"],
-  ["reorder_words", "Reordenar palavras"],
-  ["error_correction", "Correção de erro"],
+// Catálogo de tipos de bloco organizado em GRUPOS — usado pelo picker
+// visual em modo create. Conteúdo lecionado vs exercícios autocorrigidos:
+// separar visualmente ajuda o admin a montar a parte com intenção.
+type BlockTypeEntry = {
+  value: string;
+  label: string;
+  description: string;
+  icon: React.ReactNode;
+};
+
+const CONTENT_TYPES: BlockTypeEntry[] = [
+  { value: "rich_text", label: "Texto", description: "Explicação rica em texto.", icon: <IconText /> },
+  { value: "reading_tts", label: "Leitura (áudio)", description: "Texto com botão de áudio.", icon: <IconReading /> },
+  { value: "vocabulary", label: "Vocabulário", description: "Lista termo + tradução + áudio.", icon: <IconVocab /> },
+  { value: "dialogue_tts", label: "Diálogo (áudio)", description: "Falas entre personagens.", icon: <IconDialogue /> },
+  { value: "pronunciation", label: "Pronúncia", description: "Frases para ouvir e treinar.", icon: <IconPronunciation /> },
+  { value: "examples", label: "Exemplos", description: "Frases-exemplo com tradução e áudio.", icon: <IconExamples /> },
+  { value: "speaking", label: "Speaking (falar)", description: "Aluno fala; sistema compara.", icon: <IconSpeaking /> },
 ];
 
-const TYPE_LABEL = Object.fromEntries(TYPES);
+const EXERCISE_TYPES_PICKER: BlockTypeEntry[] = [
+  { value: "multiple_choice", label: "Múltipla escolha", description: "Pergunta + alternativas.", icon: <IconChoice /> },
+  { value: "fill_blank", label: "Lacuna", description: "Aluno completa a frase.", icon: <IconBlank /> },
+  { value: "translation", label: "Tradução", description: "Traduzir a frase.", icon: <IconTranslate /> },
+  { value: "reorder_words", label: "Reordenar palavras", description: "Montar a frase na ordem certa.", icon: <IconReorder /> },
+  { value: "error_correction", label: "Correção de erro", description: "Reescrever frase corrigida.", icon: <IconCorrection /> },
+];
+
+const ALL_TYPES = [...CONTENT_TYPES, ...EXERCISE_TYPES_PICKER];
+const TYPE_LABEL = Object.fromEntries(
+  ALL_TYPES.map((t) => [t.value, t.label]),
+);
 
 export interface BlockInitial {
   text?: string;
@@ -79,7 +95,11 @@ export function BlockForm({
   // na mesma linha do tipo do bloco, evitando uma faixa morta acima.
   headerSlot?: React.ReactNode;
 }) {
-  const [type, setType] = useState(fixedType ?? "rich_text");
+  // Em create: começa sem tipo escolhido (mostra picker em vez do form).
+  // Em edit: tipo é fixo e sempre definido.
+  const [type, setType] = useState<string | null>(
+    fixedType ?? (mode === "edit" ? "rich_text" : null),
+  );
   const formRef = useRef<HTMLFormElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -112,6 +132,31 @@ export function BlockForm({
     }, 800);
   }
 
+  // Picker visual em duas seções (Conteúdo / Exercícios). Aparece SOMENTE
+  // em modo create, antes do tipo ser escolhido. Após o clique, abrimos o
+  // form de fato — com "← Trocar tipo" pra voltar.
+  if (mode === "create" && !type) {
+    return (
+      <div className="flex flex-col gap-6">
+        <TypeGroup
+          title="Conteúdo lecionado"
+          subtitle="Blocos que apresentam o conteúdo da parte."
+          items={CONTENT_TYPES}
+          onPick={setType}
+        />
+        <TypeGroup
+          title="Exercícios autocorrigidos"
+          subtitle="Blocos com correção automática e XP."
+          items={EXERCISE_TYPES_PICKER}
+          onPick={setType}
+        />
+        {headerSlot && (
+          <div className="flex justify-end">{headerSlot}</div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <form
       ref={formRef}
@@ -121,25 +166,28 @@ export function BlockForm({
     >
       <input type="hidden" name="part_id" value={partId} />
       <input type="hidden" name="course_id" value={courseId} />
-      <input type="hidden" name="type" value={type} />
+      <input type="hidden" name="type" value={type ?? ""} />
       {blockId && <input type="hidden" name="id" value={blockId} />}
 
       <div className="flex items-center justify-between gap-3">
         {mode === "create" ? (
-          <select
-            className={cn(inputCls, "max-w-xs flex-1")}
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-          >
-            {TYPES.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+          // Em create, depois de escolher o tipo, mostramos o label
+          // do tipo + um link "Trocar tipo" pra voltar ao picker.
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-medium uppercase text-fg-tertiary">
+              {type ? TYPE_LABEL[type] ?? type : ""}
+            </span>
+            <button
+              type="button"
+              onClick={() => setType(null)}
+              className="text-xs text-primary-brand hover:underline"
+            >
+              ← Trocar tipo
+            </button>
+          </div>
         ) : (
           <span className="text-xs font-medium uppercase text-fg-tertiary">
-            {TYPE_LABEL[type] ?? type}
+            {type ? TYPE_LABEL[type] ?? type : ""}
           </span>
         )}
 
@@ -391,6 +439,182 @@ export function BlockForm({
         </Button>
       )}
     </form>
+  );
+}
+
+// Picker visual: uma seção (Conteúdo OU Exercícios) com card pequeno
+// por tipo. Click escolhe o tipo e abre o form correspondente.
+function TypeGroup({
+  title,
+  subtitle,
+  items,
+  onPick,
+}: {
+  title: string;
+  subtitle: string;
+  items: BlockTypeEntry[];
+  onPick: (value: string) => void;
+}) {
+  return (
+    <section className="flex flex-col gap-3">
+      <div className="flex flex-col">
+        <h3 className="text-sm font-semibold text-fg-primary">{title}</h3>
+        <p className="text-xs text-fg-secondary">{subtitle}</p>
+      </div>
+      <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {items.map((it) => (
+          <li key={it.value}>
+            <button
+              type="button"
+              onClick={() => onPick(it.value)}
+              className="group flex w-full items-center gap-3 rounded-lg border border-border-primary bg-bg-secondary px-3 py-2.5 text-left transition-colors hover:border-primary-brand/40 hover:bg-primary-brand-surface"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-bg-tertiary text-fg-secondary transition-colors group-hover:bg-primary-brand-surface group-hover:text-primary-brand">
+                {it.icon}
+              </span>
+              <span className="flex min-w-0 flex-col">
+                <span className="truncate text-sm font-medium text-fg-primary group-hover:text-primary-brand">
+                  {it.label}
+                </span>
+                <span className="truncate text-xs text-fg-tertiary">
+                  {it.description}
+                </span>
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+// Ícones inline para o picker. SVGs outline 24x24 — compactos e sem
+// dependência de novos arquivos em /icons (só usados aqui).
+function svgProps() {
+  return {
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true as const,
+    className: "h-5 w-5",
+  };
+}
+
+function IconText() {
+  return (
+    <svg {...svgProps()}>
+      <path d="M4 6h16M4 12h12M4 18h8" />
+    </svg>
+  );
+}
+
+function IconReading() {
+  return (
+    <svg {...svgProps()}>
+      <path d="M3 5a2 2 0 0 1 2-2h4a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H3z" />
+      <path d="M21 5a2 2 0 0 0-2-2h-4a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h7z" />
+    </svg>
+  );
+}
+
+function IconVocab() {
+  return (
+    <svg {...svgProps()}>
+      <path d="M4 4h16v16H4z" />
+      <path d="M4 9h16M9 4v16" />
+    </svg>
+  );
+}
+
+function IconDialogue() {
+  return (
+    <svg {...svgProps()}>
+      <path d="M3 6a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3v-3H5a2 2 0 0 1-2-2z" />
+      <path d="M16 9h3a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1v3l-4-3" />
+    </svg>
+  );
+}
+
+function IconPronunciation() {
+  return (
+    <svg {...svgProps()}>
+      <path d="M11 5 6 9H3v6h3l5 4z" />
+      <path d="M15.5 9a4 4 0 0 1 0 6" />
+      <path d="M18.5 6a8 8 0 0 1 0 12" />
+    </svg>
+  );
+}
+
+function IconExamples() {
+  return (
+    <svg {...svgProps()}>
+      <path d="M9 7h11M9 12h11M9 17h7" />
+      <circle cx="4.5" cy="7" r="1" fill="currentColor" />
+      <circle cx="4.5" cy="12" r="1" fill="currentColor" />
+      <circle cx="4.5" cy="17" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconSpeaking() {
+  return (
+    <svg {...svgProps()}>
+      <rect x="9" y="3" width="6" height="12" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0" />
+      <path d="M12 18v3" />
+    </svg>
+  );
+}
+
+function IconChoice() {
+  return (
+    <svg {...svgProps()}>
+      <circle cx="5" cy="7" r="2" />
+      <circle cx="5" cy="17" r="2" />
+      <path d="M11 7h10M11 17h10" />
+      <path d="m3.5 7 1 1 2-2" />
+    </svg>
+  );
+}
+
+function IconBlank() {
+  return (
+    <svg {...svgProps()}>
+      <path d="M4 6h6M14 6h6M4 12h16M4 18h6M14 18h6" />
+    </svg>
+  );
+}
+
+function IconTranslate() {
+  return (
+    <svg {...svgProps()}>
+      <path d="M3 5h10" />
+      <path d="M7 3v2c0 4-2 8-5 9" />
+      <path d="M3 9c0 3 4 6 9 7" />
+      <path d="m13 21 4-10 4 10" />
+      <path d="M14.5 17h5" />
+    </svg>
+  );
+}
+
+function IconReorder() {
+  return (
+    <svg {...svgProps()}>
+      <path d="M3 6h13l-3-3M21 18H8l3 3" />
+    </svg>
+  );
+}
+
+function IconCorrection() {
+  return (
+    <svg {...svgProps()}>
+      <path d="M14 4 5 13l-1 5 5-1 9-9z" />
+      <path d="m13 5 4 4" />
+      <path d="m15 18 2 2 4-4" />
+    </svg>
   );
 }
 
