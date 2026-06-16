@@ -12,25 +12,29 @@ function looksLikeHtml(s: string): boolean {
 }
 
 export function RichTextBlock({ data }: { data: RichTextData }) {
-  if (looksLikeHtml(data.text)) {
+  const body = looksLikeHtml(data.text) ? (
     // HTML gerado por TipTap (admin é privilegiado, conteúdo seguro).
-    return (
-      <div
-        className="tiptap text-fg-primary"
-        dangerouslySetInnerHTML={{ __html: data.text }}
-      />
-    );
-  }
-  const paragraphs = data.text
-    .split(/\n{2,}/)
-    .filter((p) => p.trim().length > 0);
-  return (
+    <div
+      className="tiptap text-fg-primary"
+      dangerouslySetInnerHTML={{ __html: data.text }}
+    />
+  ) : (
     <div className="tiptap text-fg-primary">
-      {paragraphs.map((paragraph, i) => (
-        <p key={i} className="whitespace-pre-wrap">
-          {paragraph}
-        </p>
-      ))}
+      {data.text
+        .split(/\n{2,}/)
+        .filter((p) => p.trim().length > 0)
+        .map((paragraph, i) => (
+          <p key={i} className="whitespace-pre-wrap">
+            {paragraph}
+          </p>
+        ))}
+    </div>
+  );
+  if (!data.title) return body;
+  return (
+    <div className="flex flex-col gap-2">
+      <h4 className="font-medium text-fg-primary">{data.title}</h4>
+      {body}
     </div>
   );
 }

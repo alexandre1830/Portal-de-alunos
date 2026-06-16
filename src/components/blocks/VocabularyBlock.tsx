@@ -17,8 +17,12 @@ export function VocabularyBlock({
   tts?: TtsOverride;
 }) {
   return (
-    <ul className="flex flex-col divide-y divide-border-primary">
-      {data.items.map((item, i) => (
+    <div className="flex flex-col gap-2">
+      {data.title && (
+        <h4 className="font-medium text-fg-primary">{data.title}</h4>
+      )}
+      <ul className="flex flex-col divide-y divide-border-primary">
+        {data.items.map((item, i) => (
         <li key={i} className="flex items-start justify-between gap-3 py-2">
           {/* Coluna esquerda: termo + exemplo */}
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -46,8 +50,9 @@ export function VocabularyBlock({
               }}
             />
           </div>
-        </li>
-      ))}
-    </ul>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

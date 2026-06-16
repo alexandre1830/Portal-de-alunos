@@ -35,7 +35,10 @@ function toInitial(
   switch (type) {
     case "rich_text": {
       const p = richTextData.safeParse(data);
-      return { text: p.success ? p.data.text : "" };
+      return {
+        title: p.success ? (p.data.title ?? "") : "",
+        text: p.success ? p.data.text : "",
+      };
     }
     case "reading_tts": {
       const p = readingData.safeParse(data);
@@ -57,6 +60,7 @@ function toInitial(
       const p = vocabularyData.safeParse(data);
       return p.success
         ? {
+            title: p.data.title ?? "",
             items: p.data.items
               .map((it) => {
                 const head = `${it.term}: ${it.translation}`;
@@ -80,7 +84,10 @@ function toInitial(
     case "dialogue_tts": {
       const p = dialogueData.safeParse(data);
       return p.success
-        ? { lines: p.data.lines.map((l) => `${l.speaker}: ${l.text}`).join("\n") }
+        ? {
+            title: p.data.title ?? "",
+            lines: p.data.lines.map((l) => `${l.speaker}: ${l.text}`).join("\n"),
+          }
         : {};
     }
     case "multiple_choice": {

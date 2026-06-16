@@ -40,6 +40,9 @@ const ALL_TYPES = [...CONTENT_TYPES, ...EXERCISE_TYPES_PICKER];
 const TYPE_LABEL = Object.fromEntries(
   ALL_TYPES.map((t) => [t.value, t.label]),
 );
+// Set para checagem rápida no conditional do título — todo bloco de
+// conteúdo lecionado aceita título opcional no topo.
+const CONTENT_TYPE_VALUES = new Set(CONTENT_TYPES.map((t) => t.value));
 
 export interface BlockInitial {
   text?: string;
@@ -190,10 +193,7 @@ export function BlockForm({
         </div>
       </div>
 
-      {(type === "reading_tts" ||
-        type === "pronunciation" ||
-        type === "speaking" ||
-        type === "examples") && (
+      {type && CONTENT_TYPE_VALUES.has(type) && (
         <input
           name="title"
           defaultValue={initial.title}

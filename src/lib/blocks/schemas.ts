@@ -9,11 +9,15 @@ import { z } from "zod";
 // vão para o cliente — ver toPublicExercise abaixo.
 
 // --- Blocos de conteúdo ---
+// Todos os blocos de conteúdo aceitam `title` opcional — o admin usa pra
+// dar contexto ao bloco e o renderer mostra como <h4> no topo.
 export const richTextData = z.object({
+  title: z.string().optional(),
   text: z.string(),
 });
 
 export const vocabularyData = z.object({
+  title: z.string().optional(),
   items: z
     .array(
       z.object({
@@ -31,6 +35,7 @@ export const readingData = z.object({
 });
 
 export const dialogueData = z.object({
+  title: z.string().optional(),
   lines: z
     .array(z.object({ speaker: z.string(), text: z.string() }))
     .min(1),

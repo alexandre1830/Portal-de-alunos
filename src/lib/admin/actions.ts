@@ -404,7 +404,13 @@ function buildBlockData(type: string, formData: FormData): {
 
   switch (type) {
     case "rich_text":
-      return { data: { text: str(formData, "text") }, solution: null };
+      return {
+        data: {
+          title: str(formData, "title") || undefined,
+          text: str(formData, "text"),
+        },
+        solution: null,
+      };
     case "reading_tts":
       return {
         data: { title: str(formData, "title") || undefined, text: str(formData, "text") },
@@ -423,6 +429,7 @@ function buildBlockData(type: string, formData: FormData): {
     case "vocabulary":
       return {
         data: {
+          title: str(formData, "title") || undefined,
           items: lines("items").map((line) => {
             // Convenção: "termo: tradução | exemplo (opcional)".
             // O primeiro ":" separa termo e tradução; o "|" continua
@@ -457,6 +464,7 @@ function buildBlockData(type: string, formData: FormData): {
     case "dialogue_tts":
       return {
         data: {
+          title: str(formData, "title") || undefined,
           lines: lines("lines").map((line) => {
             const i = line.indexOf(":");
             const speaker = i >= 0 ? line.slice(0, i).trim() : "";
