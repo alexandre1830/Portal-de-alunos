@@ -58,7 +58,10 @@ function toInitial(
       return p.success
         ? {
             items: p.data.items
-              .map((it) => [it.term, it.translation, it.example].filter(Boolean).join(" | "))
+              .map((it) => {
+                const head = `${it.term}: ${it.translation}`;
+                return it.example ? `${head} | ${it.example}` : head;
+              })
               .join("\n"),
           }
         : {};

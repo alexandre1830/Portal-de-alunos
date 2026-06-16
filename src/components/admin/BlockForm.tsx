@@ -230,11 +230,13 @@ export function BlockForm({
           <textarea
             name="items"
             defaultValue={initial.items}
-            placeholder={"termo | tradução | exemplo (opcional)"}
+            placeholder={"termo: tradução | exemplo (opcional)"}
             rows={4}
             className={areaCls}
           />
-          <Hint>Um item por linha: termo | tradução | exemplo (exemplo é opcional).</Hint>
+          <Hint>
+            Um item por linha: <code>termo: tradução | exemplo</code> (exemplo é opcional).
+          </Hint>
         </>
       )}
 

@@ -424,8 +424,18 @@ function buildBlockData(type: string, formData: FormData): {
       return {
         data: {
           items: lines("items").map((line) => {
-            const [term, translation, example] = line.split("|").map((s) => s.trim());
-            return { term: term ?? "", translation: translation ?? "", ...(example ? { example } : {}) };
+            // Convenção: "termo: tradução | exemplo (opcional)".
+            // O primeiro ":" separa termo e tradução; o "|" continua
+            // separando o exemplo (que pode conter ":" sem problema).
+            const i = line.indexOf(":");
+            const term = (i >= 0 ? line.slice(0, i) : line).trim();
+            const rest = i >= 0 ? line.slice(i + 1) : "";
+            const [translation, example] = rest.split("|").map((s) => s.trim());
+            return {
+              term,
+              translation: translation ?? "",
+              ...(example ? { example } : {}),
+            };
           }),
         },
         solution: null,
