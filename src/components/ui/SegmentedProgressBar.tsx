@@ -5,15 +5,17 @@ import { cn } from "@/lib/utils/cn";
 // lição), e não um percentual contínuo.
 //
 // Cada segmento é renderizado como um pill arredondado. Segmentos completos
-// usam bg-fg-primary; pendentes usam bg-bg-tertiary. A transição de width/
-// background dá uma sensação de "preenchendo" quando recarrega após algo
-// ficar pronto.
+// usam bg-primary-brand; pendentes usam bg-primary-brand-lighter (tint
+// claro da marca) — passa contraste no light contra surface-card branco,
+// e no dark cai em rgba translúcido da marca. A transição de background
+// dá sensação de "preenchendo" quando recarrega após algo ficar pronto.
 export function SegmentedProgressBar({
   value,
   max,
   className,
   ariaLabel,
   filledClassName = "bg-primary-brand",
+  emptyClassName = "bg-primary-brand-lighter",
 }: {
   value: number;
   max: number;
@@ -23,6 +25,9 @@ export function SegmentedProgressBar({
   // marca (preserva todos os callers existentes); o dashboard do aluno
   // sobrescreve com bg-accent-progress.
   filledClassName?: string;
+  // Classe dos segmentos pendentes. Default = tint claro da marca, com
+  // contraste visível em ambos os temas. Override em casos especiais.
+  emptyClassName?: string;
 }) {
   const safeMax = Math.max(0, Math.floor(max));
   const safeValue = Math.max(0, Math.min(Math.floor(value), safeMax));
@@ -37,7 +42,8 @@ export function SegmentedProgressBar({
         aria-valuenow={0}
         aria-label={ariaLabel}
         className={cn(
-          "h-1.5 w-full rounded-full bg-bg-tertiary",
+          "h-1.5 w-full rounded-full",
+          emptyClassName,
           className,
         )}
       />
@@ -61,7 +67,7 @@ export function SegmentedProgressBar({
             aria-hidden="true"
             className={cn(
               "h-1.5 flex-1 rounded-full transition-colors duration-300",
-              done ? filledClassName : "bg-bg-tertiary",
+              done ? filledClassName : emptyClassName,
             )}
           />
         );
