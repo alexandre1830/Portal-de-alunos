@@ -42,6 +42,22 @@ export const pronunciationData = z.object({
   items: z.array(z.string()).min(1),
 });
 
+// Exemplos: frases de exemplo (frequentemente atreladas a um vocabulário
+// ou tópico gramatical), cada uma com tradução opcional e botão de áudio.
+// Diferente de pronunciation, aqui o foco é entender o significado — a
+// tradução aparece embaixo de cada frase quando preenchida.
+export const examplesData = z.object({
+  title: z.string().optional(),
+  items: z
+    .array(
+      z.object({
+        sentence: z.string(),
+        translation: z.string().optional(),
+      }),
+    )
+    .min(1),
+});
+
 // Prática de speaking: lista de frases que o aluno deve falar. Web Speech API
 // no navegador transcreve, e o servidor compara com Levenshtein (3 estados).
 // Não conta para conclusão da parte (modo híbrido).
@@ -115,6 +131,7 @@ const draftBlock = z.discriminatedUnion("type", [
   z.object({ type: z.literal("reading_tts"), data: readingData }),
   z.object({ type: z.literal("dialogue_tts"), data: dialogueData }),
   z.object({ type: z.literal("pronunciation"), data: pronunciationData }),
+  z.object({ type: z.literal("examples"), data: examplesData }),
   z.object({ type: z.literal("speaking"), data: speakingData }),
   z.object({
     type: z.literal("multiple_choice"),
@@ -162,6 +179,7 @@ export type VocabularyData = z.infer<typeof vocabularyData>;
 export type ReadingData = z.infer<typeof readingData>;
 export type DialogueData = z.infer<typeof dialogueData>;
 export type PronunciationData = z.infer<typeof pronunciationData>;
+export type ExamplesData = z.infer<typeof examplesData>;
 export type SpeakingData = z.infer<typeof speakingData>;
 export type MultipleChoiceData = z.infer<typeof multipleChoiceData>;
 export type FillBlankData = z.infer<typeof fillBlankData>;
@@ -175,6 +193,7 @@ export const BLOCK_SCHEMAS = {
   reading_tts: readingData,
   dialogue_tts: dialogueData,
   pronunciation: pronunciationData,
+  examples: examplesData,
   speaking: speakingData,
   multiple_choice: multipleChoiceData,
   fill_blank: fillBlankData,

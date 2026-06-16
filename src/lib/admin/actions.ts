@@ -430,6 +430,20 @@ function buildBlockData(type: string, formData: FormData): {
         },
         solution: null,
       };
+    case "examples":
+      return {
+        data: {
+          title: str(formData, "title") || undefined,
+          items: lines("items").map((line) => {
+            const [sentence, translation] = line.split("|").map((s) => s.trim());
+            return {
+              sentence: sentence ?? "",
+              ...(translation ? { translation } : {}),
+            };
+          }),
+        },
+        solution: null,
+      };
     case "dialogue_tts":
       return {
         data: {

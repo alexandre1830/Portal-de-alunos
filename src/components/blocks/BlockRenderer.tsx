@@ -1,5 +1,6 @@
 import { DialogueBlock } from "@/components/blocks/DialogueBlock";
 import { ErrorCorrectionExercise } from "@/components/blocks/ErrorCorrectionExercise";
+import { ExamplesBlock } from "@/components/blocks/ExamplesBlock";
 import { FillBlankExercise } from "@/components/blocks/FillBlankExercise";
 import { MultipleChoiceExercise } from "@/components/blocks/MultipleChoiceExercise";
 import { PronunciationBlock } from "@/components/blocks/PronunciationBlock";
@@ -12,6 +13,7 @@ import { VocabularyBlock } from "@/components/blocks/VocabularyBlock";
 import {
   dialogueData,
   errorCorrectionData,
+  examplesData,
   fillBlankData,
   multipleChoiceData,
   pronunciationData,
@@ -98,6 +100,14 @@ export function BlockRenderer({
         <PronunciationBlock data={parsed.data} tts={tts} />
       ) : (
         <Notice>Bloco de pronúncia inválido.</Notice>
+      );
+    }
+    case "examples": {
+      const parsed = examplesData.safeParse(block.data);
+      return parsed.success ? (
+        <ExamplesBlock data={parsed.data} tts={tts} />
+      ) : (
+        <Notice>Bloco de exemplos inválido.</Notice>
       );
     }
     case "speaking": {

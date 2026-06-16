@@ -16,6 +16,7 @@ import {
   multipleChoiceSolution,
   errorCorrectionData,
   errorCorrectionSolution,
+  examplesData,
   pronunciationData,
   readingData,
   reorderWordsData,
@@ -58,6 +59,17 @@ function toInitial(
         ? {
             items: p.data.items
               .map((it) => [it.term, it.translation, it.example].filter(Boolean).join(" | "))
+              .join("\n"),
+          }
+        : {};
+    }
+    case "examples": {
+      const p = examplesData.safeParse(data);
+      return p.success
+        ? {
+            title: p.data.title ?? "",
+            items: p.data.items
+              .map((it) => [it.sentence, it.translation].filter(Boolean).join(" | "))
               .join("\n"),
           }
         : {};
