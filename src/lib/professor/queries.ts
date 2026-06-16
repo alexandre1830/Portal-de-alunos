@@ -254,7 +254,13 @@ export async function getStudentDetail(
         totalLessons,
         lastActivity: lastActivityByCourse.get(c.id) ?? null,
       };
-    });
+    })
+    // Filtra cursos sem qualquer engajamento — matrículas "frias" (aluno
+    // foi vinculado mas nunca tocou) poluíam o perfil. lastActivity vira
+    // null quando não existe nenhum part_progress, que é o sinal canônico
+    // de "começou a estudar". Cursos novos aparecem assim que o aluno
+    // resolve o primeiro bloco.
+    .filter((c) => c.lastActivity !== null);
 
   return {
     userId: profile.id,
