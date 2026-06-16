@@ -307,14 +307,19 @@ export default async function PainelPage() {
                   >
                     {/* Stretched link: cobre o card inteiro e leva à visão
                         geral do curso. Botões internos (ex.: Continuar)
-                        ficam com z-10 pra continuar interagíveis. */}
+                        ficam com z-10 pra continuar interagíveis.
+                        IMPORTANTE: os wrappers internos NÃO podem ter
+                        `relative` sem z-index — em mesma stacking context,
+                        positioned-sem-z pinta acima de positioned-sem-z
+                        anteriores (ordem de documento), engolindo o clique
+                        do stretched link. Por isso ficam não-posicionados. */}
                     <Link
                       href={`/cursos/${course.slug}`}
                       className="absolute inset-0 rounded-lg"
                       aria-label={`Abrir curso ${course.title}`}
                     />
                     {/* Header: nome do curso + pill idioma/nível. */}
-                    <div className="relative flex items-start justify-between gap-3">
+                    <div className="flex items-start justify-between gap-3">
                       <div className="flex flex-col gap-0.5">
                         <span
                           className="self-start font-medium text-fg-primary"
@@ -339,7 +344,7 @@ export default async function PainelPage() {
                         sem fundo nem caixa extra para evitar a sensação
                         de "card dentro de card". */}
                     {cont && cont.partsTotalInCourse > 0 ? (
-                      <div className="relative flex flex-col gap-3 border-t border-border-primary pt-3">
+                      <div className="flex flex-col gap-3 border-t border-border-primary pt-3">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex min-w-0 flex-col gap-1">
                             {courseDone ? (
@@ -378,7 +383,7 @@ export default async function PainelPage() {
                     ) : (
                       // Curso sem partes publicadas ainda — o stretched
                       // link do próprio card já leva à visão geral.
-                      <span className="relative self-start text-sm text-fg-tertiary">
+                      <span className="self-start text-sm text-fg-tertiary">
                         Sem aulas publicadas ainda.
                       </span>
                     )}
