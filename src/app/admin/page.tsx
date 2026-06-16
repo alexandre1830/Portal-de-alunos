@@ -1,14 +1,38 @@
 import Link from "next/link";
 
 import { Card } from "@/components/ui/Card";
+import { SegmentedProgressBar } from "@/components/ui/SegmentedProgressBar";
 import { requireAdmin } from "@/lib/admin/guard";
-import { getAdminOverview } from "@/lib/admin/queries";
+import {
+  getAdminOverview,
+  getRecentlyActiveStudents,
+  type AdminStudentRow,
+} from "@/lib/admin/queries";
 
-// Home do admin: 4 cards de visão geral em grid 2x2. Cada card é
-// clicável e leva para a página correspondente.
+// Mesmo helper de tempo relativo que o painel do professor usa.
+// Duplicado aqui pra evitar uma viagem ao /shared/utils só por isso.
+function formatRelative(iso: string | null): string {
+  if (!iso) return "—";
+  const t = new Date(iso).getTime();
+  const diffMin = Math.floor((Date.now() - t) / 60_000);
+  if (diffMin < 1) return "agora mesmo";
+  if (diffMin < 60) return `há ${diffMin} min`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `há ${diffH} h`;
+  const diffD = Math.floor(diffH / 24);
+  if (diffD < 7) return `há ${diffD} d`;
+  return new Date(iso).toLocaleDateString("pt-BR");
+}
+
+// Home do admin: 4 cards de visão geral + lista dos alunos mais ativos
+// recentemente (mesmo card do painel do professor). Cada card é clicável
+// e leva à página correspondente.
 export default async function AdminHome() {
   const { supabase } = await requireAdmin();
-  const overview = await getAdminOverview(supabase);
+  const [overview, recentStudents] = await Promise.all([
+    getAdminOverview(supabase),
+    getRecentlyActiveStudents(supabase, 5),
+  ]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -46,6 +70,33 @@ export default async function AdminHome() {
           }
         />
       </section>
+
+      <section className="flex flex-col gap-3">
+        <div className="flex flex-col">
+          <h2 className="text-lg font-semibold text-fg-primary">
+            Atividade recente
+          </h2>
+          <p className="text-sm text-fg-secondary">
+            Top 5 alunos da escola por última atividade.
+          </p>
+        </div>
+
+        {recentStudents.length === 0 ? (
+          <Card padded>
+            <p className="text-sm text-fg-secondary">
+              Nenhum aluno cadastrado ainda.
+            </p>
+          </Card>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {recentStudents.map((s) => (
+              <li key={s.userId}>
+                <StudentRowCard student={s} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
@@ -72,3 +123,46 @@ function StatLink({
   );
 }
 
+// Mesmo formato visual do card de aluno no painel do professor —
+// /professor/alunos/page.tsx. Link vai pra detalhe administrativo
+// (/admin/alunos/[id]).
+function StudentRowCard({ student: s }: { student: AdminStudentRow }) {
+  return (
+    <Link href={`/admin/alunos/${s.userId}`} className="block">
+      <Card
+        padded
+        interactive
+        className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="flex flex-col">
+          <span className="font-medium text-fg-primary">
+            {s.fullName ?? s.email}
+          </span>
+          {s.fullName && (
+            <span className="text-xs text-fg-tertiary">{s.email}</span>
+          )}
+          <span className="mt-1 text-xs text-fg-tertiary">
+            {s.enrolledCourses}{" "}
+            {s.enrolledCourses === 1 ? "curso" : "cursos"} ·
+            última atividade {formatRelative(s.lastActivity)}
+          </span>
+        </div>
+        <div className="flex flex-col gap-2 sm:items-end">
+          <span className="text-sm text-fg-secondary">
+            <span className="text-fg-primary">{s.lessonsCompleted}</span> /{" "}
+            {s.totalLessons || "—"} lições
+          </span>
+          {s.totalLessons > 0 && (
+            <div className="w-40">
+              <SegmentedProgressBar
+                value={s.lessonsCompleted}
+                max={s.totalLessons}
+                ariaLabel="Progresso geral em lições"
+              />
+            </div>
+          )}
+        </div>
+      </Card>
+    </Link>
+  );
+}
