@@ -46,18 +46,21 @@ export default async function AdminHome() {
           label="Alunos matriculados"
           value={overview.enrolledStudents}
           hint="Com matrícula ativa"
+          icon={<UsersIcon />}
         />
         <StatLink
           href="/admin/alunos"
           label="Alunos ativos"
           value={overview.activeStudents}
           hint="Últimos 7 dias"
+          icon={<ActivityIcon />}
         />
         <StatLink
           href="/admin/professores"
           label="Professores"
           value={overview.teachers}
           hint={overview.teachers === 1 ? "Cadastrado" : "Cadastrados"}
+          icon={<TeacherIcon />}
         />
         <StatLink
           href="/admin/cursos"
@@ -68,6 +71,7 @@ export default async function AdminHome() {
               ? "1 publicado"
               : `${overview.publishedCourses} publicados`
           }
+          icon={<BookIcon />}
         />
       </section>
 
@@ -103,20 +107,87 @@ function StatLink({
   label,
   value,
   hint,
+  icon,
 }: {
   href: string;
   label: string;
   value: number;
   hint: string;
+  icon: React.ReactNode;
 }) {
   return (
     <Link href={href} className="block">
       <Card padded interactive className="flex h-full flex-col gap-2 p-8">
-        <span className="text-4xl font-bold text-fg-primary">{value}</span>
+        <div className="flex items-start justify-between gap-3">
+          <span className="text-4xl font-bold text-fg-primary">{value}</span>
+          {/* Badge circular com o ícone — mesmo padrão visual do KpiIcon
+              no painel do aluno: surface translúcida da marca + ícone
+              em primary-brand. Funciona em ambos os temas via tokens. */}
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-brand-surface text-primary-brand">
+            {icon}
+          </span>
+        </div>
         <span className="text-base font-medium text-fg-primary">{label}</span>
         <span className="text-sm text-fg-tertiary">{hint}</span>
       </Card>
     </Link>
+  );
+}
+
+// Ícones inline (SVG outline 24x24) — só usados aqui, sem dependência
+// nova em /icons.
+function svgProps() {
+  return {
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true as const,
+    className: "h-5 w-5",
+  };
+}
+
+function UsersIcon() {
+  // Grupo de pessoas — alunos matriculados.
+  return (
+    <svg {...svgProps()}>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+
+function ActivityIcon() {
+  // Linha de pulso — alunos ativos / atividade recente.
+  return (
+    <svg {...svgProps()}>
+      <path d="M3 12h4l3-8 4 16 3-8h4" />
+    </svg>
+  );
+}
+
+function TeacherIcon() {
+  // Chapéu de formatura — professores.
+  return (
+    <svg {...svgProps()}>
+      <path d="M2 9 12 4l10 5-10 5L2 9z" />
+      <path d="M6 11v4c0 1.5 3 3 6 3s6-1.5 6-3v-4" />
+      <path d="M22 9v5" />
+    </svg>
+  );
+}
+
+function BookIcon() {
+  // Livro aberto — cursos.
+  return (
+    <svg {...svgProps()}>
+      <path d="M4 4h6a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5H4z" />
+      <path d="M20 4h-6a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5H20z" />
+    </svg>
   );
 }
 
