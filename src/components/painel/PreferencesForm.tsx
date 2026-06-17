@@ -106,7 +106,7 @@ export function PreferencesForm({
         <div className="flex flex-col gap-1">
           <h2 className="text-base font-semibold text-fg-primary">Áudio</h2>
           <p className="text-sm text-fg-secondary">
-            Suas escolhas são salvas automaticamente.
+            Preferências de áudio
           </p>
         </div>
         <SaveStatus status={status} />

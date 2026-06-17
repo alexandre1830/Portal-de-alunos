@@ -24,11 +24,6 @@ export default async function SessaoRevisaoPage() {
         <h1 className="text-2xl font-semibold text-fg-primary">
           Sessão de revisão
         </h1>
-        <p className="text-sm text-fg-secondary">
-          Digite a resposta de cada item. A correção e o próximo agendamento
-          são automáticos. Acertar pontua XP reduzido; quase e errado não
-          pontuam.
-        </p>
       </div>
 
       {items.length === 0 ? (

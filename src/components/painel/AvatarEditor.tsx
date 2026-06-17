@@ -101,7 +101,7 @@ export function AvatarEditor({
           if (!pending) setOpen(false);
         }}
         title="Foto de perfil"
-        description="Envie uma imagem (PNG, JPEG, WEBP ou GIF) ou remova a atual."
+        description="Envie uma foto de perfil ou remova a atual."
       >
         <div className="flex flex-col items-center gap-4">
           <Avatar src={src} fullName={fullName} email={email} size="xl" />
@@ -118,7 +118,7 @@ export function AvatarEditor({
             {src && (
               <Button
                 type="button"
-                variant="ghost"
+                variant="danger"
                 onClick={handleRemove}
                 disabled={pending}
               >
