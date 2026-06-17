@@ -1,10 +1,16 @@
 import { notFound } from "next/navigation";
 
 import { FlameIcon } from "@/components/icons/FlameIcon";
+import { EditMeetUrlButton } from "@/components/professor/EditMeetUrlButton";
 import { Avatar } from "@/components/shared/Avatar";
 import { BackLink } from "@/components/shared/BackLink";
 import { Card } from "@/components/ui/Card";
 import { SegmentedProgressBar } from "@/components/ui/SegmentedProgressBar";
+import {
+  DAY_LABELS,
+  formatStartTime,
+  listStudentLiveSessions,
+} from "@/lib/live-sessions/queries";
 import { getStudentDetail } from "@/lib/professor/queries";
 import { requireTeacher } from "@/lib/professor/guard";
 
@@ -29,7 +35,12 @@ export default async function ProfessorStudentDetailPage({
   const { studentId } = await params;
   const { supabase } = await requireTeacher();
 
-  const detail = await getStudentDetail(supabase, studentId);
+  const [detail, sessions] = await Promise.all([
+    getStudentDetail(supabase, studentId),
+    // RLS filtra pra somente as aulas onde teacher_id = professor logado.
+    // Admin vê todas; professor vê apenas as próprias.
+    listStudentLiveSessions(supabase, studentId),
+  ]);
   if (!detail) notFound();
 
   return (
@@ -148,6 +159,50 @@ export default async function ProfessorStudentDetailPage({
           </ul>
         )}
       </section>
+
+      {/* Aulas síncronas onde este professor é responsavel. RLS filtra
+          a lista — admin que abrir esta pagina vê todas as aulas; o
+          professor vê apenas as próprias. Quem cria/exclui aulas e fixa
+          dia/hora segue sendo o admin. Aqui o professor só edita o
+          link do Meet (caso o Google gere um link novo, etc.). */}
+      {sessions.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <div className="flex flex-col">
+            <h2 className="text-base font-semibold text-fg-primary">
+              Aulas síncronas
+            </h2>
+            <p className="text-xs text-fg-tertiary">
+              Horários recorrentes com link de acesso.
+            </p>
+          </div>
+          <ul className="flex flex-col divide-y divide-border-primary rounded-md border border-border-primary [&>li:first-child]:rounded-t-md [&>li:last-child]:rounded-b-md">
+            {sessions.map((s) => (
+              <li
+                key={s.id}
+                className="flex items-center justify-between gap-3 bg-bg-secondary px-4 py-3"
+              >
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <span className="text-sm font-medium text-fg-primary">
+                    {DAY_LABELS[s.dayOfWeek]} · {formatStartTime(s.startTime)}
+                  </span>
+                  <a
+                    href={s.meetUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="truncate text-xs text-primary-brand hover:underline"
+                  >
+                    {s.meetUrl}
+                  </a>
+                </div>
+                <EditMeetUrlButton
+                  sessionId={s.id}
+                  initialMeetUrl={s.meetUrl}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

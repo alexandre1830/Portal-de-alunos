@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireAdmin } from "@/lib/admin/guard";
+import { requireTeacher } from "@/lib/professor/guard";
 
 const meetUrlSchema = z
   .string()
@@ -113,6 +114,58 @@ export async function updateLiveSession(
   if (error) return { ok: false, error: error.message };
 
   revalidatePath(`/admin/alunos/${studentId}`);
+  revalidatePath("/painel");
+  return { ok: true, error: null };
+}
+
+// Ação restrita ao PROFESSOR (ou admin) — atualiza APENAS o meet_url de
+// uma aula que ele dá. A policy RLS student_live_sessions_teacher_update
+// reforça que ele só consegue editar onde teacher_id = auth.uid(); aqui
+// no app fazemos a checagem dupla pra retornar erro amigável e garantir
+// que só meet_url muda (dia/hora/professor seguem reservados ao admin).
+const updateMeetUrlSchema = z.object({
+  id: z.string().uuid(),
+  meetUrl: meetUrlSchema,
+});
+
+export async function updateLiveSessionMeetUrl(
+  formData: FormData,
+): Promise<LiveSessionActionResult> {
+  const { supabase, userId, isAdmin } = await requireTeacher();
+  const parsed = updateMeetUrlSchema.safeParse({
+    id: formData.get("id"),
+    meetUrl: formData.get("meet_url"),
+  });
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Dados inválidos.",
+    };
+  }
+  const { id, meetUrl } = parsed.data;
+
+  // Busca a sessão pra revalidar paths certos + checar ownership quando
+  // não é admin (admin pode tudo via outra policy).
+  const { data: session } = await supabase
+    .from("student_live_sessions")
+    .select("teacher_id, student_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (!session) {
+    return { ok: false, error: "Aula não encontrada." };
+  }
+  if (!isAdmin && session.teacher_id !== userId) {
+    return { ok: false, error: "Você não pode editar essa aula." };
+  }
+
+  const { error } = await supabase
+    .from("student_live_sessions")
+    .update({ meet_url: meetUrl })
+    .eq("id", id);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath(`/admin/alunos/${session.student_id}`);
+  revalidatePath(`/professor/alunos/${session.student_id}`);
   revalidatePath("/painel");
   return { ok: true, error: null };
 }
