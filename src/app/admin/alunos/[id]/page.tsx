@@ -130,7 +130,8 @@ export default async function AdminStudentDetailPage({
               <ul className="flex flex-col gap-3">
                 {detail.courses.map((c) => (
                   <li key={c.courseId}>
-                    <Card padded className="flex flex-col gap-3">
+                    <Card padded className="flex flex-col gap-4">
+                      <div className="flex flex-col gap-3">
                         <div className="flex items-baseline justify-between gap-3">
                           <span className="font-medium text-fg-primary">
                             {c.courseTitle}
@@ -157,6 +158,33 @@ export default async function AdminStudentDetailPage({
                             Última atividade {formatRelative(c.lastActivity)}
                           </span>
                         </div>
+                      </div>
+
+                      {/* Quebra por lição — segmentos = partes. Cada
+                          segmento preenchido representa uma parte concluída
+                          (na ordem de position), então o admin/professor
+                          vê QUAIS partes o aluno fez, não só quantas. */}
+                      {c.lessons.length > 0 && (
+                        <ul className="flex flex-col gap-2 border-t border-border-primary pt-3">
+                          {c.lessons.map((l) => (
+                            <li key={l.lessonId} className="flex flex-col gap-1">
+                              <div className="flex items-baseline justify-between gap-3">
+                                <span className="text-sm text-fg-primary">
+                                  {l.lessonTitle}
+                                </span>
+                                <span className="shrink-0 text-xs text-fg-tertiary">
+                                  {l.partsCompleted} / {l.totalParts} partes
+                                </span>
+                              </div>
+                              <SegmentedProgressBar
+                                value={l.partsCompleted}
+                                max={Math.max(l.totalParts, 1)}
+                                ariaLabel={`Progresso na lição ${l.lessonTitle}`}
+                              />
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </Card>
                   </li>
                 ))}

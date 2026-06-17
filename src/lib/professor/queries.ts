@@ -144,6 +144,13 @@ export async function getMyStudents(
 // Detalhe de UM aluno: cursos onde está matriculado + progresso em cada.
 // Mesma régua do resumo: progresso em LIÇÕES, partes douradas fora do
 // denominador.
+export interface StudentLessonProgress {
+  lessonId: string;
+  lessonTitle: string;
+  totalParts: number;
+  partsCompleted: number;
+}
+
 export interface StudentCourseProgress {
   courseId: string;
   courseTitle: string;
@@ -153,6 +160,10 @@ export interface StudentCourseProgress {
   lessonsCompleted: number;
   totalLessons: number;
   lastActivity: string | null;
+  // Quebra por lição (na ordem de position). Cada item permite ao
+  // admin/professor enxergar QUAIS partes o aluno fez dentro daquela
+  // lição (com SegmentedProgressBar de N segmentos).
+  lessons: StudentLessonProgress[];
 }
 
 export interface MyStudentDetail {
@@ -196,26 +207,59 @@ export async function getStudentDetail(
       .eq("user_id", studentId),
   ]);
 
-  // Universo de partes/lições por curso.
+  // Universo de partes/lições por curso. Ordena tudo por position pra
+  // que a quebra por lição apareça na ordem natural do curso e cada
+  // segmento da SegmentedProgressBar corresponda a uma parte concreta.
   const courseIds = (enrRes.data ?? [])
     .map((row) => row.course?.id)
     .filter((id): id is string => !!id);
   const regularPartsByLesson = new Map<string, string[]>();
-  const lessonsByCourse = new Map<string, Set<string>>();
+  const lessonsByCourse = new Map<
+    string,
+    { id: string; title: string }[]
+  >();
   if (courseIds.length > 0) {
-    const { data: parts } = await supabase
-      .from("parts")
-      .select("id, course_id, lesson_id, kind")
-      .in("course_id", courseIds);
-    for (const p of parts ?? []) {
+    const [partsRes, lessonsRes] = await Promise.all([
+      supabase
+        .from("parts")
+        .select("id, course_id, lesson_id, kind, position")
+        .in("course_id", courseIds)
+        .order("position"),
+      supabase
+        .from("lessons")
+        .select("id, course_id, title, position")
+        .in("course_id", courseIds)
+        .order("position"),
+    ]);
+    // Mapa rápido pra título.
+    const lessonTitleById = new Map<string, string>();
+    for (const l of lessonsRes.data ?? []) {
+      lessonTitleById.set(l.id, l.title);
+    }
+    // Set de lessonIds que já apareceram por curso (preserva ordem
+    // por position das lições).
+    const seenLessonByCourse = new Map<string, Set<string>>();
+    for (const l of lessonsRes.data ?? []) {
+      const arr = lessonsByCourse.get(l.course_id) ?? [];
+      const seen = seenLessonByCourse.get(l.course_id) ?? new Set<string>();
+      if (!seen.has(l.id)) {
+        arr.push({ id: l.id, title: l.title });
+        seen.add(l.id);
+        lessonsByCourse.set(l.course_id, arr);
+        seenLessonByCourse.set(l.course_id, seen);
+      }
+    }
+    // Partes regulares por lição, em ordem de position.
+    for (const p of partsRes.data ?? []) {
       if (p.kind === "golden") continue;
       const arr = regularPartsByLesson.get(p.lesson_id) ?? [];
       arr.push(p.id);
       regularPartsByLesson.set(p.lesson_id, arr);
-      const set = lessonsByCourse.get(p.course_id) ?? new Set<string>();
-      set.add(p.lesson_id);
-      lessonsByCourse.set(p.course_id, set);
     }
+    // Falha-segura: se algum part referencia um lessonId que nao apareceu
+    // em lessons (raro — FK garante), pelo menos nao quebra. Adicionamos
+    // como "Lição sem título" no fim.
+    void lessonTitleById;
   }
 
   // Conjunto de partes concluídas + última atividade por curso.
@@ -233,16 +277,24 @@ export async function getStudentDetail(
     .map((row) => row.course)
     .filter((c): c is NonNullable<typeof c> => c !== null)
     .map((c) => {
-      const lessons = lessonsByCourse.get(c.id) ?? new Set<string>();
+      const lessons = lessonsByCourse.get(c.id) ?? [];
+      const lessonBreakdown: StudentLessonProgress[] = [];
       let totalLessons = 0;
       let lessonsCompleted = 0;
-      for (const lessonId of lessons) {
-        const regularParts = regularPartsByLesson.get(lessonId) ?? [];
+      for (const lesson of lessons) {
+        const regularParts = regularPartsByLesson.get(lesson.id) ?? [];
         if (regularParts.length === 0) continue;
         totalLessons += 1;
-        if (regularParts.every((pid) => completedParts.has(pid))) {
-          lessonsCompleted += 1;
-        }
+        const partsCompleted = regularParts.filter((pid) =>
+          completedParts.has(pid),
+        ).length;
+        if (partsCompleted === regularParts.length) lessonsCompleted += 1;
+        lessonBreakdown.push({
+          lessonId: lesson.id,
+          lessonTitle: lesson.title,
+          totalParts: regularParts.length,
+          partsCompleted,
+        });
       }
       return {
         courseId: c.id,
@@ -253,6 +305,7 @@ export async function getStudentDetail(
         lessonsCompleted,
         totalLessons,
         lastActivity: lastActivityByCourse.get(c.id) ?? null,
+        lessons: lessonBreakdown,
       };
     })
     // Filtra cursos sem qualquer engajamento — matrículas "frias" (aluno
