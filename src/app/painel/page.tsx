@@ -110,8 +110,10 @@ export default async function PainelPage() {
       </div>
 
       {/* Gamificação — cada KPI ganha um badge circular com ícone na cor
-          da marca (azul-marinho), padrão do sistema irmão. */}
-      <section className="grid grid-cols-3 gap-3">
+          da marca (azul-marinho), padrão do sistema irmão.
+          Mobile: 1 coluna full-width (ícone + número + label cabem
+          horizontalmente). sm+: 3 colunas como antes. */}
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Link href="/painel/xp" className="block">
           <Card
             padded
@@ -172,8 +174,9 @@ export default async function PainelPage() {
         </Link>
       </section>
 
-      {/* Atalhos: revisar manualmente + conquistas */}
-      <section className="grid grid-cols-2 gap-3">
+      {/* Atalhos: revisar manualmente + conquistas. Mesmo esquema dos
+          KPIs — 1 col mobile, 2 col sm+. */}
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Link href="/painel/revisar" className="block">
           <Card padded interactive className="flex h-full items-center gap-3">
             <KpiIcon tone="review">
