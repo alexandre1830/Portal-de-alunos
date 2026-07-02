@@ -10,7 +10,9 @@
 //    pelo cliente são IGNORADOS em diálogos.
 //  - Texto único / pronúncia: aceita override `voice` e `rate` (preferências
 //    do aluno). Validados contra whitelist; senão usa default por idioma.
-//  - Limpeza do texto: setas viram pausa, emojis/símbolos são removidos.
+//  - Limpeza do texto: setas viram pausa, emojis/símbolos são removidos,
+//    e "/" vira espaço (senão o TTS lê "slash" — em "he/she", "12/25",
+//    "on/off", etc.).
 //
 // Auth: verify_jwt = true. Google via API key (secret GOOGLE_TTS_API_KEY).
 // IMPORTANTE: o catálogo aqui deve espelhar src/lib/tts/voices.ts.
@@ -120,6 +122,10 @@ function clean(input: string): string {
   return input
     .replace(/[→➔➜⇒↦➝]/g, ", ")
     .replace(/[•·▪◦‣■●◆❖➢✅✔☑⚠✍✎♦★☆🔊🏆😀-🿿]/gu, " ")
+    // "/" separando alternativas ("he/she", "12/25", "on/off") vira
+    // espaço — evita que a Chirp3 leia "slash". Barras invertidas
+    // (raro em conteúdo natural) também caem no mesmo cesto.
+    .replace(/[/\\]/g, " ")
     .replace(/[ \t]*\n[ \t]*/g, ", ")
     .replace(/\s+([,.;:!?])/g, "$1")
     .replace(/\s{2,}/g, " ")
