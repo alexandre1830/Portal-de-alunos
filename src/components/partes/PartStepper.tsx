@@ -29,7 +29,8 @@ import type { Block } from "@/types/content";
 // O último bloco é seguido pela "tela final": se a parte JÁ está completa
 // (todos os exercícios foram acertados, ou marcada manualmente), mostra
 // um parabéns; se não, e a parte NÃO tem exercícios, oferece o botão
-// "Marcar como concluída".
+// "Próximo" — clique marca a parte como concluída E dispara a celebração
+// (com botão "Próxima parte" / "Voltar ao curso" para o aluno seguir).
 export function PartStepper({
   partId,
   blocks,
@@ -294,9 +295,13 @@ function FinalAction({
       </span>
     );
   }
+  // Botão único de avanço em parte-só-conteúdo. Clicar marca a parte
+  // como concluída (server action) e abre o dialog de celebração, que
+  // ja tem "Próxima parte" / "Voltar ao curso" pro aluno seguir de
+  // fato — evita a fricção do "marcar" + "voltar" separados.
   return (
     <Button type="button" size="sm" loading={pending} onClick={onMark}>
-      Marcar como concluída
+      Próximo
     </Button>
   );
 }
