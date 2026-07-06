@@ -1,30 +1,44 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 
+import { SpeakButton } from "@/components/blocks/SpeakButton";
+import { MicIcon } from "@/components/icons/MicIcon";
+import { StopIcon } from "@/components/icons/StopIcon";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
+import { useSpeechRecognition } from "@/lib/speech/use-speech-recognition";
 import { reviewItem, type ReviewItemResult } from "@/lib/srs/actions";
 import type { SrsDueItem } from "@/lib/srs/queries";
 import { cn } from "@/lib/utils/cn";
 
+// Config de fala por idioma, resolvida no servidor a partir das
+// preferências do aluno. `recognizerLang` é o BCP-47 do reconhecedor
+// (honra sotaque preferido); `ttsVoice` é a voz do botão "Ouvir".
+export interface SpeechConfig {
+  en: { recognizerLang: string; ttsVoice: string };
+  es: { recognizerLang: string; ttsVoice: string };
+  rate: number;
+}
+
 interface Props {
   items: SrsDueItem[];
+  speech: SpeechConfig;
 }
 
 // Sessão de revisão com auto-correção (ADR 0006 aplicado à revisão):
 //   1. Mostra a pergunta (termo, frase ou pergunta original).
-//   2. Aluno digita a resposta.
-//   3. Submit → Server Action grade via Levenshtein → estado
-//      (perfect/close/incorrect).
+//   2. Aluno responde — digitando OU, no caso de speaking, FALANDO
+//      (o erro original foi de pronúncia; a frase já está impressa).
+//   3. Submit → Server Action grade → estado (perfect/close/incorrect).
 //   4. Feedback inline: cor + resposta canônica + XP.
 //   5. "Próximo" avança.
 //
 // XP é reduzido (revisão repete conteúdo). "Quase" e "errado" não
 // pontuam — só "perfect".
-export function ReviewSession({ items: initialItems }: Props) {
+export function ReviewSession({ items: initialItems, speech }: Props) {
   // Snapshot dos itens no MONTE da sessão. A lista de "due items" muda no
   // servidor a cada resposta (o item revisado sai do due), mas a sessão
   // precisa trabalhar sobre um conjunto FIXO — senão o `index` remapearia
@@ -40,7 +54,7 @@ export function ReviewSession({ items: initialItems }: Props) {
     close: 0,
     incorrect: 0,
   });
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
 
   const total = items.length;
   const current = items[index];
@@ -76,7 +90,7 @@ export function ReviewSession({ items: initialItems }: Props) {
   // Renderização da "pergunta" depende do tipo:
   //  - exercise: a pergunta original
   //  - vocab:    "Como se diz X?" — o aluno escreve a tradução
-  //  - speaking: a frase para o aluno digitar de novo (recall textual)
+  //  - speaking: a frase para o aluno PRONUNCIAR (revisão por voz)
   let prompt: string;
   let helper: string | null = null;
   let sourceLabel: string;
@@ -91,25 +105,34 @@ export function ReviewSession({ items: initialItems }: Props) {
       sourceLabel = "Vocabulário";
       break;
     case "speaking":
-      prompt = "Escreva a frase para revisar:";
+      prompt = "Pronuncie a frase:";
       helper = `"${current.payload.phrase}"`;
       sourceLabel = "Speaking";
       break;
   }
 
+  const isSpeaking = current.payload.type === "speaking";
   const submitted = result !== null;
 
-  function handleSubmit(e?: React.FormEvent) {
-    if (e) e.preventDefault();
+  // Núcleo de submissão — `value` é a resposta digitada OU a transcrição
+  // de voz. Rota única para todos os tipos (o servidor grada por tipo).
+  function submit(value: string) {
     if (pending || submitted) return;
-    if (answer.trim().length === 0) return;
-    startTransition(async () => {
-      const res = await reviewItem(current!.id, answer);
+    if (value.trim().length === 0) return;
+    setPending(true);
+    void (async () => {
+      const res = await reviewItem(current!.id, value);
+      setPending(false);
       setResult(res);
       if (res.ok) {
         setCounts((c) => ({ ...c, [res.state]: c[res.state] + 1 }));
       }
-    });
+    })();
+  }
+
+  function handleTextSubmit(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    submit(answer);
   }
 
   function nextItem() {
@@ -138,32 +161,38 @@ export function ReviewSession({ items: initialItems }: Props) {
           )}
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col gap-2 border-t border-border-primary pt-3"
-        >
-          <label
-            htmlFor="srs-answer"
-            className="text-xs uppercase tracking-wide text-fg-tertiary"
-          >
+        <div className="flex flex-col gap-2 border-t border-border-primary pt-3">
+          <span className="text-xs uppercase tracking-wide text-fg-tertiary">
             Sua resposta
-          </label>
-          <Input
-            // key por item: remonta o input a cada pergunta, re-disparando
-            // o autoFocus (que só age na montagem) e garantindo campo limpo.
-            key={current.id}
-            id="srs-answer"
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            placeholder="Digite aqui"
-            autoFocus
-            disabled={pending || submitted}
-            autoComplete="off"
-            autoCapitalize="off"
-            autoCorrect="off"
-            spellCheck={false}
-          />
-        </form>
+          </span>
+
+          {isSpeaking && current.payload.type === "speaking" ? (
+            <SpeakingReviewAnswer
+              key={current.id}
+              phrase={current.payload.phrase}
+              lang={current.payload.lang ?? "en"}
+              speech={speech}
+              disabled={pending || submitted}
+              onValueChange={setAnswer}
+            />
+          ) : (
+            <form onSubmit={handleTextSubmit}>
+              <Input
+                key={current.id}
+                id="srs-answer"
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                placeholder="Digite aqui"
+                autoFocus
+                disabled={pending || submitted}
+                autoComplete="off"
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+            </form>
+          )}
+        </div>
 
         {/* Feedback após submit */}
         {result && (
@@ -194,20 +223,115 @@ export function ReviewSession({ items: initialItems }: Props) {
       </Card>
 
       <div className="flex justify-end gap-2">
-        {!submitted ? (
+        {submitted ? (
+          <Button onClick={nextItem}>
+            {index + 1 < total ? "Próximo" : "Concluir"}
+          </Button>
+        ) : (
           <Button
-            onClick={handleSubmit}
+            onClick={() => submit(answer)}
             loading={pending}
             disabled={pending || answer.trim().length === 0}
           >
             Enviar
           </Button>
-        ) : (
-          <Button onClick={nextItem}>
-            {index + 1 < total ? "Próximo" : "Concluir"}
-          </Button>
         )}
       </div>
+    </div>
+  );
+}
+
+// Área de resposta por VOZ para itens de speaking. Captura a transcrição
+// (Web Speech API) e a espelha em `answer` do pai via onValueChange — o
+// botão "Enviar" do rodapé continua sendo o gatilho único de submissão.
+// Sem suporte a fala, cai num input de texto (mesma tolerância no grading).
+function SpeakingReviewAnswer({
+  phrase,
+  lang,
+  speech,
+  disabled,
+  onValueChange,
+}: {
+  phrase: string;
+  lang: "en" | "es";
+  speech: SpeechConfig;
+  disabled: boolean;
+  onValueChange: (value: string) => void;
+}) {
+  const cfg = lang === "es" ? speech.es : speech.en;
+  const recognizer = useSpeechRecognition(cfg.recognizerLang);
+  const [textFallback, setTextFallback] = useState("");
+  const isListening = recognizer.status === "listening";
+
+  // Espelha a transcrição de voz no valor do pai assim que muda.
+  useEffect(() => {
+    if (recognizer.transcript) onValueChange(recognizer.transcript);
+  }, [recognizer.transcript, onValueChange]);
+
+  return (
+    <div className="flex flex-col gap-2">
+      {/* Ouvir a pronúncia correta antes de tentar. */}
+      <SpeakButton
+        label="Ouvir"
+        body={{
+          text: phrase,
+          lang,
+          voice: cfg.ttsVoice,
+          rate: speech.rate,
+        }}
+      />
+
+      {recognizer.supported ? (
+        <>
+          <div className="flex flex-wrap items-center gap-2">
+            {!isListening ? (
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={recognizer.start}
+                disabled={disabled}
+              >
+                <MicIcon className="h-4 w-4" /> Falar
+              </Button>
+            ) : (
+              <Button size="sm" variant="danger" onClick={recognizer.stop}>
+                <StopIcon className="h-4 w-4" /> Parar
+              </Button>
+            )}
+          </div>
+          {recognizer.transcript && (
+            <p className="text-sm italic text-fg-secondary">
+              “{recognizer.transcript}”
+            </p>
+          )}
+          {recognizer.error && (
+            <p role="alert" className="text-sm text-danger">
+              {recognizer.error}
+            </p>
+          )}
+        </>
+      ) : (
+        // Fallback: navegador sem reconhecimento de fala → digitar.
+        <div className="flex flex-col gap-1">
+          <p className="text-xs text-fg-tertiary">
+            Seu navegador não reconhece fala. Digite a frase:
+          </p>
+          <Input
+            value={textFallback}
+            onChange={(e) => {
+              setTextFallback(e.target.value);
+              onValueChange(e.target.value);
+            }}
+            placeholder="Digite a frase"
+            aria-label="Digite a frase"
+            disabled={disabled}
+            autoComplete="off"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+          />
+        </div>
+      )}
     </div>
   );
 }

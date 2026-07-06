@@ -86,12 +86,16 @@ export async function submitSpeaking(raw: {
 
   const { data: block } = await admin
     .from("blocks")
-    .select("id, type, part_id, course_id, data")
+    .select("id, type, part_id, course_id, data, course:courses(language)")
     .eq("id", blockId)
     .maybeSingle();
   if (!block || block.type !== "speaking") {
     return fail("Bloco não encontrado.");
   }
+  // Idioma do curso (en/es) — guardado no item SRS para o reconhecedor de
+  // fala e o TTS da revisão usarem o locale certo. Fallback: en.
+  const courseLang: "en" | "es" =
+    block.course?.language === "es" ? "es" : "en";
 
   // Segurança: só aluno com matrícula ativa pode submeter — exceto admin
   // em pré-visualização.
@@ -182,6 +186,7 @@ export async function submitSpeaking(raw: {
       blockId,
       phraseIndex,
       phrase: target,
+      lang: courseLang,
     });
   }
 

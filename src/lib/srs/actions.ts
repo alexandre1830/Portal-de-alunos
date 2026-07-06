@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { gradeFillBlank, type GradeState } from "@/lib/grading/grade";
+import {
+  gradeFillBlank,
+  gradeSpeaking,
+  type GradeState,
+} from "@/lib/grading/grade";
 import type { SrsPayload } from "@/lib/srs/payload";
 import { applySm2 } from "@/lib/srs/sm2";
 import { createClient } from "@/lib/supabase/server";
@@ -90,12 +94,16 @@ export async function reviewItem(
   const payload = item.payload as unknown as SrsPayload;
   const expected = expectedAnswerOf(payload);
 
-  // Grading: reusa a lógica do fill_blank (Levenshtein + normalização).
-  // Não passamos "alternatives" — só a resposta canônica.
-  const state = gradeFillBlank((submitted ?? "").trim(), {
-    answer: expected,
-    alternatives: [],
-  });
+  // Grading por tipo:
+  //  - speaking: `submitted` é a transcrição (voz ou texto-fallback);
+  //    usa gradeSpeaking (tolerância maior — STT erra pontuação/homófonos).
+  //  - demais: reusa a lógica do fill_blank (Levenshtein + normalização),
+  //    só a resposta canônica (sem alternatives).
+  const trimmed = (submitted ?? "").trim();
+  const state =
+    payload.type === "speaking"
+      ? gradeSpeaking(trimmed, expected)
+      : gradeFillBlank(trimmed, { answer: expected, alternatives: [] });
   const quality = qualityFor(state);
 
   const next = applySm2(

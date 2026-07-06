@@ -19,11 +19,15 @@ export interface SrsVocabPayload {
   courseTitle?: string;
 }
 
-// Speaking: a "pergunta" da revisão é o que o aluno deve falar, e a "resposta"
-// é a mesma frase (na sessão SRS ele simplesmente revê e se autoavalia).
+// Speaking: a "pergunta" da revisão é o que o aluno deve FALAR. Como o
+// erro original foi de pronúncia, a revisão também é por voz (Web Speech
+// API) — a frase já vem escrita na tela, digitar não faria sentido.
+// `lang` guarda o idioma do curso (en/es) para o reconhecedor de fala e o
+// TTS "ouvir" — itens antigos sem lang caem em "en".
 export interface SrsSpeakingPayload {
   type: "speaking";
   phrase: string;
+  lang?: "en" | "es";
   partTitle?: string;
   courseTitle?: string;
 }

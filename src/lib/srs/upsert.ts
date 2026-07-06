@@ -128,6 +128,7 @@ export async function upsertSpeakingSrsItem(
     blockId: string;
     phraseIndex: number;
     phrase: string;
+    lang?: "en" | "es";
     partTitle?: string;
     courseTitle?: string;
   },
@@ -135,6 +136,7 @@ export async function upsertSpeakingSrsItem(
   const payload: SrsSpeakingPayload = {
     type: "speaking",
     phrase: params.phrase,
+    lang: params.lang,
     partTitle: params.partTitle,
     courseTitle: params.courseTitle,
   };

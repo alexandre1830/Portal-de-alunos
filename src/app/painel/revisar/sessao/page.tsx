@@ -1,12 +1,17 @@
 import { redirect } from "next/navigation";
 
-import { ReviewSession } from "@/components/painel/ReviewSession";
+import {
+  ReviewSession,
+  type SpeechConfig,
+} from "@/components/painel/ReviewSession";
 import { TargetIllustration } from "@/components/illustrations/TargetIllustration";
 import { BackLink } from "@/components/shared/BackLink";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { getUserPreferences } from "@/lib/preferences/queries";
 import { listDueItems } from "@/lib/srs/queries";
 import { createClient } from "@/lib/supabase/server";
+import { languageCodeForVoice } from "@/lib/tts/voices";
 
 export default async function SessaoRevisaoPage() {
   const supabase = await createClient();
@@ -15,7 +20,25 @@ export default async function SessaoRevisaoPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const items = await listDueItems(supabase, user.id, 20);
+  const [items, prefs] = await Promise.all([
+    listDueItems(supabase, user.id, 20),
+    getUserPreferences(supabase, user.id),
+  ]);
+
+  // Config de fala para a revisão de speaking: por idioma, o locale do
+  // reconhecedor (BCP-47, honrando o sotaque preferido) + a voz do TTS
+  // para o botão "Ouvir".
+  const speech: SpeechConfig = {
+    en: {
+      recognizerLang: languageCodeForVoice(prefs.ttsVoiceEn),
+      ttsVoice: prefs.ttsVoiceEn,
+    },
+    es: {
+      recognizerLang: languageCodeForVoice(prefs.ttsVoiceEs),
+      ttsVoice: prefs.ttsVoiceEs,
+    },
+    rate: prefs.ttsRate,
+  };
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-6 px-6 py-12">
@@ -35,7 +58,7 @@ export default async function SessaoRevisaoPage() {
           />
         </Card>
       ) : (
-        <ReviewSession items={items} />
+        <ReviewSession items={items} speech={speech} />
       )}
     </main>
   );
