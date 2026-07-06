@@ -161,8 +161,15 @@ export async function reviewItem(
     // Não-bloqueante.
   }
 
+  // IMPORTANTE: NÃO revalidar "/painel/revisar/sessao" aqui. Essa é a
+  // própria página onde o aluno está no meio da sessão — revalidá-la
+  // faz o server component re-buscar os itens "due", o item recém-
+  // respondido some da lista, a prop `items` do ReviewSession muda, e o
+  // `index` local passa a apontar para outro item. A pergunta troca sob
+  // os pés do aluno enquanto o feedback antigo fica preso, travando a
+  // resposta. A sessão trabalha sobre um snapshot estável (ver
+  // ReviewSession). Só revalidamos a lista e o painel (contadores).
   revalidatePath("/painel/revisar");
-  revalidatePath("/painel/revisar/sessao");
   revalidatePath("/painel");
 
   return { ok: true, state, expected, xpAwarded, error: null };

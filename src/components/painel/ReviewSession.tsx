@@ -24,7 +24,14 @@ interface Props {
 //
 // XP é reduzido (revisão repete conteúdo). "Quase" e "errado" não
 // pontuam — só "perfect".
-export function ReviewSession({ items }: Props) {
+export function ReviewSession({ items: initialItems }: Props) {
+  // Snapshot dos itens no MONTE da sessão. A lista de "due items" muda no
+  // servidor a cada resposta (o item revisado sai do due), mas a sessão
+  // precisa trabalhar sobre um conjunto FIXO — senão o `index` remapearia
+  // para itens diferentes no meio do caminho. Defesa em profundidade: o
+  // action já não revalida esta rota (ver srs/actions.ts), mas se algo
+  // revalidar por outro caminho, este snapshot mantém a sessão estável.
+  const [items] = useState(() => initialItems);
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState("");
   const [result, setResult] = useState<ReviewItemResult | null>(null);
@@ -142,6 +149,9 @@ export function ReviewSession({ items }: Props) {
             Sua resposta
           </label>
           <Input
+            // key por item: remonta o input a cada pergunta, re-disparando
+            // o autoFocus (que só age na montagem) e garantindo campo limpo.
+            key={current.id}
             id="srs-answer"
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
