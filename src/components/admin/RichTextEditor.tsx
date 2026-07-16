@@ -37,6 +37,12 @@ interface Props {
   // não um form control, então o `onChange` do <form> pai não o detecta.
   // Quem precisa reagir (ex.: autosave do BlockForm) deve passar onUpdate.
   onUpdate?: (html: string) => void;
+  // Disparado quando o editor PERDE O FOCO (blur). O hidden input já foi
+  // ressincronizado com o HTML atual antes desta chamada. Usado para
+  // descarregar (flush) um autosave pendente na hora — evita perder a
+  // última formatação quando o usuário aplica cor/negrito e sai antes do
+  // debounce.
+  onFlush?: () => void;
 }
 
 export function RichTextEditor({
@@ -44,6 +50,7 @@ export function RichTextEditor({
   initialHtml = "",
   placeholder,
   onUpdate,
+  onFlush,
 }: Props) {
   // Ref POR INSTÂNCIA para o hidden input. Antes usávamos
   // document.getElementById(`rt-${name}`), mas `name` é sempre "text" — e
@@ -89,6 +96,14 @@ export function RichTextEditor({
       // mapeia um `input` cujo alvo é o <form> (nem um input hidden) para
       // onChange. Chamamos o callback do pai diretamente.
       onUpdate?.(html);
+    },
+    onBlur({ editor }) {
+      // Ressincroniza o hidden input com o HTML atual (defensivo — cobre o
+      // caso de um toggle de mark que não tenha disparado onUpdate) e pede
+      // ao pai para descarregar o save pendente imediatamente.
+      const html = editor.getHTML();
+      if (hiddenRef.current) hiddenRef.current.value = html;
+      onFlush?.();
     },
   });
 
@@ -302,6 +317,10 @@ function ToolbarButton({
   return (
     <button
       type="button"
+      // preventDefault no mousedown: o botão NÃO rouba o foco do editor,
+      // preservando a seleção de texto ao formatar e evitando disparar o
+      // blur (flush) do editor a cada clique de formatação.
+      onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
@@ -336,6 +355,8 @@ function ColorSwatch({
   return (
     <button
       type="button"
+      // Mesma razão dos botões de formatação: não roubar foco do editor.
+      onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       aria-label={label}
       aria-pressed={active}

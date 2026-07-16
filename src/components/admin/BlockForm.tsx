@@ -110,29 +110,48 @@ export function BlockForm({
   const [status, setStatus] = useState<Status>("idle");
   const [, startTransition] = useTransition();
 
+  // Salva AGORA (lê o FormData atual e chama updateBlock). Compartilhado
+  // pelo autosave debounced e pelo flush imediato.
+  function runSave() {
+    const form = formRef.current;
+    if (!form) return;
+    const fd = new FormData(form);
+    startTransition(async () => {
+      try {
+        await updateBlock(fd);
+        setStatus("saved");
+        if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+        savedTimerRef.current = setTimeout(() => setStatus("idle"), 1600);
+      } catch {
+        setStatus("idle");
+        toast.danger({
+          title: "Não consegui salvar o bloco",
+          description: "Tente alterar de novo em instantes.",
+        });
+      }
+    });
+  }
+
+  // Autosave debounced: agenda um save 800ms após a última alteração.
   function handleFormChange() {
     if (mode !== "edit") return;
     setStatus("saving");
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      const form = formRef.current;
-      if (!form) return;
-      const fd = new FormData(form);
-      startTransition(async () => {
-        try {
-          await updateBlock(fd);
-          setStatus("saved");
-          if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
-          savedTimerRef.current = setTimeout(() => setStatus("idle"), 1600);
-        } catch {
-          setStatus("idle");
-          toast.danger({
-            title: "Não consegui salvar o bloco",
-            description: "Tente alterar de novo em instantes.",
-          });
-        }
-      });
-    }, 800);
+    debounceRef.current = setTimeout(runSave, 800);
+  }
+
+  // Flush imediato: cancela o debounce pendente e salva na hora. Chamado
+  // quando o editor de rich text perde o foco (o aluno aplicou cor/negrito/
+  // itálico como última ação e saiu antes dos 800ms) — sem isso, o timer
+  // pendente se perdia na navegação e a formatação não era persistida.
+  function flushSave() {
+    if (mode !== "edit") return;
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
+    setStatus("saving");
+    runSave();
   }
 
   // Picker visual em duas seções (Conteúdo / Exercícios). Aparece SOMENTE
@@ -214,6 +233,10 @@ export function BlockForm({
           // lê tudo via refs, então funciona mesmo se o TipTap capturar
           // este callback no primeiro render.
           onUpdate={handleFormChange}
+          // Ao perder o foco, descarrega o save pendente na hora — evita
+          // perder a última formatação (cor/negrito/itálico) quando o
+          // admin sai antes do debounce.
+          onFlush={flushSave}
         />
       )}
 
