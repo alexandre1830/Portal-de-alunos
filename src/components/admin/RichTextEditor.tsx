@@ -6,6 +6,7 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { useRef } from "react";
 
 import { cn } from "@/lib/utils/cn";
 
@@ -44,6 +45,13 @@ export function RichTextEditor({
   placeholder,
   onUpdate,
 }: Props) {
+  // Ref POR INSTÂNCIA para o hidden input. Antes usávamos
+  // document.getElementById(`rt-${name}`), mas `name` é sempre "text" — e
+  // a página de partes renderiza um BlockForm por bloco, então vários
+  // blocos de texto compartilhavam o MESMO id. getElementById devolvia o
+  // primeiro do DOM, e o onUpdate gravava o HTML no hidden input do bloco
+  // ERRADO; o bloco editado salvava vazio. Um ref elimina a colisão.
+  const hiddenRef = useRef<HTMLInputElement>(null);
   const editor = useEditor({
     immediatelyRender: false, // evita hydration mismatch no Next App Router
     extensions: [
@@ -73,12 +81,10 @@ export function RichTextEditor({
     },
     onUpdate({ editor }) {
       const html = editor.getHTML();
-      // Sincroniza o hidden input para que FormData(form) pegue o valor
-      // (usado tanto no submit do create quanto no autosave do edit).
-      const input = document.getElementById(
-        `rt-${name}`,
-      ) as HTMLInputElement | null;
-      if (input) input.value = html;
+      // Sincroniza o hidden input DESTA instância (ref, sem colisão de id)
+      // para que FormData(form) pegue o valor — tanto no submit do create
+      // quanto no autosave do edit.
+      if (hiddenRef.current) hiddenRef.current.value = html;
       // Gatilho confiável: NÃO despachamos evento no form — o React não
       // mapeia um `input` cujo alvo é o <form> (nem um input hidden) para
       // onChange. Chamamos o callback do pai diretamente.
@@ -101,8 +107,14 @@ export function RichTextEditor({
     <div className="flex flex-col">
       <Toolbar editor={editor} />
       <EditorContent editor={editor} />
-      {/* Hidden input que carrega o HTML para o FormData do pai */}
-      <input type="hidden" id={`rt-${name}`} name={name} defaultValue={initialHtml} />
+      {/* Hidden input que carrega o HTML para o FormData do pai. Sem id
+          (evita colisão entre múltiplos editores) — sincronizado via ref. */}
+      <input
+        ref={hiddenRef}
+        type="hidden"
+        name={name}
+        defaultValue={initialHtml}
+      />
     </div>
   );
 }
