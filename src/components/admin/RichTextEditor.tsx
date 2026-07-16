@@ -1,11 +1,24 @@
 "use client";
 
+import { Color } from "@tiptap/extension-color";
 import TextAlign from "@tiptap/extension-text-align";
+import { TextStyle } from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
 import { cn } from "@/lib/utils/cn";
+
+// Paleta de cores de fonte — via tokens (var CSS), então adapta ao tema
+// claro/escuro automaticamente e respeita a regra "sem cores hardcoded".
+// "Padrão" reseta para a cor herdada (fg-primary).
+const FONT_COLORS: { label: string; value: string }[] = [
+  { label: "Azul (marca)", value: "var(--color-primary)" },
+  { label: "Vermelho", value: "var(--color-secondary)" },
+  { label: "Verde", value: "var(--color-success)" },
+  { label: "Âmbar", value: "var(--color-warning)" },
+  { label: "Ciano", value: "var(--color-info)" },
+];
 
 // Editor rich text com toolbar de formatação (bold/italic/underline,
 // alinhamento, listas, headings, blockquote, undo/redo). Salva HTML no
@@ -43,6 +56,10 @@ export function RichTextEditor({
         types: ["heading", "paragraph"],
         alignments: ["left", "center", "right", "justify"],
       }),
+      // TextStyle é o mark base; Color grava a cor como inline style
+      // (`color: var(--...)`) sobre ele.
+      TextStyle,
+      Color.configure({ types: ["textStyle"] }),
     ],
     content: initialHtml,
     editorProps: {
@@ -209,6 +226,27 @@ function Toolbar({ editor }: { editor: Editor }) {
       <ToolbarDivider />
 
       <ToolbarGroup>
+        {/* "Padrão": remove a cor (volta a herdar fg-primary). */}
+        <ColorSwatch
+          label="Cor padrão"
+          value={null}
+          active={!editor.getAttributes("textStyle").color}
+          onClick={() => editor.chain().focus().unsetColor().run()}
+        />
+        {FONT_COLORS.map((c) => (
+          <ColorSwatch
+            key={c.value}
+            label={c.label}
+            value={c.value}
+            active={editor.getAttributes("textStyle").color === c.value}
+            onClick={() => editor.chain().focus().setColor(c.value).run()}
+          />
+        ))}
+      </ToolbarGroup>
+
+      <ToolbarDivider />
+
+      <ToolbarGroup>
         <ToolbarButton
           label="Desfazer (Ctrl+Z)"
           onClick={() => editor.chain().focus().undo().run()}
@@ -266,6 +304,49 @@ function ToolbarButton({
       )}
     >
       {children}
+    </button>
+  );
+}
+
+// Botão-swatch de cor de fonte. Círculo preenchido com a cor (via token);
+// `value=null` é o swatch "Padrão" (reset), renderizado com borda + risco.
+function ColorSwatch({
+  label,
+  value,
+  active,
+  onClick,
+}: {
+  label: string;
+  value: string | null;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      aria-pressed={active}
+      title={label}
+      className={cn(
+        "inline-flex h-7 w-7 items-center justify-center rounded transition-colors hover:bg-bg-tertiary",
+        active && "bg-bg-tertiary",
+      )}
+    >
+      <span
+        className={cn(
+          "relative flex h-4 w-4 items-center justify-center rounded-full border",
+          active
+            ? "border-fg-primary ring-2 ring-fg-primary/30"
+            : "border-border-secondary",
+        )}
+        style={value ? { backgroundColor: value } : undefined}
+      >
+        {value === null && (
+          // Risco diagonal para indicar "sem cor / padrão".
+          <span className="absolute h-px w-5 rotate-45 bg-danger" />
+        )}
+      </span>
     </button>
   );
 }
