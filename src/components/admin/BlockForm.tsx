@@ -207,6 +207,13 @@ export function BlockForm({
           name="text"
           initialHtml={initial.text ?? ""}
           placeholder="Escreva o conteúdo da explicação…"
+          // O TipTap é contenteditable, não um form control — o
+          // `onChange` do <form> não o enxerga. Ligamos o onUpdate do
+          // editor direto no handleFormChange para o autosave (edit) e
+          // manter o hidden input sincronizado (create). handleFormChange
+          // lê tudo via refs, então funciona mesmo se o TipTap capturar
+          // este callback no primeiro render.
+          onUpdate={handleFormChange}
         />
       )}
 

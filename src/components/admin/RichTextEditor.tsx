@@ -18,10 +18,10 @@ interface Props {
   name: string;
   initialHtml?: string;
   placeholder?: string;
-  // Disparado a cada alteração (já com o HTML atualizado). O hidden input
-  // também atualiza, então quem está num <form onChange> automático
-  // continua funcionando — mas TipTap não emite eventos onChange no
-  // input invisível, então também chamamos onUpdate explicitamente.
+  // Disparado a cada alteração (já com o HTML atualizado no hidden input).
+  // É o gatilho CONFIÁVEL de "conteúdo mudou": o TipTap é contenteditable,
+  // não um form control, então o `onChange` do <form> pai não o detecta.
+  // Quem precisa reagir (ex.: autosave do BlockForm) deve passar onUpdate.
   onUpdate?: (html: string) => void;
 }
 
@@ -56,14 +56,15 @@ export function RichTextEditor({
     },
     onUpdate({ editor }) {
       const html = editor.getHTML();
-      // Sincroniza o hidden input para que FormData(form) pegue o valor.
+      // Sincroniza o hidden input para que FormData(form) pegue o valor
+      // (usado tanto no submit do create quanto no autosave do edit).
       const input = document.getElementById(
         `rt-${name}`,
       ) as HTMLInputElement | null;
       if (input) input.value = html;
-      // E dispara um evento "input" no form para o autosave do pai
-      // detectar como mudança (form.onChange).
-      input?.form?.dispatchEvent(new Event("input", { bubbles: true }));
+      // Gatilho confiável: NÃO despachamos evento no form — o React não
+      // mapeia um `input` cujo alvo é o <form> (nem um input hidden) para
+      // onChange. Chamamos o callback do pai diretamente.
       onUpdate?.(html);
     },
   });
