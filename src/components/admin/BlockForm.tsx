@@ -149,7 +149,7 @@ export function BlockForm({
         <input
           name="title"
           defaultValue={initial.title}
-          placeholder="Título (opcional)"
+          placeholder="Título"
           className={inputCls}
         />
       )}

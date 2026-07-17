@@ -196,7 +196,7 @@ export function ImageUploadField({
 
       <label className="flex flex-col gap-1">
         <span className="text-xs text-fg-secondary">
-          Texto alternativo (obrigatório)
+          Texto alternativo
         </span>
         <input
           name="alt"
@@ -209,7 +209,7 @@ export function ImageUploadField({
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-xs text-fg-secondary">Legenda (opcional)</span>
+        <span className="text-xs text-fg-secondary">Legenda</span>
         <input
           name="caption"
           defaultValue={initialCaption}

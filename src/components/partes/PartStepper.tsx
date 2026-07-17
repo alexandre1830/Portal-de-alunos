@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 
 import { BlockRenderer, type TtsOverride } from "@/components/blocks/BlockRenderer";
@@ -218,17 +219,14 @@ export function PartStepper({
             Próximo
           </Button>
         ) : (
-          // No último bloco, o botão muda:
-          //  - se a parte tem exercícios, a conclusão é automática — o aluno
-          //    só vê "Fim da parte" e segue navegando.
-          //  - se NÃO tem exercícios e ainda não está concluída, mostra o
-          //    botão para marcar.
           <FinalAction
             hasExerciseInPart={hasExerciseInPart}
             completed={completed}
             pending={pending}
             canAdvance={canAdvance}
             onMark={handleMarkCompleted}
+            nextPartHref={nextPartHref}
+            courseHref={courseHref}
           />
         )}
       </div>
@@ -266,20 +264,43 @@ export function PartStepper({
   );
 }
 
+// Ação no ÚLTIMO bloco da parte. Regra: se a parte está concluída, o aluno
+// SEMPRE tem um caminho pra frente aqui.
+//
+// A celebração (dialog) só aparece na primeira conclusão — antes, quem
+// revisitava uma parte já feita via só um "Parte concluída ✓" estático e
+// ficava sem saída, tendo que voltar pelo BackLink. Agora o botão de
+// avanço é permanente e não depende do dialog.
 function FinalAction({
   hasExerciseInPart,
   completed,
   pending,
   canAdvance,
   onMark,
+  nextPartHref,
+  courseHref,
 }: {
   hasExerciseInPart: boolean;
   completed: boolean;
   pending: boolean;
   canAdvance: boolean;
   onMark: () => void;
+  nextPartHref?: string;
+  courseHref?: string;
 }) {
   if (completed) {
+    // Próxima parte da mesma lição; se era a última, volta ao curso.
+    const href = nextPartHref ?? courseHref;
+    if (href) {
+      return (
+        <Link href={href}>
+          <Button type="button" size="sm">
+            {nextPartHref ? "Próximo" : "Voltar ao curso"}
+          </Button>
+        </Link>
+      );
+    }
+    // Sem destino conhecido (caso raro): mantém ao menos a confirmação.
     return (
       <span className="text-sm font-medium text-success">
         Parte concluída ✓
@@ -295,10 +316,8 @@ function FinalAction({
       </span>
     );
   }
-  // Botão único de avanço em parte-só-conteúdo. Clicar marca a parte
-  // como concluída (server action) e abre o dialog de celebração, que
-  // ja tem "Próxima parte" / "Voltar ao curso" pro aluno seguir de
-  // fato — evita a fricção do "marcar" + "voltar" separados.
+  // Parte só-conteúdo ainda não concluída: marcar + avançar num clique só.
+  // Dispara a server action e abre a celebração (que também leva adiante).
   return (
     <Button type="button" size="sm" loading={pending} onClick={onMark}>
       Próximo
