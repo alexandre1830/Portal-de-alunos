@@ -1,14 +1,24 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState } from "react";
 
 import { TrashIcon } from "@/components/icons/TrashIcon";
 import { Button } from "@/components/ui/Button";
-import { uploadLessonImage } from "@/lib/blocks/image-actions";
+import { createClient } from "@/lib/supabase/browser";
 import { toast } from "@/lib/toast/store";
 
 // Campo do bloco de imagem: upload para o bucket `lesson-images`, preview,
 // alt (obrigatório), legenda (opcional) e largura máxima.
+//
+// O upload vai DIRETO do browser para o Storage — não passa por Server
+// Action. Motivo: Server Actions têm limite de corpo (1 MB por padrão no
+// Next, e teto de ~4,5 MB na Vercel que não dá para elevar), o que
+// derrubava imagens comuns de material didático. Indo direto, o arquivo
+// nunca trafega pelo servidor Next.
+//
+// Autorização continua no banco (ADR 0002): a policy
+// `lesson_images_admin_insert` exige private.is_admin(), e o bucket impõe
+// tamanho (5 MB) e mime permitidos. O cliente anon não consegue burlar.
 //
 // alt/caption/width são inputs COM `name` — o `onChange` do <form> do
 // BlockForm já dispara o autosave neles. A URL vem do upload (não é
@@ -17,6 +27,17 @@ import { toast } from "@/lib/toast/store";
 
 const inputCls =
   "h-10 w-full rounded-md border border-border-primary bg-bg-primary px-3 text-sm text-fg-primary";
+
+const MAX_BYTES = 5 * 1024 * 1024; // espelha o file_size_limit do bucket
+
+// Também serve de whitelist: mime fora deste mapa é rejeitado antes de
+// subir. A extensão vem daqui — nunca do nome do arquivo enviado.
+const EXT_BY_TYPE: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+  "image/gif": "gif",
+};
 
 const WIDTH_OPTIONS: { value: string; label: string }[] = [
   { value: "full", label: "Cheia (largura do card)" },
@@ -46,28 +67,61 @@ export function ImageUploadField({
   const hiddenRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [url, setUrl] = useState(initialUrl);
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
 
-  function handleFile(file: File | undefined) {
-    if (!file) return;
-    const fd = new FormData();
-    fd.set("course_id", courseId);
-    fd.set("file", file);
-    startTransition(async () => {
-      const res = await uploadLessonImage(fd);
-      if (!res.ok || !res.url) {
+  async function handleFile(file: File | undefined) {
+    if (!file || pending) return;
+
+    const ext = EXT_BY_TYPE[file.type];
+    if (!ext) {
+      toast.danger({
+        title: "Formato não suportado",
+        description: "Use PNG, JPG, WEBP ou GIF.",
+      });
+      return;
+    }
+    if (file.size > MAX_BYTES) {
+      toast.danger({
+        title: "Imagem muito grande",
+        description: "O limite é 5 MB.",
+      });
+      return;
+    }
+
+    setPending(true);
+    try {
+      const supabase = createClient();
+      // Path agrupado por curso + nome único: trocar a imagem de um bloco
+      // nunca sobrescreve a de outro, e não precisa de cache-busting.
+      const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const path = `${courseId}/${unique}.${ext}`;
+
+      const { error } = await supabase.storage
+        .from("lesson-images")
+        .upload(path, file, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: file.type,
+        });
+      if (error) {
         toast.danger({
           title: "Não consegui enviar a imagem",
-          description: res.error ?? "Tente de novo.",
+          description: error.message,
         });
         return;
       }
-      setUrl(res.url);
-      if (hiddenRef.current) hiddenRef.current.value = res.url;
+
+      const { data } = supabase.storage
+        .from("lesson-images")
+        .getPublicUrl(path);
+      setUrl(data.publicUrl);
+      if (hiddenRef.current) hiddenRef.current.value = data.publicUrl;
       toast.success({ title: "Imagem enviada" });
       // Salva na hora — a URL não passa pelo onChange do form.
       onFlush?.();
-    });
+    } finally {
+      setPending(false);
+    }
   }
 
   function removeImage() {

@@ -8,11 +8,27 @@
 --
 -- Convenção de path: lesson-images/<course_id>/<arquivo>. Agrupar por
 -- curso facilita auditar/limpar material de um curso removido.
+--
+-- O upload é DIRETO do browser para o Storage (Server Action tem limite de
+-- corpo: 1 MB no Next por padrão, ~4,5 MB de teto na Vercel — inviável
+-- para material didático). Por isso os limites de tamanho/mime moram no
+-- BUCKET: é a fronteira que o cliente não contorna. Quem pode escrever
+-- continua sendo decidido pela RLS abaixo.
 -- =====================================================================
 
-insert into storage.buckets (id, name, public)
-  values ('lesson-images', 'lesson-images', true)
-  on conflict (id) do nothing;
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+  values (
+    'lesson-images',
+    'lesson-images',
+    true,
+    5242880, -- 5 MB
+    array['image/png', 'image/jpeg', 'image/webp', 'image/gif']
+  )
+  on conflict (id) do update
+    set
+      public = excluded.public,
+      file_size_limit = excluded.file_size_limit,
+      allowed_mime_types = excluded.allowed_mime_types;
 
 do $$
 begin
