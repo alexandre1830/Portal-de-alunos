@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { BlockForm, type BlockInitial } from "@/components/admin/BlockForm";
 import { BlockRowMenu } from "@/components/admin/BlockRowMenu";
+import { BlockTypePicker } from "@/components/admin/BlockTypePicker";
 import { BackLink } from "@/components/shared/BackLink";
 import { Card } from "@/components/ui/Card";
 import { requireAdmin } from "@/lib/admin/guard";
@@ -210,7 +211,6 @@ export default async function AdminPartPage({
         {(blocks ?? []).map((block) => (
           <Card key={block.id} className="flex flex-col p-7">
             <BlockForm
-              mode="edit"
               partId={part.id}
               courseId={part.course_id}
               blockId={block.id}
@@ -228,9 +228,11 @@ export default async function AdminPartPage({
         ))}
       </section>
 
+      {/* Escolher o tipo CRIA o bloco na hora (em branco) — ele aparece na
+          lista acima já em edição, e este card segue limpo para o próximo. */}
       <Card className="flex flex-col gap-4 p-7">
         <h2 className="text-base font-semibold text-fg-primary">Novo bloco</h2>
-        <BlockForm mode="create" partId={part.id} courseId={part.course_id} />
+        <BlockTypePicker partId={part.id} />
       </Card>
     </div>
   );
