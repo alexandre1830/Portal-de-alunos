@@ -40,7 +40,7 @@ const EXT_BY_TYPE: Record<string, string> = {
 };
 
 const WIDTH_OPTIONS: { value: string; label: string }[] = [
-  { value: "full", label: "Cheia (largura do card)" },
+  { value: "full", label: "Grande" },
   { value: "medium", label: "Média" },
   { value: "small", label: "Pequena" },
 ];
@@ -186,7 +186,7 @@ export function ImageUploadField({
             Enviar imagem
           </Button>
           <p className="text-xs text-fg-tertiary">
-            PNG, JPG, WEBP ou GIF — até 5 MB.
+            Até 5 MB.
           </p>
         </div>
       )}
