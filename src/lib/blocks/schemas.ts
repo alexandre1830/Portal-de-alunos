@@ -47,6 +47,26 @@ export const pronunciationData = z.object({
   items: z.array(z.string()).min(1),
 });
 
+// Tabela: grade de texto simples. A PRIMEIRA linha é o cabeçalho (<th>);
+// `rows` é o corpo. Montada no admin por um editor visual (escolhe
+// linhas × colunas e preenche célula a célula), não por texto delimitado.
+export const tableData = z.object({
+  title: z.string().optional(),
+  header: z.array(z.string()).min(1),
+  rows: z.array(z.array(z.string())),
+});
+
+// Imagem: arquivo no bucket `lesson-images` do Storage (upload pelo admin).
+// `alt` é obrigatório — acessibilidade não é opcional. `caption` aparece
+// abaixo da imagem; `width` limita a largura máxima na renderização.
+export const imageData = z.object({
+  title: z.string().optional(),
+  url: z.string().min(1),
+  alt: z.string().min(1),
+  caption: z.string().optional(),
+  width: z.enum(["small", "medium", "full"]).optional(),
+});
+
 // Exemplos: frases de exemplo (frequentemente atreladas a um vocabulário
 // ou tópico gramatical), cada uma com tradução opcional e botão de áudio.
 // Diferente de pronunciation, aqui o foco é entender o significado — a
@@ -185,6 +205,8 @@ export type ReadingData = z.infer<typeof readingData>;
 export type DialogueData = z.infer<typeof dialogueData>;
 export type PronunciationData = z.infer<typeof pronunciationData>;
 export type ExamplesData = z.infer<typeof examplesData>;
+export type TableData = z.infer<typeof tableData>;
+export type ImageData = z.infer<typeof imageData>;
 export type SpeakingData = z.infer<typeof speakingData>;
 export type MultipleChoiceData = z.infer<typeof multipleChoiceData>;
 export type FillBlankData = z.infer<typeof fillBlankData>;
@@ -199,6 +221,8 @@ export const BLOCK_SCHEMAS = {
   dialogue_tts: dialogueData,
   pronunciation: pronunciationData,
   examples: examplesData,
+  table: tableData,
+  image: imageData,
   speaking: speakingData,
   multiple_choice: multipleChoiceData,
   fill_blank: fillBlankData,

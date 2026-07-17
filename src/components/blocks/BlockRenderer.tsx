@@ -2,12 +2,14 @@ import { DialogueBlock } from "@/components/blocks/DialogueBlock";
 import { ErrorCorrectionExercise } from "@/components/blocks/ErrorCorrectionExercise";
 import { ExamplesBlock } from "@/components/blocks/ExamplesBlock";
 import { FillBlankExercise } from "@/components/blocks/FillBlankExercise";
+import { ImageBlock } from "@/components/blocks/ImageBlock";
 import { MultipleChoiceExercise } from "@/components/blocks/MultipleChoiceExercise";
 import { PronunciationBlock } from "@/components/blocks/PronunciationBlock";
 import { ReadingBlock } from "@/components/blocks/ReadingBlock";
 import { ReorderWordsExercise } from "@/components/blocks/ReorderWordsExercise";
 import { RichTextBlock } from "@/components/blocks/RichTextBlock";
 import { SpeakingBlock } from "@/components/blocks/SpeakingBlock";
+import { TableBlock } from "@/components/blocks/TableBlock";
 import { TranslationExercise } from "@/components/blocks/TranslationExercise";
 import { VocabularyBlock } from "@/components/blocks/VocabularyBlock";
 import {
@@ -15,12 +17,14 @@ import {
   errorCorrectionData,
   examplesData,
   fillBlankData,
+  imageData,
   multipleChoiceData,
   pronunciationData,
   readingData,
   reorderWordsData,
   richTextData,
   speakingData,
+  tableData,
   translationData,
   vocabularyData,
 } from "@/lib/blocks/schemas";
@@ -108,6 +112,22 @@ export function BlockRenderer({
         <ExamplesBlock data={parsed.data} tts={tts} />
       ) : (
         <Notice>Bloco de exemplos inválido.</Notice>
+      );
+    }
+    case "table": {
+      const parsed = tableData.safeParse(block.data);
+      return parsed.success ? (
+        <TableBlock data={parsed.data} />
+      ) : (
+        <Notice>Bloco de tabela inválido.</Notice>
+      );
+    }
+    case "image": {
+      const parsed = imageData.safeParse(block.data);
+      return parsed.success ? (
+        <ImageBlock data={parsed.data} />
+      ) : (
+        <Notice>Bloco de imagem inválido.</Notice>
       );
     }
     case "speaking": {

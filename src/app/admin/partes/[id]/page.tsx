@@ -15,11 +15,13 @@ import {
   errorCorrectionData,
   errorCorrectionSolution,
   examplesData,
+  imageData,
   pronunciationData,
   readingData,
   reorderWordsData,
   richTextData,
   speakingData,
+  tableData,
   translationData,
   translationSolution,
   vocabularyData,
@@ -65,6 +67,28 @@ function toInitial(
                 return it.example ? `${head} | ${it.example}` : head;
               })
               .join("\n"),
+          }
+        : {};
+    }
+    case "table": {
+      const p = tableData.safeParse(data);
+      return p.success
+        ? {
+            title: p.data.title ?? "",
+            // O TableGridEditor lê/escreve o grid como JSON.
+            table: JSON.stringify({ header: p.data.header, rows: p.data.rows }),
+          }
+        : {};
+    }
+    case "image": {
+      const p = imageData.safeParse(data);
+      return p.success
+        ? {
+            title: p.data.title ?? "",
+            url: p.data.url,
+            alt: p.data.alt,
+            caption: p.data.caption ?? "",
+            width: p.data.width ?? "full",
           }
         : {};
     }

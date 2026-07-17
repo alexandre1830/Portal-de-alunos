@@ -2,7 +2,9 @@
 
 import { useRef, useState, useTransition } from "react";
 
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { TableGridEditor } from "@/components/admin/TableGridEditor";
 import { Button } from "@/components/ui/Button";
 import { createBlock, updateBlock } from "@/lib/admin/actions";
 import { toast } from "@/lib/toast/store";
@@ -26,6 +28,8 @@ const CONTENT_TYPES: BlockTypeEntry[] = [
   { value: "pronunciation", label: "Pronúncia", description: "Frases para ouvir e treinar.", icon: <IconPronunciation /> },
   { value: "examples", label: "Exemplos", description: "Frases com tradução e áudio.", icon: <IconExamples /> },
   { value: "speaking", label: "Speaking (falar)", description: "Aluno fala e o sistema corrige.", icon: <IconSpeaking /> },
+  { value: "table", label: "Tabela", description: "Grade de linhas e colunas.", icon: <IconTable /> },
+  { value: "image", label: "Imagem", description: "Imagem com legenda.", icon: <IconImage /> },
 ];
 
 const EXERCISE_TYPES_PICKER: BlockTypeEntry[] = [
@@ -60,6 +64,13 @@ export interface BlockInitial {
   source?: string;
   sentence?: string;
   tokens?: string;
+  // table: grid serializado como JSON { header, rows }
+  table?: string;
+  // image
+  url?: string;
+  alt?: string;
+  caption?: string;
+  width?: string;
 }
 
 const inputCls =
@@ -236,6 +247,27 @@ export function BlockForm({
           // Ao perder o foco, descarrega o save pendente na hora — evita
           // perder a última formatação (cor/negrito/itálico) quando o
           // admin sai antes do debounce.
+          onFlush={flushSave}
+        />
+      )}
+
+      {type === "table" && (
+        <TableGridEditor
+          name="table"
+          initialJson={initial.table}
+          onUpdate={handleFormChange}
+          onFlush={flushSave}
+        />
+      )}
+
+      {type === "image" && (
+        <ImageUploadField
+          courseId={courseId}
+          initialUrl={initial.url}
+          initialAlt={initial.alt}
+          initialCaption={initial.caption}
+          initialWidth={initial.width}
+          onUpdate={handleFormChange}
           onFlush={flushSave}
         />
       )}
@@ -588,6 +620,29 @@ function IconSpeaking() {
       <rect x="9" y="3" width="6" height="12" rx="3" />
       <path d="M5 11a7 7 0 0 0 14 0" />
       <path d="M12 18v3" />
+    </svg>
+  );
+}
+
+function IconTable() {
+  // Grade com cabeçalho destacado.
+  return (
+    <svg {...svgProps()}>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M3 9h18" />
+      <path d="M9 9v11" />
+      <path d="M15 9v11" />
+    </svg>
+  );
+}
+
+function IconImage() {
+  // Moldura com sol + montanha.
+  return (
+    <svg {...svgProps()}>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <circle cx="8.5" cy="9.5" r="1.5" />
+      <path d="m21 16-5-5L5 20" />
     </svg>
   );
 }

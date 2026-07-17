@@ -447,6 +447,46 @@ function buildBlockData(type: string, formData: FormData): {
         },
         solution: null,
       };
+    case "table": {
+      // O editor visual serializa o grid inteiro como JSON num hidden
+      // input. Parse defensivo: JSON quebrado vira tabela vazia em vez de
+      // derrubar a Server Action.
+      let header: string[] = [];
+      let rows: string[][] = [];
+      try {
+        const parsed = JSON.parse(str(formData, "table") || "{}") as {
+          header?: unknown;
+          rows?: unknown;
+        };
+        if (Array.isArray(parsed.header)) {
+          header = parsed.header.map((c) => String(c ?? ""));
+        }
+        if (Array.isArray(parsed.rows)) {
+          rows = parsed.rows.map((r) =>
+            Array.isArray(r) ? r.map((c) => String(c ?? "")) : [],
+          );
+        }
+      } catch {
+        // grid vazio
+      }
+      return {
+        data: { title: str(formData, "title") || undefined, header, rows },
+        solution: null,
+      };
+    }
+    case "image": {
+      const width = str(formData, "width");
+      return {
+        data: {
+          title: str(formData, "title") || undefined,
+          url: str(formData, "url"),
+          alt: str(formData, "alt"),
+          caption: str(formData, "caption") || undefined,
+          width: ["small", "medium", "full"].includes(width) ? width : "full",
+        },
+        solution: null,
+      };
+    }
     case "examples":
       return {
         data: {
