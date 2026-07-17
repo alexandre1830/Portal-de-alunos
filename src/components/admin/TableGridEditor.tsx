@@ -63,9 +63,14 @@ export function TableGridEditor({
   const [newRows, setNewRows] = useState(2);
 
   const hasTable = grid.header.length > 0;
+  const serialized = JSON.stringify(grid);
 
-  // Fonte única de escrita: atualiza o estado, sincroniza o hidden input
-  // (para o FormData) e avisa o pai. `flush=true` salva na hora.
+  // Fonte única de escrita: atualiza o estado e avisa o pai.
+  // O `hiddenRef.current.value = ...` imperativo NÃO é redundante: o flush
+  // chama runSave() de forma SÍNCRONA, antes do React re-renderizar com o
+  // novo state — sem isso o FormData leria o valor anterior. No próximo
+  // render o React escreve o mesmo valor (controlado), então não há
+  // divergência.
   function commit(next: Grid, flush = false) {
     setGrid(next);
     if (hiddenRef.current) {
@@ -143,13 +148,13 @@ export function TableGridEditor({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Hidden input que leva o grid inteiro (JSON) para o FormData. */}
-      <input
-        ref={hiddenRef}
-        type="hidden"
-        name={name}
-        defaultValue={initialJson ?? ""}
-      />
+      {/* Hidden input que leva o grid inteiro (JSON) para o FormData.
+          CONTROLADO pelo state (não `defaultValue`): <input type="hidden">
+          não tem "dirty value flag" — o value IDL opera em default mode e
+          reflete o atributo — então um `defaultValue` gerenciado pelo React
+          sobrescreveria o que escrevemos imperativamente em `commit`. Com o
+          state como fonte da verdade, React e o editor sempre concordam. */}
+      <input ref={hiddenRef} type="hidden" name={name} value={serialized} readOnly />
 
       {!hasTable ? (
         // Passo 1: escolher o tamanho — mesma ideia do "inserir tabela" do

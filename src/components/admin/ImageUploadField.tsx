@@ -133,8 +133,11 @@ export function ImageUploadField({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* URL da imagem — preenchida pelo upload, nunca digitada. */}
-      <input ref={hiddenRef} type="hidden" name="url" defaultValue={initialUrl} />
+      {/* URL da imagem — preenchida pelo upload, nunca digitada.
+          CONTROLADO pelo state (não `defaultValue`): <input type="hidden">
+          não tem "dirty value flag", então um `defaultValue` gerenciado pelo
+          React sobrescreveria o valor escrito imperativamente no upload. */}
+      <input ref={hiddenRef} type="hidden" name="url" value={url} readOnly />
 
       {/* Input de arquivo fica escondido; o botão abaixo o aciona. */}
       <input

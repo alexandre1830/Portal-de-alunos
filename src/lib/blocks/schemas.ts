@@ -57,12 +57,17 @@ export const tableData = z.object({
 });
 
 // Imagem: arquivo no bucket `lesson-images` do Storage (upload pelo admin).
-// `alt` é obrigatório — acessibilidade não é opcional. `caption` aparece
-// abaixo da imagem; `width` limita a largura máxima na renderização.
+// `caption` aparece abaixo da imagem; `width` limita a largura máxima.
+//
+// `alt` é OPCIONAL no schema de propósito: alt="" é HTML válido (marca a
+// imagem como decorativa para leitores de tela). Exigir alt aqui fazia o
+// bloco inteiro virar "inválido" e sumir para o aluno quando o admin só
+// subia a imagem — punir o aluno por um metadado ausente é pior do que uma
+// imagem sem descrição. O admin é incentivado a preencher no formulário.
 export const imageData = z.object({
   title: z.string().optional(),
   url: z.string().min(1),
-  alt: z.string().min(1),
+  alt: z.string().optional(),
   caption: z.string().optional(),
   width: z.enum(["small", "medium", "full"]).optional(),
 });

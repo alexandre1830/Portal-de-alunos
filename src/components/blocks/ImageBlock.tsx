@@ -9,8 +9,9 @@ const WIDTH_CLS: Record<NonNullable<ImageData["width"]>, string> = {
   full: "max-w-full",
 };
 
-// Imagem hospedada no bucket `lesson-images` do Storage. `alt` é sempre
-// preenchido (obrigatório no admin) — leitor de tela depende dele.
+// Imagem hospedada no bucket `lesson-images` do Storage. `alt` ausente vira
+// "" — que é o marcador HTML de imagem decorativa, tratamento correto para
+// leitor de tela quando o admin não descreveu a imagem.
 // Usamos <img> nativo em vez de next/image porque o domínio do Supabase
 // exigiria configurar remotePatterns, e aqui o ganho do optimizer é baixo.
 export function ImageBlock({ data }: { data: ImageData }) {
@@ -22,7 +23,7 @@ export function ImageBlock({ data }: { data: ImageData }) {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={data.url}
-        alt={data.alt}
+        alt={data.alt ?? ""}
         className={cn(
           "h-auto w-full rounded-md border border-border-primary",
           WIDTH_CLS[data.width ?? "full"],

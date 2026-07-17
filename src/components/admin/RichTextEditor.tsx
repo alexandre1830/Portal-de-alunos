@@ -6,7 +6,7 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import { cn } from "@/lib/utils/cn";
 
@@ -59,6 +59,11 @@ export function RichTextEditor({
   // primeiro do DOM, e o onUpdate gravava o HTML no hidden input do bloco
   // ERRADO; o bloco editado salvava vazio. Um ref elimina a colisão.
   const hiddenRef = useRef<HTMLInputElement>(null);
+  // HTML em state para o hidden input ser CONTROLADO. Com `defaultValue`,
+  // qualquer mudança de prop fazia o React reaplicar o atributo e
+  // sobrescrever o que escrevemos imperativamente — <input type="hidden">
+  // não tem "dirty value flag" que proteja o valor.
+  const [html, setHtml] = useState(initialHtml);
   const editor = useEditor({
     immediatelyRender: false, // evita hydration mismatch no Next App Router
     extensions: [
@@ -88,10 +93,11 @@ export function RichTextEditor({
     },
     onUpdate({ editor }) {
       const html = editor.getHTML();
-      // Sincroniza o hidden input DESTA instância (ref, sem colisão de id)
-      // para que FormData(form) pegue o valor — tanto no submit do create
-      // quanto no autosave do edit.
+      // Sincroniza o hidden input DESTA instância (ref, sem colisão de id).
+      // O write imperativo cobre o flush síncrono (que lê o FormData antes
+      // do re-render); o setHtml mantém o input controlado depois.
       if (hiddenRef.current) hiddenRef.current.value = html;
+      setHtml(html);
       // Gatilho confiável: NÃO despachamos evento no form — o React não
       // mapeia um `input` cujo alvo é o <form> (nem um input hidden) para
       // onChange. Chamamos o callback do pai diretamente.
@@ -103,6 +109,7 @@ export function RichTextEditor({
       // ao pai para descarregar o save pendente imediatamente.
       const html = editor.getHTML();
       if (hiddenRef.current) hiddenRef.current.value = html;
+      setHtml(html);
       onFlush?.();
     },
   });
@@ -123,13 +130,9 @@ export function RichTextEditor({
       <Toolbar editor={editor} />
       <EditorContent editor={editor} />
       {/* Hidden input que carrega o HTML para o FormData do pai. Sem id
-          (evita colisão entre múltiplos editores) — sincronizado via ref. */}
-      <input
-        ref={hiddenRef}
-        type="hidden"
-        name={name}
-        defaultValue={initialHtml}
-      />
+          (evita colisão entre múltiplos editores) e CONTROLADO pelo state
+          (evita o React sobrescrever o valor ao reaplicar defaultValue). */}
+      <input ref={hiddenRef} type="hidden" name={name} value={html} readOnly />
     </div>
   );
 }

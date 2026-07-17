@@ -614,10 +614,22 @@ export async function createBlock(formData: FormData) {
   revalidatePath(`/admin/partes/${partId}`);
 }
 
+// IMPORTANTE: NÃO revalidar `/admin/partes/[id]` aqui. Esta é a página onde
+// o admin está digitando, e updateBlock roda a cada autosave. Revalidar
+// re-renderizava o Server Component, trocando os props `initial` dos
+// editores no meio da digitação — e como <input type="hidden"> não tem
+// "dirty value flag" (o value IDL opera em default mode, refletindo o
+// atributo), o React reaplicava o `defaultValue` e SOBRESCREVIA o valor
+// que o editor tinha escrito imperativamente. Resultado: o autosave
+// gravava de volta o último estado salvo e as edições sumiam.
+// Mesmo padrão do bug da sessão de revisão (ver srs/actions.ts).
+//
+// Não perdemos frescor: a rota é dinâmica (requireAdmin lê cookies), então
+// ao navegar de volta os dados vêm do banco de novo. Ações estruturais
+// (create/delete/move) seguem revalidando — ali a lista muda de verdade.
 export async function updateBlock(formData: FormData) {
   const { supabase } = await requireAdmin();
   const id = str(formData, "id");
-  const partId = str(formData, "part_id");
   const courseId = str(formData, "course_id");
   const type = str(formData, "type");
   const { data: blockData, solution } = buildBlockData(type, formData);
@@ -627,7 +639,6 @@ export async function updateBlock(formData: FormData) {
       .from("exercise_solutions")
       .upsert({ block_id: id, course_id: courseId, solution: solution as never });
   }
-  revalidatePath(`/admin/partes/${partId}`);
 }
 
 export async function deleteBlock(formData: FormData) {
